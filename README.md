@@ -45,7 +45,24 @@ ChargeLoop/
 
 ## 🚀 Getting Started
 
-### 1. Run the .NET 11 Backend API
+### ⚡ 1-Click Launch (Backend + Mobile App)
+
+Simply run the PowerShell script (or double-click `run.bat`):
+
+```powershell
+.\run.ps1
+```
+
+This script:
+1. Verifies the .NET 11 SDK and PostgreSQL connection (`localhost:5432`).
+2. Starts the backend server on `http://localhost:5000`.
+3. Opens the Mobile App in your default web browser automatically.
+
+---
+
+### Manual Launch (Step-by-Step)
+
+#### 1. Run the .NET 11 Backend API
 
 Ensure .NET 11 SDK is installed:
 
