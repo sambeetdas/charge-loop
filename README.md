@@ -112,3 +112,11 @@ flutter run -d chrome
 3. **Automated Validation (< 1.5s)**: Backend verifies battery serials, cell temperature, and minimum 90% SOC.
 4. **Physical Exchange**: Partner places new 100% charged battery into driver's EV (~60–90s).
 5. **Settlement**: Partner confirms swap (`POST /api/v1/swaps/confirm`). Driver wallet deducted (₹118 with GST) and partner instantly credited commission (₹25).
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for full details.
+
+Copyright (c) 2026 Sambeet Das & ChargeLoop Energy Solutions.
