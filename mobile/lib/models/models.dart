@@ -71,6 +71,41 @@ class DriverProfile {
   }
 }
 
+class VendorProfile {
+  final String id;
+  final String phoneNumber;
+  final String fullName;
+  final String businessName;
+  final String token;
+  final double walletBalance;
+  final String? upiId;
+  final String? bankAccountNumber;
+
+  VendorProfile({
+    required this.id,
+    required this.phoneNumber,
+    required this.fullName,
+    required this.businessName,
+    required this.token,
+    required this.walletBalance,
+    this.upiId,
+    this.bankAccountNumber,
+  });
+
+  factory VendorProfile.fromJson(Map<String, dynamic> json) {
+    return VendorProfile(
+      id: json['vendorId'] ?? json['id'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      fullName: json['fullName'] ?? 'Vendor',
+      businessName: json['businessName'] ?? 'Station Partner',
+      token: json['token'] ?? '',
+      walletBalance: (json['walletBalance'] as num?)?.toDouble() ?? 0.0,
+      upiId: json['upiId'],
+      bankAccountNumber: json['bankAccountNumber'],
+    );
+  }
+}
+
 class VehicleModel {
   final String id;
   final String registrationNumber;

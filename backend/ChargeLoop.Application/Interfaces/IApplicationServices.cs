@@ -57,6 +57,13 @@ public interface ISupportService
     Task<IReadOnlyList<SupportTicketDto>> GetUserTicketsAsync(Guid userId);
 }
 
+public interface IVendorService
+{
+    Task<VendorAuthResponse> AuthenticateWithPhoneAsync(VendorAuthRequest request);
+    Task<VendorProfileDto?> GetProfileAsync(Guid vendorId);
+    Task<IReadOnlyList<Partner>> GetAllVendorsAsync();
+}
+
 public interface IRealTimeNotificationService
 {
     Task NotifyStationUpdatedAsync(StationDto station);

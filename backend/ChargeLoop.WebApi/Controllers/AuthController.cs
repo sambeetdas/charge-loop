@@ -9,12 +9,15 @@ namespace ChargeLoop.WebApi.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IDriverService _driverService;
+    private readonly IVendorService _vendorService;
 
-    public AuthController(IDriverService driverService)
+    public AuthController(IDriverService driverService, IVendorService vendorService)
     {
         _driverService = driverService;
+        _vendorService = vendorService;
     }
 
+    // Driver Endpoints
     [HttpPost("phone")]
     public async Task<ActionResult<AuthResponse>> AuthenticatePhone([FromBody] AuthRequest request)
     {
@@ -55,5 +58,33 @@ public class AuthController : ControllerBase
     {
         var vehicle = await _driverService.LinkVehicleAsync(request);
         return Ok(vehicle);
+    }
+
+    // Vendor Endpoints
+    [HttpPost("vendor/phone")]
+    public async Task<ActionResult<VendorAuthResponse>> AuthenticateVendor([FromBody] VendorAuthRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            return BadRequest("Phone number is required");
+        }
+
+        var response = await _vendorService.AuthenticateWithPhoneAsync(request);
+        return Ok(response);
+    }
+
+    [HttpGet("vendor/profile/{vendorId:guid}")]
+    public async Task<ActionResult<VendorProfileDto>> GetVendorProfile(Guid vendorId)
+    {
+        var profile = await _vendorService.GetProfileAsync(vendorId);
+        if (profile == null) return NotFound("Vendor not found");
+        return Ok(profile);
+    }
+
+    [HttpGet("vendors")]
+    public async Task<ActionResult> GetAllVendors()
+    {
+        var vendors = await _vendorService.GetAllVendorsAsync();
+        return Ok(vendors);
     }
 }

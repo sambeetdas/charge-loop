@@ -83,7 +83,7 @@
     }
 
     .app-header {
-      padding: 12px 20px 8px;
+      padding: 14px 20px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -100,57 +100,35 @@
     }
 
     .brand-icon {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       background: rgba(0, 230, 118, 0.15);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--neon-green);
+      font-size: 18px;
     }
 
-    .app-mode-bar {
+    .user-pill {
       display: flex;
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 3px;
-      margin: 10px 20px 6px;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-elevated);
       border: 1px solid var(--border);
-    }
-
-    .mode-btn {
-      flex: 1;
-      padding: 7px 0;
+      border-radius: 20px;
+      padding: 4px 10px;
       font-size: 12px;
-      font-weight: 700;
-      border: none;
-      border-radius: 9px;
-      cursor: pointer;
-      background: transparent;
-      color: var(--text-muted);
-      transition: all 0.2s ease;
-    }
-
-    .mode-btn.active {
-      background: var(--neon-green);
-      color: #000;
-    }
-
-    .lang-toggle {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      font-weight: 600;
       color: var(--text-primary);
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 11px;
-      outline: none;
+      cursor: pointer;
     }
 
     .screen-content {
       flex: 1;
       overflow-y: auto;
-      padding: 14px 20px 90px;
+      padding: 16px 20px 90px;
       display: none;
     }
 
@@ -220,6 +198,28 @@
     }
     .input-box:focus { border-color: var(--neon-green); }
 
+    .role-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .role-btn.active {
+      border-color: var(--neon-green);
+      background: rgba(0, 230, 118, 0.12);
+      color: #fff;
+    }
+
     .badge-stock {
       display: inline-flex;
       align-items: center;
@@ -231,12 +231,10 @@
       background: rgba(0, 230, 118, 0.15);
       color: var(--neon-green);
     }
-
     .badge-amber {
       background: rgba(255, 179, 0, 0.15);
       color: var(--warning-amber);
     }
-
     .badge-danger {
       background: rgba(255, 61, 0, 0.15);
       color: var(--danger-red);
@@ -265,7 +263,7 @@
     .gauge-soc { font-size: 26px; font-weight: 800; }
     .gauge-label { font-size: 9px; letter-spacing: 1px; color: var(--text-muted); }
 
-    /* Timer Display */
+    /* Timer */
     .timer-box {
       background: var(--surface);
       border: 1px solid rgba(0, 229, 255, 0.4);
@@ -320,32 +318,6 @@
       height: 20px;
       fill: currentColor;
     }
-
-    /* Bay Grid in Partner App */
-    .bay-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin: 12px 0;
-    }
-    .bay-cell {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 4px;
-      text-align: center;
-      font-size: 11px;
-    }
-    .bay-cell.ready {
-      border-color: var(--neon-green);
-      background: rgba(0, 230, 118, 0.12);
-    }
-    .bay-cell.charging {
-      border-color: var(--warning-amber);
-      background: rgba(255, 179, 0, 0.12);
-    }
-    .bay-num { font-weight: 800; font-size: 12px; }
-    .bay-soc { font-weight: 700; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -353,7 +325,7 @@
 <div class="phone-container">
   <!-- Status Bar -->
   <div class="status-bar">
-    <span id="clockTime">08:00 PM</span>
+    <span id="clockTime">08:30 PM</span>
     <div class="status-pill">
       <div class="status-dot"></div>
       <span>Network Live</span>
@@ -361,60 +333,80 @@
     <span>5G ⚡</span>
   </div>
 
-  <!-- Header -->
+  <!-- Header (Clean Branding, No top mode toggle, No language selector) -->
   <div class="app-header">
     <div class="brand">
       <div class="brand-icon">⚡</div>
       <span>ChargeLoop</span>
     </div>
-    <select class="lang-toggle" id="langSelector" onchange="toggleLanguage()">
-      <option value="en">🇬🇧 English</option>
-      <option value="hi">🇮🇳 हिन्दी</option>
-    </select>
+    <div class="user-pill" id="headerUserPill" onclick="showAuthScreen()">
+      <span id="headerRoleBadge" style="color: var(--neon-green); font-size: 11px;">Sign In</span>
+      <span id="headerUserName">👤</span>
+    </div>
   </div>
 
-  <!-- App Mode Toggle (Driver vs Partner Station) -->
-  <div class="app-mode-bar">
-    <button class="mode-btn active" id="btnModeDriver" onclick="switchMode('driver')">Driver App</button>
-    <button class="mode-btn" id="btnModePartner" onclick="switchMode('partner')">Partner Station App</button>
-  </div>
+  <!-- ======================== SCREEN: AUTH & SIGN UP (DRIVER / VENDOR) ======================== -->
+  <div id="screen-auth" class="screen-content active">
+    <div style="margin-top: 16px;">
+      <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 6px;">Sign In / Sign Up</h2>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Choose your account type to access the platform.</p>
 
-  <!-- ======================== DRIVER SCREENS ======================== -->
+      <!-- Role Selection Field -->
+      <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px; color: var(--text-muted);">ACCOUNT TYPE</div>
+      <div style="display: flex; gap: 10px; margin-bottom: 18px;">
+        <button type="button" class="role-btn active" id="btnRoleDriver" onclick="setAuthRole('driver')">
+          🚗 <span>Driver</span>
+        </button>
+        <button type="button" class="role-btn" id="btnRoleVendor" onclick="setAuthRole('vendor')">
+          🏪 <span>Vendor</span>
+        </button>
+      </div>
 
-  <!-- SCREEN 0: SIGN IN -->
-  <div id="screen-auth" class="screen-content">
-    <div style="margin-top: 20px;">
-      <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Driver Sign In</h2>
-      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Enter your phone number to access your account.</p>
+      <!-- Input Form -->
+      <div id="driverAuthFields">
+        <input type="tel" id="authDriverPhone" class="input-box" placeholder="10-digit Mobile Number" />
+        <input type="text" id="authDriverName" class="input-box" placeholder="Driver Full Name (optional for existing)" />
+        <button class="btn-primary" onclick="submitDriverAuth()">Sign In as Driver</button>
 
-      <input type="tel" id="authPhoneInput" class="input-box" placeholder="Enter 10-digit mobile number" />
-      <input type="text" id="authNameInput" class="input-box" placeholder="Full Name (optional for existing users)" />
+        <div style="margin-top: 24px;">
+          <span style="color: var(--text-muted); font-size: 12px;">Quick Select Active Driver:</span>
+          <div id="dbDriversList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="color: var(--text-muted); font-size: 12px;">Loading drivers...</div>
+          </div>
+        </div>
+      </div>
 
-      <button class="btn-primary" onclick="submitAuth()">Verify & Sign In</button>
+      <div id="vendorAuthFields" style="display: none;">
+        <input type="tel" id="authVendorPhone" class="input-box" placeholder="Vendor Mobile Number" />
+        <input type="text" id="authVendorName" class="input-box" placeholder="Contact Person Name" />
+        <input type="text" id="authVendorBusiness" class="input-box" placeholder="Station / Business Name (e.g. Metro Swapping Hub)" />
+        <button class="btn-primary" onclick="submitVendorAuth()">Sign In as Vendor</button>
 
-      <div style="margin-top: 24px;">
-        <span style="color: var(--text-muted); font-size: 12px;">Select Driver Profile:</span>
-        <div id="dbDriversList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-          <div style="color: var(--text-muted); font-size: 12px;">Loading profiles...</div>
+        <div style="margin-top: 24px;">
+          <span style="color: var(--text-muted); font-size: 12px;">Quick Select Active Vendor:</span>
+          <div id="dbVendorsList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="color: var(--text-muted); font-size: 12px;">Loading vendors...</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCREEN 1: STATIONS DISCOVERY -->
-  <div id="screen-stations" class="screen-content active">
-    <div class="card card-highlight">
-      <div style="font-weight: 700; font-size: 15px;" id="txt-radar-title">Nearby Swapping Stations</div>
-      <div style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="stationsSummary">Loading live station availability...</div>
-    </div>
+  <!-- ======================== DRIVER SCREENS ======================== -->
 
-    <div id="stations-list">
+  <!-- DRIVER SCREEN 1: STATIONS DISCOVERY -->
+  <div id="screen-driver-stations" class="screen-content">
+    <div class="card card-highlight">
+      <div style="font-weight: 700; font-size: 15px;">Nearby Swapping Stations</div>
+      <div style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="driverStationsSummary">Loading stations...</div>
+    </div>
+    <div id="driverStationsList">
       <div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading nearby stations...</div>
     </div>
   </div>
 
-  <!-- SCREEN 2: 2-MINUTE SWAP -->
-  <div id="screen-swap" class="screen-content">
+  <!-- DRIVER SCREEN 2: 2-MINUTE SWAP -->
+  <div id="screen-driver-swap" class="screen-content">
     <div id="swap-step-init">
       <div class="gauge-wrapper">
         <div class="gauge-circle" id="socCircle">
@@ -468,7 +460,7 @@
     <div id="swap-step-receipt" style="display: none;">
       <div style="text-align: center; padding: 16px 0;">
         <div style="font-size: 48px; color: var(--neon-green);">✓</div>
-        <h3 style="font-size: 20px; font-weight: 800; margin-top: 8px;">Swap Recorded in Database!</h3>
+        <h3 style="font-size: 20px; font-weight: 800; margin-top: 8px;">Swap Recorded Successfully!</h3>
         <p style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="receipt-duration">Duration: 48s (&lt; 2 min)</p>
       </div>
 
@@ -487,7 +479,7 @@
           <span style="color: var(--neon-green);">₹118.00</span>
         </div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: var(--text-muted); margin-top: 6px;">
-          <span>Station Operator Commission:</span>
+          <span>Station Vendor Commission:</span>
           <span style="color: var(--bright-cyan);">₹25.00 Credited</span>
         </div>
       </div>
@@ -496,41 +488,41 @@
     </div>
   </div>
 
-  <!-- SCREEN 3: WALLET & SUBSCRIPTIONS -->
-  <div id="screen-wallet" class="screen-content">
+  <!-- DRIVER SCREEN 3: WALLET & PLANS -->
+  <div id="screen-driver-wallet" class="screen-content">
     <div class="card card-highlight">
       <div style="color: var(--text-muted); font-size: 12px;">DRIVER DIGITAL WALLET</div>
-      <div style="font-size: 32px; font-weight: 900; color: var(--neon-green); margin: 6px 0;" id="walletBalance">₹0.00</div>
-      <div style="color: var(--text-muted); font-size: 12px;" id="walletStatusText">Loading ledger balance...</div>
+      <div style="font-size: 32px; font-weight: 900; color: var(--neon-green); margin: 6px 0;" id="driverWalletBalance">₹0.00</div>
+      <div style="color: var(--text-muted); font-size: 12px;" id="driverWalletStatusText">Loading balance...</div>
     </div>
 
     <!-- Quick Top-Up -->
     <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Instant Top-Up (UPI AutoPay)</div>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
-      <button class="btn-outline btn-secondary" onclick="topUpWallet(200)">+₹200</button>
-      <button class="btn-outline btn-secondary" onclick="topUpWallet(500)">+₹500</button>
-      <button class="btn-outline btn-secondary" onclick="topUpWallet(1000)">+₹1,000</button>
+      <button class="btn-outline btn-secondary" onclick="topUpDriverWallet(200)">+₹200</button>
+      <button class="btn-outline btn-secondary" onclick="topUpDriverWallet(500)">+₹500</button>
+      <button class="btn-outline btn-secondary" onclick="topUpDriverWallet(1000)">+₹1,000</button>
     </div>
 
-    <!-- Active Subscription Plans from Database -->
-    <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Subscription Plans (From DB)</div>
+    <!-- Active Subscription Plans -->
+    <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Subscription Plans</div>
     <div id="subscriptionPlansList">
       <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading plans...</div>
     </div>
 
-    <!-- Swap History from Database -->
-    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Recent Swaps in Database</div>
-    <div id="wallet-history">
+    <!-- Swap History -->
+    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Recent Swaps</div>
+    <div id="driverSwapHistory">
       <div class="card" style="color: var(--text-muted); font-size: 13px;">No transactions yet.</div>
     </div>
   </div>
 
-  <!-- SCREEN 4: PROFILE & SUPPORT -->
-  <div id="screen-profile" class="screen-content">
+  <!-- DRIVER SCREEN 4: DRIVER PROFILE -->
+  <div id="screen-driver-profile" class="screen-content">
     <div style="text-align: center; margin-bottom: 20px;">
       <div style="width: 64px; height: 64px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 28px; color: var(--neon-green);">👤</div>
-      <div style="font-size: 18px; font-weight: 800;" id="profName">Loading...</div>
-      <div style="color: var(--text-muted); font-size: 13px;" id="profPhone">-</div>
+      <div style="font-size: 18px; font-weight: 800;" id="profDriverName">Loading...</div>
+      <div style="color: var(--text-muted); font-size: 13px;" id="profDriverPhone">-</div>
       <div class="badge-stock" style="margin-top: 6px;">✓ Verified Driver</div>
     </div>
 
@@ -544,185 +536,339 @@
       <div style="color: var(--text-muted); font-size: 12px;">Loading battery state...</div>
     </div>
 
-    <!-- Grievance & Dispute Redressal (DR-12) -->
-    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">GRIEVANCE & SUPPORT TICKET</div>
+    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">SUPPORT & GRIEVANCE</div>
     <div class="card">
-      <input type="text" id="ticketSubject" class="input-box" placeholder="Issue Subject (e.g. Defective Battery / Refund)" />
-      <textarea id="ticketDesc" class="input-box" rows="2" style="resize: none;" placeholder="Describe issue details..."></textarea>
-      <button class="btn-outline btn-secondary" onclick="submitTicket()">Submit Support Ticket to DB</button>
-      <div id="recentTicketsList" style="margin-top: 10px; font-size: 12px;"></div>
+      <input type="text" id="driverTicketSubject" class="input-box" placeholder="Subject (e.g. Battery Issue / Billing)" />
+      <textarea id="driverTicketDesc" class="input-box" rows="2" style="resize: none;" placeholder="Issue details..."></textarea>
+      <button class="btn-outline btn-secondary" onclick="submitDriverTicket()">Submit Support Ticket</button>
+      <div id="driverTicketsList" style="margin-top: 10px; font-size: 12px;"></div>
     </div>
 
-    <button class="btn-outline" style="margin-top: 16px; border-color: var(--border); color: var(--text-muted);" onclick="showAuthScreen()">Switch Driver / Sign Out</button>
+    <button class="btn-outline" style="margin-top: 16px; border-color: var(--border); color: var(--text-muted);" onclick="showAuthScreen()">Sign Out / Switch Account</button>
   </div>
 
-  <!-- ======================== PARTNER STATION SCREEN ======================== -->
-  <div id="screen-partner" class="screen-content">
-    <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">SELECT PARTNER OPERATOR</div>
-    <select id="partnerStationSelect" class="input-box" onchange="onPartnerStationChanged()"></select>
+  <!-- ======================== VENDOR SCREENS ======================== -->
 
-    <!-- Partner Earnings Card -->
+  <!-- VENDOR SCREEN 1: OPERATIONS / STATIONS -->
+  <div id="screen-vendor-stations" class="screen-content">
+    <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">OPERATED STATION</div>
+    <select id="vendorStationSelect" class="input-box" onchange="onVendorStationSelectChanged()"></select>
+
+    <!-- Operational State Card -->
     <div class="card card-highlight">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <div style="color: var(--text-muted); font-size: 11px;">PARTNER COMMISSION EARNED</div>
-          <div style="font-size: 26px; font-weight: 900; color: var(--bright-cyan); margin: 4px 0;" id="partnerWalletBalance">₹0.00</div>
-          <div style="color: var(--neon-green); font-size: 12px; font-weight: 600;">₹25.00 Instant Payout per Swap</div>
+          <div style="font-weight: 800; font-size: 16px;" id="vendorStationTitle">Station Hub</div>
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="vendorStationAddress">Address</div>
         </div>
-        <button class="btn-outline" style="width: auto; padding: 6px 12px; height: auto; font-size: 11px;" onclick="alert('Payout transfer initiated to Partner UPI ID!')">Withdraw</button>
+        <div class="badge-stock" id="vendorStationStatusBadge">Open</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+        <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
+          <div style="font-size: 22px; font-weight: 900; color: var(--neon-green);" id="vendorReadyCount">0</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Ready Batteries</div>
+        </div>
+        <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
+          <div style="font-size: 22px; font-weight: 900; color: var(--warning-amber);" id="vendorChargingCount">0</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Charging Bays</div>
+        </div>
       </div>
     </div>
 
     <!-- Station Controls -->
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-weight: 700; font-size: 14px;" id="partnerStationTitle">Station Status</div>
-          <div style="color: var(--text-muted); font-size: 11px;" id="partnerStationAddress">Address</div>
-        </div>
-        <div class="badge-stock" id="partnerStationStatusBadge">Open 06:00 - 23:00</div>
-      </div>
-      <div style="display: flex; gap: 8px; margin-top: 12px;">
-        <button class="btn-outline" style="font-size: 11px; height: 34px;" onclick="toggleStationStatus(0)">Open</button>
-        <button class="btn-outline" style="font-size: 11px; height: 34px;" onclick="toggleStationStatus(2)">Maintenance</button>
-        <button class="btn-outline" style="font-size: 11px; height: 34px;" onclick="toggleStationStatus(1)">Closed</button>
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Update Operational State</div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--neon-green); border-color: var(--neon-green);" onclick="setStationStatus(0)">Set Open</button>
+        <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--warning-amber); border-color: var(--warning-amber);" onclick="setStationStatus(2)">Maintenance</button>
+        <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--danger-red); border-color: var(--danger-red);" onclick="setStationStatus(1)">Set Closed</button>
       </div>
     </div>
 
-    <!-- Live Bay Inventory Grid (BRD Section 11.2) -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-      <div style="font-weight: 700; font-size: 13px;">LIVE BAY INVENTORY GRID</div>
-      <div style="font-size: 11px; color: var(--neon-green); font-weight: 600;" id="bayGridSummary">-- Ready</div>
-    </div>
-    <div class="bay-grid" id="partnerBayGrid">
-      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 10px;">Loading bays...</div>
-    </div>
-
-    <!-- Partner Ticket Report -->
-    <div class="card">
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 6px;">Report Charger Hardware Issue</div>
-      <input type="text" id="partnerTicketSubject" class="input-box" placeholder="e.g. Bay 4 Connector Thermal Warning" />
-      <button class="btn-outline btn-secondary" onclick="submitPartnerTicket()">Report Issue to Ops</button>
+    <!-- Ready Batteries List at this station -->
+    <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px; margin-top: 14px;">Charged Batteries in Stock</div>
+    <div id="vendorStationBatteriesList">
+      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading battery inventory...</div>
     </div>
   </div>
 
-  <!-- Bottom Navigation (Only visible in Driver Mode) -->
-  <div class="bottom-nav" id="driverBottomNav">
+  <!-- VENDOR SCREEN 2: EARNINGS & SETTLEMENT -->
+  <div id="screen-vendor-earnings" class="screen-content">
+    <div class="card card-highlight">
+      <div style="color: var(--text-muted); font-size: 12px;">VENDOR COMMISSION BALANCE</div>
+      <div style="font-size: 32px; font-weight: 900; color: var(--bright-cyan); margin: 6px 0;" id="vendorWalletBalance">₹0.00</div>
+      <div style="color: var(--neon-green); font-size: 12px; font-weight: 600;">₹25.00 Instant Payout per Swap</div>
+    </div>
+
+    <!-- Settlement Details Card -->
+    <div class="card">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Settlement Payout Route</div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+        <span style="color: var(--text-muted);">Payout UPI ID:</span>
+        <span style="font-weight: 600;" id="vendorUpiDisplay">-</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+        <span style="color: var(--text-muted);">Bank Account:</span>
+        <span style="font-weight: 600;" id="vendorBankDisplay">-</span>
+      </div>
+      <button class="btn-primary" style="margin-top: 12px; height: 42px; font-size: 14px;" onclick="requestVendorPayout()">
+        Request 1-Click Bank/UPI Payout
+      </button>
+    </div>
+
+    <!-- Recent Swaps Credited to this Vendor -->
+    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Recent Commission Credits</div>
+    <div id="vendorCommissionHistory">
+      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading payout activity...</div>
+    </div>
+  </div>
+
+  <!-- VENDOR SCREEN 3: HARDWARE SUPPORT -->
+  <div id="screen-vendor-support" class="screen-content">
+    <div class="card card-highlight">
+      <div style="font-weight: 700; font-size: 15px;">Charger & Station Support</div>
+      <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Report hardware malfunctions, connector wear, or power outage directly to operations.</p>
+    </div>
+
+    <div class="card">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Report Hardware Defect</div>
+      <input type="text" id="vendorTicketSubject" class="input-box" placeholder="Subject (e.g. Bay 2 Lock Jammed)" />
+      <textarea id="vendorTicketDesc" class="input-box" rows="3" style="resize: none;" placeholder="Details of the charger or station issue..."></textarea>
+      <button class="btn-primary" onclick="submitVendorTicket()">Submit Hardware Defect Ticket</button>
+    </div>
+
+    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Reported Station Tickets</div>
+    <div id="vendorTicketsList">
+      <div class="card" style="color: var(--text-muted); font-size: 12px;">No active tickets.</div>
+    </div>
+  </div>
+
+  <!-- VENDOR SCREEN 4: VENDOR PROFILE -->
+  <div id="screen-vendor-profile" class="screen-content">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="width: 64px; height: 64px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 28px; color: var(--bright-cyan);">🏪</div>
+      <div style="font-size: 18px; font-weight: 800;" id="profVendorBusiness">Loading...</div>
+      <div style="color: var(--text-muted); font-size: 13px;" id="profVendorName">-</div>
+      <div class="badge-stock" style="margin-top: 6px; background: rgba(0,229,255,0.15); color: var(--bright-cyan);">✓ Authorized Vendor Partner</div>
+    </div>
+
+    <!-- Business Details -->
+    <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">VENDOR BUSINESS DETAILS</div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+        <span style="color: var(--text-muted);">Contact Phone:</span>
+        <span style="font-weight: 600;" id="profVendorPhone">-</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+        <span style="color: var(--text-muted);">Partner ID:</span>
+        <span style="font-weight: 600; font-family: monospace; font-size: 11px;" id="profVendorId">-</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+        <span style="color: var(--text-muted);">Payout UPI:</span>
+        <span style="font-weight: 600;" id="profVendorUpi">-</span>
+      </div>
+    </div>
+
+    <!-- Operated Stations List -->
+    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">OPERATED STATIONS</div>
+    <div id="profVendorStationsList">
+      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading stations...</div>
+    </div>
+
+    <button class="btn-outline" style="margin-top: 16px; border-color: var(--border); color: var(--text-muted);" onclick="showAuthScreen()">Sign Out / Switch Account</button>
+  </div>
+
+  <!-- ======================== BOTTOM NAVIGATION BARS ======================== -->
+
+  <!-- Driver Bottom Nav -->
+  <div class="bottom-nav" id="driverBottomNav" style="display: none;">
     <div class="nav-item active" onclick="switchDriverTab('stations')">
       <svg viewBox="0 0 24 24"><path d="M19 12h-2V7h-4v2h2v5H9V5h6V3H7v11H5v2h2v5h10v-5h2v-4zm-4 7H9v-3h6v3z"/></svg>
-      <span id="tab-stations">Stations</span>
+      <span>Stations</span>
     </div>
     <div class="nav-item" onclick="switchDriverTab('swap')">
       <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
-      <span id="tab-swap">Swap</span>
+      <span>Swap</span>
     </div>
     <div class="nav-item" onclick="switchDriverTab('wallet')">
       <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-      <span id="tab-wallet">Wallet</span>
+      <span>Wallet</span>
     </div>
     <div class="nav-item" onclick="switchDriverTab('profile')">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <span id="tab-profile">Profile</span>
+      <span>Profile</span>
+    </div>
+  </div>
+
+  <!-- Vendor Bottom Nav -->
+  <div class="bottom-nav" id="vendorBottomNav" style="display: none;">
+    <div class="nav-item active" onclick="switchVendorTab('stations')">
+      <svg viewBox="0 0 24 24"><path d="M19 12h-2V7h-4v2h2v5H9V5h6V3H7v11H5v2h2v5h10v-5h2v-4zm-4 7H9v-3h6v3z"/></svg>
+      <span>Operations</span>
+    </div>
+    <div class="nav-item" onclick="switchVendorTab('earnings')">
+      <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <span>Earnings</span>
+    </div>
+    <div class="nav-item" onclick="switchVendorTab('support')">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <span>Support</span>
+    </div>
+    <div class="nav-item" onclick="switchVendorTab('profile')">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <span>Profile</span>
     </div>
   </div>
 </div>
 
 <script>
-  let currentMode = 'driver'; // 'driver' or 'partner'
-  let activeDriver = null;
+  let activeRole = null; // 'driver' or 'vendor'
+  let activeUser = null; // Driver or Vendor object
   let loadedStations = [];
   let timerInterval = null;
   let timerSeconds = 0;
   let activeSwapId = null;
 
-  // Mode switching
-  function switchMode(mode) {
-    currentMode = mode;
-    document.getElementById('btnModeDriver').classList.toggle('active', mode === 'driver');
-    document.getElementById('btnModePartner').classList.toggle('active', mode === 'partner');
-    document.getElementById('driverBottomNav').style.display = mode === 'driver' ? 'flex' : 'none';
+  // 1. Role Selection in Auth Screen
+  function setAuthRole(role) {
+    document.getElementById('btnRoleDriver').classList.toggle('active', role === 'driver');
+    document.getElementById('btnRoleVendor').classList.toggle('active', role === 'vendor');
+    document.getElementById('driverAuthFields').style.display = role === 'driver' ? 'block' : 'none';
+    document.getElementById('vendorAuthFields').style.display = role === 'vendor' ? 'block' : 'none';
+  }
 
+  function showAuthScreen() {
     document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-    if (mode === 'driver') {
-      if (!activeDriver) {
-        showAuthScreen();
+    document.getElementById('driverBottomNav').style.display = 'none';
+    document.getElementById('vendorBottomNav').style.display = 'none';
+    document.getElementById('screen-auth').classList.add('active');
+    document.getElementById('headerRoleBadge').innerText = 'Sign In';
+    loadDbDriversList();
+    loadDbVendorsList();
+  }
+
+  // 2. Navigation Tab Switching
+  function switchDriverTab(tab) {
+    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
+    const navItems = document.querySelectorAll('#driverBottomNav .nav-item');
+    navItems.forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`screen-driver-${tab}`).classList.add('active');
+    if (tab === 'stations') navItems[0].classList.add('active');
+    if (tab === 'swap') navItems[1].classList.add('active');
+    if (tab === 'wallet') navItems[2].classList.add('active');
+    if (tab === 'profile') navItems[3].classList.add('active');
+  }
+
+  function switchVendorTab(tab) {
+    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
+    const navItems = document.querySelectorAll('#vendorBottomNav .nav-item');
+    navItems.forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`screen-vendor-${tab}`).classList.add('active');
+    if (tab === 'stations') navItems[0].classList.add('active');
+    if (tab === 'earnings') navItems[1].classList.add('active');
+    if (tab === 'support') navItems[2].classList.add('active');
+    if (tab === 'profile') navItems[3].classList.add('active');
+  }
+
+  // 3. Driver Authentication
+  async function submitDriverAuth() {
+    const phone = document.getElementById('authDriverPhone').value.trim();
+    const name = document.getElementById('authDriverName').value.trim();
+    if (!phone || phone.length < 10) { alert('Please enter a valid 10-digit phone number'); return; }
+
+    try {
+      const res = await fetch('/api/v1/auth/phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, fullName: name || null, languageCode: 'en' })
+      });
+      if (res.ok) {
+        const authRes = await res.json();
+        await enterAsDriver(authRes.driverId);
       } else {
-        switchDriverTab('stations');
+        alert('Authentication failed: ' + (await res.text()));
       }
-    } else {
-      document.getElementById('screen-partner').classList.add('active');
-      loadPartnerStationView();
+    } catch (e) {
+      alert('Error: ' + e);
     }
   }
 
-  function switchDriverTab(name) {
-    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(`screen-${name}`).classList.add('active');
-    const navItems = document.querySelectorAll('.nav-item');
-    if (name === 'stations') navItems[0].classList.add('active');
-    if (name === 'swap') navItems[1].classList.add('active');
-    if (name === 'wallet') navItems[2].classList.add('active');
-    if (name === 'profile') navItems[3].classList.add('active');
-  }
-
-  // App Initialization
-  async function initApp() {
-    await loadDbDrivers();
-    await loadStations();
-    await loadSubscriptionPlans();
-  }
-
-  async function loadDbDrivers() {
-    const listEl = document.getElementById('dbDriversList');
-    try {
-      const res = await fetch('/api/v1/auth/drivers');
-      if (res.ok) {
-        const drivers = await res.json();
-        if (drivers && drivers.length > 0) {
-          listEl.innerHTML = drivers.map(d => `
-            <button class="btn-outline" style="text-align:left; padding:8px 12px; height:auto; display:flex; justify-content:space-between; align-items:center;" onclick="selectDriver('${d.id}')">
-              <div>
-                <div style="font-weight:700;">${d.fullName}</div>
-                <div style="font-size:11px; color:var(--text-muted);">${d.phoneNumber}</div>
-              </div>
-              <div style="font-weight:700; color:var(--neon-green);">₹${(d.walletBalance || 0).toFixed(2)}</div>
-            </button>
-          `).join('');
-
-          // Select first driver by default if none selected
-          if (!activeDriver) {
-            await selectDriver(drivers[0].id);
-          }
-          return;
-        }
-      }
-    } catch (_) {}
-    listEl.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No drivers found in database.</div>`;
-  }
-
-  async function selectDriver(driverId) {
+  async function enterAsDriver(driverId) {
     try {
       const res = await fetch(`/api/v1/auth/profile/${driverId}`);
       if (res.ok) {
-        activeDriver = await res.json();
-        updateDriverUI(activeDriver);
+        activeUser = await res.json();
+        activeRole = 'driver';
+
+        document.getElementById('headerRoleBadge').innerText = 'Driver';
+        document.getElementById('headerUserName').innerText = activeUser.fullName.split(' ')[0];
+        document.getElementById('driverBottomNav').style.display = 'flex';
+        document.getElementById('vendorBottomNav').style.display = 'none';
+
+        updateDriverUI(activeUser);
         switchDriverTab('stations');
       }
     } catch (e) {
-      console.error('Select driver error', e);
+      console.error(e);
     }
   }
 
-  function updateDriverUI(detail) {
-    document.getElementById('profName').innerText = detail.fullName || 'Driver';
-    document.getElementById('profPhone').innerText = detail.phoneNumber || '';
-    document.getElementById('walletBalance').innerText = `₹${(detail.walletBalance || 0).toFixed(2)}`;
-    document.getElementById('walletStatusText').innerText = detail.walletBalance >= 118 
-      ? '✓ Sufficient balance for swaps' 
-      : '⚠ Low balance. Please top up.';
+  // 4. Vendor Authentication
+  async function submitVendorAuth() {
+    const phone = document.getElementById('authVendorPhone').value.trim();
+    const name = document.getElementById('authVendorName').value.trim();
+    const business = document.getElementById('authVendorBusiness').value.trim();
+    if (!phone || phone.length < 10) { alert('Please enter a valid vendor mobile number'); return; }
 
-    // Update Mounted Battery & Gauge
+    try {
+      const res = await fetch('/api/v1/auth/vendor/phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, fullName: name || null, businessName: business || null })
+      });
+      if (res.ok) {
+        const authRes = await res.json();
+        await enterAsVendor(authRes.vendorId);
+      } else {
+        alert('Vendor sign in failed: ' + (await res.text()));
+      }
+    } catch (e) {
+      alert('Error: ' + e);
+    }
+  }
+
+  async function enterAsVendor(vendorId) {
+    try {
+      const res = await fetch(`/api/v1/auth/vendor/profile/${vendorId}`);
+      if (res.ok) {
+        activeUser = await res.json();
+        activeRole = 'vendor';
+
+        document.getElementById('headerRoleBadge').innerText = 'Vendor';
+        document.getElementById('headerUserName').innerText = activeUser.fullName.split(' ')[0];
+        document.getElementById('driverBottomNav').style.display = 'none';
+        document.getElementById('vendorBottomNav').style.display = 'flex';
+
+        updateVendorUI(activeUser);
+        switchVendorTab('stations');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // 5. Driver UI Updates
+  function updateDriverUI(detail) {
+    document.getElementById('profDriverName').innerText = detail.fullName || 'Driver';
+    document.getElementById('profDriverPhone').innerText = detail.phoneNumber || '';
+    document.getElementById('driverWalletBalance').innerText = `₹${(detail.walletBalance || 0).toFixed(2)}`;
+    document.getElementById('driverWalletStatusText').innerText = detail.walletBalance >= 118 
+      ? '✓ Sufficient balance for battery swaps' 
+      : '⚠ Low balance. Top up to continue swapping.';
+
     if (detail.activeBattery) {
       const b = detail.activeBattery;
       const soc = b.stateOfChargePercent;
@@ -753,7 +899,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div style="font-weight:700;">${b.serialNumber} (${b.modelType})</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Health (SOH): ${b.stateOfHealthPercent}% | Temp: ${b.cellTemperatureCelsius}°C</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Health: ${b.stateOfHealthPercent}% SOH | Temp: ${b.cellTemperatureCelsius}°C</div>
           </div>
           <div class="badge-stock ${soc < 20 ? 'badge-danger' : (soc < 50 ? 'badge-amber' : '')}">⚡ ${soc}% SOC</div>
         </div>
@@ -763,58 +909,187 @@
       document.getElementById('swapDepletedSerialInput').value = '';
       document.getElementById('txt-battery-status').innerText = 'No Battery Mounted';
       document.getElementById('txt-battery-range').innerText = 'Range: 0 km';
-      document.getElementById('profBatteryDetails').innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No active battery currently assigned in database.</div>`;
+      document.getElementById('profBatteryDetails').innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No active battery currently assigned.</div>`;
     }
 
-    // Vehicles list
     const vList = document.getElementById('profVehiclesList');
     if (detail.vehicles && detail.vehicles.length > 0) {
       vList.innerHTML = detail.vehicles.map(v => `
         <div class="card">
           <div style="font-weight:700; font-size:14px;">${v.registrationNumber}</div>
           <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${v.oem} — ${v.model}</div>
-          <div style="color:var(--bright-cyan); font-size:11px; font-weight:600;">Battery Spec: ${v.batteryCompatibilityType}</div>
+          <div style="color:var(--bright-cyan); font-size:11px; font-weight:600;">Spec: ${v.batteryCompatibilityType}</div>
         </div>
       `).join('');
     } else {
-      vList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No linked vehicle in database.</div>`;
+      vList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No linked vehicle.</div>`;
     }
 
     loadDriverSwapHistory(detail.id);
     loadDriverTickets(detail.id);
   }
 
-  async function submitAuth() {
-    const phone = document.getElementById('authPhoneInput').value.trim();
-    const name = document.getElementById('authNameInput').value.trim();
-    if (!phone || phone.length < 10) { alert('Please enter a valid 10-digit phone number'); return; }
+  // 6. Vendor UI Updates (With Profile, without Live Bay Grid)
+  function updateVendorUI(vendor) {
+    // Populate Profile Screen
+    document.getElementById('profVendorBusiness').innerText = vendor.businessName || 'ChargeLoop Hub';
+    document.getElementById('profVendorName').innerText = `Owner: ${vendor.fullName}`;
+    document.getElementById('profVendorPhone').innerText = vendor.phoneNumber;
+    document.getElementById('profVendorId').innerText = vendor.id;
+    document.getElementById('profVendorUpi').innerText = vendor.upiId || 'Not set';
+
+    // Populate Earnings Screen
+    document.getElementById('vendorWalletBalance').innerText = `₹${(vendor.walletBalance || 0).toFixed(2)}`;
+    document.getElementById('vendorUpiDisplay').innerText = vendor.upiId || 'partner@upi';
+    document.getElementById('vendorBankDisplay').innerText = vendor.bankAccountNumber || 'HDFC Bank ••••4321';
+
+    // Populate Stations Dropdown & Stations in Profile
+    const stSelect = document.getElementById('vendorStationSelect');
+    const pStList = document.getElementById('profVendorStationsList');
+
+    if (vendor.stations && vendor.stations.length > 0) {
+      stSelect.innerHTML = vendor.stations.map(s => `
+        <option value="${s.id}">${s.name} (${s.city})</option>
+      `).join('');
+
+      pStList.innerHTML = vendor.stations.map(s => `
+        <div class="card">
+          <div style="font-weight:700; font-size:14px;">${s.name}</div>
+          <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${s.address}</div>
+          <div style="display:flex; justify-content:space-between; margin-top:8px;">
+            <span class="badge-stock">⚡ ${s.availableChargedBatteries} Ready</span>
+            <span style="font-size:11px; color:var(--text-muted);">${s.status === 0 ? '🟢 Open' : '🟡 Maintenance'}</span>
+          </div>
+        </div>
+      `).join('');
+
+      onVendorStationSelectChanged();
+    } else {
+      stSelect.innerHTML = `<option value="">No stations registered</option>`;
+      pStList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No stations registered under this vendor.</div>`;
+    }
+
+    loadVendorTickets(vendor.id);
+    loadVendorCommissions(vendor.id);
+  }
+
+  async function onVendorStationSelectChanged() {
+    const stSelect = document.getElementById('vendorStationSelect');
+    const stationId = stSelect.value;
+    if (!stationId) return;
 
     try {
-      const res = await fetch('/api/v1/auth/phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phone, fullName: name || null, languageCode: 'hi' })
-      });
+      const res = await fetch(`/api/v1/stations/${stationId}`);
       if (res.ok) {
-        const authRes = await res.json();
-        await selectDriver(authRes.driverId);
-        await loadDbDrivers();
-      } else {
-        alert('Authentication failed: ' + (await res.text()));
+        const station = await res.json();
+        document.getElementById('vendorStationTitle').innerText = station.name;
+        document.getElementById('vendorStationAddress').innerText = station.address;
+        document.getElementById('vendorReadyCount').innerText = station.availableChargedBatteries;
+        document.getElementById('vendorChargingCount').innerText = station.chargingBatteries;
+
+        const badge = document.getElementById('vendorStationStatusBadge');
+        if (station.status === 0) {
+          badge.className = 'badge-stock';
+          badge.innerText = 'Open 06:00 - 23:00';
+        } else if (station.status === 2) {
+          badge.className = 'badge-stock badge-amber';
+          badge.innerText = 'Maintenance Mode';
+        } else {
+          badge.className = 'badge-stock badge-danger';
+          badge.innerText = 'Closed';
+        }
+      }
+
+      // Load charged batteries list for vendor
+      const bRes = await fetch(`/api/v1/stations/${stationId}/batteries`);
+      if (bRes.ok) {
+        const batteries = await bRes.json();
+        const bList = document.getElementById('vendorStationBatteriesList');
+        if (batteries && batteries.length > 0) {
+          bList.innerHTML = batteries.map(b => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:700; font-size:13px;">${b.serialNumber}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${b.modelType} • ${b.cellTemperatureCelsius}°C</div>
+              </div>
+              <div class="badge-stock">⚡ ${b.stateOfChargePercent}% Full</div>
+            </div>
+          `).join('');
+        } else {
+          bList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No charged batteries currently available.</div>`;
+        }
+      }
+    } catch (_) {}
+  }
+
+  async function setStationStatus(statusInt) {
+    const stationId = document.getElementById('vendorStationSelect').value;
+    if (!stationId) return;
+
+    try {
+      const res = await fetch(`/api/v1/stations/${stationId}/availability?availableCharged=8&charging=6&waitMinutes=2`, { method: 'POST' });
+      if (res.ok) {
+        alert('Station status updated successfully!');
+        onVendorStationSelectChanged();
       }
     } catch (e) {
-      alert('Error connecting to backend: ' + e);
+      alert('Error updating status: ' + e);
     }
   }
 
-  function showAuthScreen() {
-    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-    document.getElementById('screen-auth').classList.add('active');
+  function requestVendorPayout() {
+    alert('Instant withdrawal request submitted! Commission will be deposited to your configured UPI ID within 15 minutes.');
   }
 
-  // Stations Discovery
+  // 7. Load Data Helpers
+  async function loadDbDriversList() {
+    const listEl = document.getElementById('dbDriversList');
+    try {
+      const res = await fetch('/api/v1/auth/drivers');
+      if (res.ok) {
+        const drivers = await res.json();
+        if (drivers && drivers.length > 0) {
+          listEl.innerHTML = drivers.map(d => `
+            <button class="btn-outline" style="text-align:left; padding:8px 12px; height:auto; display:flex; justify-content:space-between; align-items:center;" onclick="enterAsDriver('${d.id}')">
+              <div>
+                <div style="font-weight:700;">${d.fullName}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${d.phoneNumber}</div>
+              </div>
+              <div style="font-weight:700; color:var(--neon-green);">₹${(d.walletBalance || 0).toFixed(2)}</div>
+            </button>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    listEl.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No drivers found.</div>`;
+  }
+
+  async function loadDbVendorsList() {
+    const listEl = document.getElementById('dbVendorsList');
+    try {
+      const res = await fetch('/api/v1/auth/vendors');
+      if (res.ok) {
+        const vendors = await res.json();
+        if (vendors && vendors.length > 0) {
+          listEl.innerHTML = vendors.map(v => `
+            <button class="btn-outline" style="text-align:left; padding:8px 12px; height:auto; display:flex; justify-content:space-between; align-items:center;" onclick="enterAsVendor('${v.id}')">
+              <div>
+                <div style="font-weight:700;">${v.businessName}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${v.fullName} (${v.phoneNumber})</div>
+              </div>
+              <div style="font-weight:700; color:var(--bright-cyan);">₹${(v.walletBalance || 0).toFixed(2)}</div>
+            </button>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    listEl.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No vendors found.</div>`;
+  }
+
   async function loadStations() {
-    const listEl = document.getElementById('stations-list');
+    const listEl = document.getElementById('driverStationsList');
     try {
       const res = await fetch('/api/v1/stations/nearby', {
         method: 'POST',
@@ -823,7 +1098,7 @@
       });
       if (res.ok) {
         loadedStations = await res.json();
-        document.getElementById('stationsSummary').innerText = `● ${loadedStations.length} Hubs Connected across NCR`;
+        document.getElementById('driverStationsSummary').innerText = `● ${loadedStations.length} Hubs Connected across NCR`;
 
         listEl.innerHTML = loadedStations.map(s => `
           <div class="card">
@@ -849,7 +1124,6 @@
         `).join('');
 
         populateSwapDropdown();
-        populatePartnerStationDropdown();
       }
     } catch (_) {}
   }
@@ -868,7 +1142,7 @@
     const issuedSelect = document.getElementById('swapIssuedBatterySelect');
     if (!stationId) return;
 
-    issuedSelect.innerHTML = `<option>Loading batteries from station bays...</option>`;
+    issuedSelect.innerHTML = `<option>Loading batteries...</option>`;
     try {
       const res = await fetch(`/api/v1/stations/${stationId}/batteries`);
       if (res.ok) {
@@ -881,7 +1155,7 @@
         }
       }
     } catch (_) {}
-    issuedSelect.innerHTML = `<option value="">No charged batteries available at this station</option>`;
+    issuedSelect.innerHTML = `<option value="">No charged batteries available</option>`;
   }
 
   function selectStationForSwap(stationId) {
@@ -890,14 +1164,14 @@
     onStationChanged();
   }
 
-  // Pre-Reservation (DR-06)
+  // Pre-Reservation
   async function holdReservation(stationId) {
-    if (!activeDriver) { alert('Please sign in first'); return; }
+    if (!activeUser) { alert('Please sign in first'); return; }
     try {
       const res = await fetch('/api/v1/reservations/hold', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ driverId: activeDriver.id, stationId: stationId })
+        body: JSON.stringify({ driverId: activeUser.id, stationId: stationId })
       });
       if (res.ok) {
         const data = await res.json();
@@ -906,13 +1180,13 @@
         alert('Could not place reservation');
       }
     } catch (e) {
-      alert('Error holding battery: ' + e);
+      alert('Error: ' + e);
     }
   }
 
-  // 2-Minute Swap Execution
+  // Swap Handshake & Confirm
   async function startSwapHandshake() {
-    if (!activeDriver) { alert('Please sign in first'); return; }
+    if (!activeUser) { alert('Please sign in first'); return; }
 
     const stationSelect = document.getElementById('swapStationSelect');
     const selectedOpt = stationSelect.options[stationSelect.selectedIndex];
@@ -921,18 +1195,11 @@
     const depletedSerial = document.getElementById('swapDepletedSerialInput').value.trim();
     const issuedSerial = document.getElementById('swapIssuedBatterySelect').value;
 
-    if (!depletedSerial) {
-      alert('Please enter or scan your depleted battery serial number');
-      return;
-    }
-    if (!issuedSerial) {
-      alert('No ready charged battery selected at this station');
-      return;
-    }
+    if (!depletedSerial) { alert('Please enter returned battery serial'); return; }
+    if (!issuedSerial) { alert('No ready battery selected'); return; }
 
     document.getElementById('timerReturnedSerial').innerText = depletedSerial;
     document.getElementById('timerIssuedSerial').innerText = `${issuedSerial} (100% Full)`;
-
     document.getElementById('swap-step-init').style.display = 'none';
     document.getElementById('swap-step-timer').style.display = 'block';
 
@@ -948,7 +1215,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          driverId: activeDriver.id,
+          driverId: activeUser.id,
           stationId: stationId,
           partnerId: partnerId,
           depletedBatterySerial: depletedSerial,
@@ -960,7 +1227,7 @@
         activeSwapId = data.swapId;
       }
     } catch (e) {
-      console.error('Swap initiation error', e);
+      console.error(e);
     }
   }
 
@@ -983,7 +1250,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ swapId: activeSwapId, paymentMethod: 1 })
         });
-        await selectDriver(activeDriver.id);
+        await enterAsDriver(activeUser.id);
         await loadStations();
       } catch (_) {}
     }
@@ -995,15 +1262,15 @@
     switchDriverTab('stations');
   }
 
-  // Wallet Top-Up
-  async function topUpWallet(amt) {
-    if (!activeDriver) { alert('Please sign in first'); return; }
+  // Driver Top-Up & Subscriptions
+  async function topUpDriverWallet(amt) {
+    if (!activeUser) return;
     try {
       const res = await fetch('/api/v1/wallet/topup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          accountId: activeDriver.id,
+          accountId: activeUser.id,
           accountType: 0,
           amount: amt,
           paymentReference: 'UPI-' + Date.now()
@@ -1011,16 +1278,15 @@
       });
       if (res.ok) {
         const data = await res.json();
-        document.getElementById('walletBalance').innerText = `₹${data.balance.toFixed(2)}`;
-        alert(`₹${amt} added successfully to your database wallet!`);
-        await selectDriver(activeDriver.id);
+        document.getElementById('driverWalletBalance').innerText = `₹${data.balance.toFixed(2)}`;
+        alert(`₹${amt} added to your wallet!`);
+        await enterAsDriver(activeUser.id);
       }
     } catch (e) {
       alert('Error updating wallet: ' + e);
     }
   }
 
-  // Subscription Plans
   async function loadSubscriptionPlans() {
     const el = document.getElementById('subscriptionPlansList');
     try {
@@ -1042,8 +1308,8 @@
   }
 
   async function subscribePlan(planId, name, price) {
-    if (!activeDriver) { alert('Please sign in first'); return; }
-    if (activeDriver.walletBalance < price) {
+    if (!activeUser) return;
+    if (activeUser.walletBalance < price) {
       alert(`Insufficient balance. Please top up ₹${price} first.`);
       return;
     }
@@ -1051,23 +1317,23 @@
       const res = await fetch('/api/v1/subscriptions/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ driverId: activeDriver.id, planId: planId })
+        body: JSON.stringify({ driverId: activeUser.id, planId: planId })
       });
       if (res.ok) {
         alert(`Successfully subscribed to ${name}!`);
-        await selectDriver(activeDriver.id);
+        await enterAsDriver(activeUser.id);
       } else {
         const err = await res.json();
         alert('Subscription failed: ' + (err.error || 'Unknown error'));
       }
     } catch (e) {
-      alert('Error subscribing: ' + e);
+      alert('Error: ' + e);
     }
   }
 
-  // Swap History
+  // Swap History & Tickets
   async function loadDriverSwapHistory(driverId) {
-    const el = document.getElementById('wallet-history');
+    const el = document.getElementById('driverSwapHistory');
     try {
       const res = await fetch(`/api/v1/swaps/history/${driverId}`);
       if (res.ok) {
@@ -1089,11 +1355,10 @@
     el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No previous swap transactions.</div>`;
   }
 
-  // Support & Grievance Tickets (DR-12)
-  async function submitTicket() {
-    if (!activeDriver) { alert('Please sign in first'); return; }
-    const subject = document.getElementById('ticketSubject').value.trim();
-    const desc = document.getElementById('ticketDesc').value.trim();
+  async function submitDriverTicket() {
+    if (!activeUser) return;
+    const subject = document.getElementById('driverTicketSubject').value.trim();
+    const desc = document.getElementById('driverTicketDesc').value.trim();
     if (!subject || !desc) { alert('Please enter ticket subject and description'); return; }
 
     try {
@@ -1102,17 +1367,17 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userType: 0,
-          userId: activeDriver.id,
-          category: 'Driver Issue',
+          userId: activeUser.id,
+          category: 'Driver Grievance',
           subject: subject,
           description: desc
         })
       });
       if (res.ok) {
-        alert('Ticket submitted successfully! Our support team is on it.');
-        document.getElementById('ticketSubject').value = '';
-        document.getElementById('ticketDesc').value = '';
-        loadDriverTickets(activeDriver.id);
+        alert('Support ticket submitted successfully!');
+        document.getElementById('driverTicketSubject').value = '';
+        document.getElementById('driverTicketDesc').value = '';
+        loadDriverTickets(activeUser.id);
       }
     } catch (e) {
       alert('Error submitting ticket: ' + e);
@@ -1120,7 +1385,7 @@
   }
 
   async function loadDriverTickets(driverId) {
-    const el = document.getElementById('recentTicketsList');
+    const el = document.getElementById('driverTicketsList');
     try {
       const res = await fetch(`/api/v1/support/tickets/${driverId}`);
       if (res.ok) {
@@ -1139,110 +1404,12 @@
     el.innerHTML = '';
   }
 
-  // ======================== PARTNER STATION APP LOGIC ========================
-  function populatePartnerStationDropdown() {
-    const select = document.getElementById('partnerStationSelect');
-    select.innerHTML = loadedStations.map(s => `
-      <option value="${s.id}">${s.name} (${s.city})</option>
-    `).join('');
-  }
-
-  async function onPartnerStationChanged() {
-    loadPartnerStationView();
-  }
-
-  async function loadPartnerStationView() {
-    const select = document.getElementById('partnerStationSelect');
-    const stationId = select.value || (loadedStations.length > 0 ? loadedStations[0].id : null);
-    if (!stationId) return;
-
-    const station = loadedStations.find(s => s.id === stationId);
-    if (station) {
-      document.getElementById('partnerStationTitle').innerText = station.name;
-      document.getElementById('partnerStationAddress').innerText = station.address;
-    }
-
-    // Load station batteries to render bay grid
-    try {
-      const res = await fetch(`/api/v1/stations/${stationId}/batteries`);
-      if (res.ok) {
-        const batteries = await res.json();
-        renderBayGrid(batteries);
-      }
-    } catch (_) {}
-
-    // Partner wallet balance
-    if (station) {
-      try {
-        const res = await fetch(`/api/v1/wallet/balance/${station.partnerId}?accountType=1`);
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById('partnerWalletBalance').innerText = `₹${data.balance.toFixed(2)}`;
-        }
-      } catch (_) {}
-    }
-  }
-
-  function renderBayGrid(batteries) {
-    const grid = document.getElementById('partnerBayGrid');
-    const totalBays = 16;
-    let readyCount = 0;
-    let html = '';
-
-    for (let i = 1; i <= totalBays; i++) {
-      const b = batteries[i - 1];
-      if (b) {
-        readyCount++;
-        html += `
-          <div class="bay-cell ready">
-            <div class="bay-num">Bay ${i}</div>
-            <div class="bay-soc" style="color:var(--neon-green);">⚡ ${b.stateOfChargePercent}%</div>
-            <div style="font-size:9px; color:var(--text-muted);">${b.serialNumber.replace('BAT-48V-', '#')}</div>
-          </div>
-        `;
-      } else if (i <= totalBays - 4) {
-        const chargingSoc = 25 + (i * 4);
-        html += `
-          <div class="bay-cell charging">
-            <div class="bay-num">Bay ${i}</div>
-            <div class="bay-soc" style="color:var(--warning-amber);">🔋 ${chargingSoc}%</div>
-            <div style="font-size:9px; color:var(--text-muted);">Charging</div>
-          </div>
-        `;
-      } else {
-        html += `
-          <div class="bay-cell">
-            <div class="bay-num">Bay ${i}</div>
-            <div class="bay-soc" style="color:var(--text-muted);">Empty</div>
-            <div style="font-size:9px; color:var(--text-muted);">Ready in</div>
-          </div>
-        `;
-      }
-    }
-    grid.innerHTML = html;
-    document.getElementById('bayGridSummary').innerText = `${readyCount} Ready Batteries`;
-  }
-
-  async function toggleStationStatus(statusInt) {
-    const select = document.getElementById('partnerStationSelect');
-    const stationId = select.value;
-    if (!stationId) return;
-
-    try {
-      const res = await fetch(`/api/v1/stations/${stationId}/availability?availableCharged=8&charging=6&waitMinutes=2`, { method: 'POST' });
-      if (res.ok) {
-        alert('Station status updated successfully!');
-      }
-    } catch (e) {
-      alert('Error updating status: ' + e);
-    }
-  }
-
-  async function submitPartnerTicket() {
-    const subject = document.getElementById('partnerTicketSubject').value.trim();
-    if (!subject) { alert('Please enter issue description'); return; }
-    const select = document.getElementById('partnerStationSelect');
-    const station = loadedStations.find(s => s.id === select.value);
+  // Vendor Support & History
+  async function submitVendorTicket() {
+    if (!activeUser) return;
+    const subject = document.getElementById('vendorTicketSubject').value.trim();
+    const desc = document.getElementById('vendorTicketDesc').value.trim();
+    if (!subject) { alert('Please enter issue subject'); return; }
 
     try {
       const res = await fetch('/api/v1/support/ticket', {
@@ -1250,44 +1417,78 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userType: 1,
-          userId: station ? station.partnerId : '11111111-1111-1111-1111-111111111111',
-          category: 'Hardware Charger',
+          userId: activeUser.id,
+          category: 'Hardware Defect',
           subject: subject,
-          description: `Reported by station ${station ? station.name : ''}`
+          description: desc || 'Reported by vendor'
         })
       });
       if (res.ok) {
-        alert('Hardware maintenance ticket created successfully!');
-        document.getElementById('partnerTicketSubject').value = '';
+        alert('Hardware defect ticket logged successfully!');
+        document.getElementById('vendorTicketSubject').value = '';
+        document.getElementById('vendorTicketDesc').value = '';
+        loadVendorTickets(activeUser.id);
       }
     } catch (e) {
-      alert('Error reporting hardware issue: ' + e);
+      alert('Error submitting ticket: ' + e);
     }
   }
 
-  function toggleLanguage() {
-    const lang = document.getElementById('langSelector').value;
-    if (lang === 'hi') {
-      document.getElementById('txt-radar-title').innerText = 'नज़दीकी स्वैप स्टेशन';
-      document.getElementById('tab-stations').innerText = 'स्टेशन';
-      document.getElementById('tab-swap').innerText = 'स्वैप';
-      document.getElementById('tab-wallet').innerText = 'वॉलेट';
-      document.getElementById('tab-profile').innerText = 'प्रोफ़ाइल';
-      document.getElementById('btnModeDriver').innerText = 'ड्राइवर ऐप';
-      document.getElementById('btnModePartner').innerText = 'पार्टनर स्टेशन ऐप';
-    } else {
-      document.getElementById('txt-radar-title').innerText = 'Nearby Swapping Stations';
-      document.getElementById('tab-stations').innerText = 'Stations';
-      document.getElementById('tab-swap').innerText = 'Swap';
-      document.getElementById('tab-wallet').innerText = 'Wallet';
-      document.getElementById('tab-profile').innerText = 'Profile';
-      document.getElementById('btnModeDriver').innerText = 'Driver App';
-      document.getElementById('btnModePartner').innerText = 'Partner Station App';
-    }
+  async function loadVendorTickets(vendorId) {
+    const el = document.getElementById('vendorTicketsList');
+    try {
+      const res = await fetch(`/api/v1/support/tickets/${vendorId}`);
+      if (res.ok) {
+        const tickets = await res.json();
+        if (tickets.length > 0) {
+          el.innerHTML = tickets.slice(0, 5).map(t => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:700; font-size:13px;">${t.subject}</div>
+                <div style="color:var(--text-muted); font-size:11px;">#${t.id.slice(0, 8)} • ${new Date(t.createdAt).toLocaleDateString()}</div>
+              </div>
+              <span class="badge-stock badge-amber">Open</span>
+            </div>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No active tickets reported.</div>`;
   }
 
-  // Run
-  initApp();
+  async function loadVendorCommissions(vendorId) {
+    const el = document.getElementById('vendorCommissionHistory');
+    try {
+      const res = await fetch(`/api/v1/wallet/balance/${vendorId}?accountType=1`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.recentTransactions && data.recentTransactions.length > 0) {
+          el.innerHTML = data.recentTransactions.slice(0, 5).map(tx => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:600; font-size:13px;">${tx.reason}</div>
+                <div style="color:var(--text-muted); font-size:11px;">${new Date(tx.timestamp).toLocaleDateString()}</div>
+              </div>
+              <div style="font-weight:700; color:var(--bright-cyan);">+₹${tx.amount.toFixed(2)}</div>
+            </div>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">Recent commission transactions will appear here.</div>`;
+  }
+
+  // Initialize
+  async function init() {
+    await loadStations();
+    await loadSubscriptionPlans();
+    await loadDbDriversList();
+    await loadDbVendorsList();
+  }
+
+  init();
 </script>
 </body>
 </html>

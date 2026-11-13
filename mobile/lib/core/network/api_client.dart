@@ -27,6 +27,25 @@ class ApiClient {
     }
   }
 
+  // 1b. Vendor Authentication
+  Future<VendorProfile> authenticateVendor(String phone, {String? name, String? businessName}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/vendor/phone'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'fullName': name?.trim(),
+        'businessName': businessName?.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+
+    if (response.statusCode == 200) {
+      return VendorProfile.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Vendor authentication failed: ${response.body}');
+    }
+  }
+
   // 2. Fetch Driver Details (Vehicles, active battery, balance directly from PostgreSQL)
   Future<DriverDetailModel> getDriverDetails(String driverId) async {
     final response = await http.get(

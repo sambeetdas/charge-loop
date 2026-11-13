@@ -6,6 +6,10 @@ namespace ChargeLoop.Application.DTOs;
 public record AuthRequest(string PhoneNumber, string? FullName, string? LanguageCode);
 public record AuthResponse(Guid DriverId, string PhoneNumber, string FullName, string Token, KycStatus KycStatus, decimal WalletBalance);
 
+public record VendorAuthRequest(string PhoneNumber, string? FullName, string? BusinessName);
+public record VendorAuthResponse(Guid VendorId, string PhoneNumber, string FullName, string BusinessName, string Token, decimal WalletBalance);
+public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, string BusinessName, string? UpiId, string? BankAccountNumber, decimal WalletBalance, List<StationDto> Stations);
+
 public record KycSubmissionRequest(Guid DriverId, string DrivingLicenseNumber, string AadhaarNumber);
 public record VehicleLinkRequest(Guid DriverId, string RegistrationNumber, string Oem, string Model, string BatteryType);
 
