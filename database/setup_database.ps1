@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Automated PostgreSQL Setup Script for ChargeLoop EV Battery Swapping Network.
 
