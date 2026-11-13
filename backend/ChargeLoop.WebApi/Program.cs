@@ -41,12 +41,14 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline
 app.UseCors("AllowAll");
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChargeLoop API v1");
-    c.RoutePrefix = string.Empty; // Serve Swagger UI at application root
+    c.RoutePrefix = "swagger";
 });
 
 app.UseRouting();
