@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ChargeLoop.Application/ChargeLoop.Application.csproj" />
+  <Project Path="ChargeLoop.Domain/ChargeLoop.Domain.csproj" />
+  <Project Path="ChargeLoop.Infrastructure/ChargeLoop.Infrastructure.csproj" />
+  <Project Path="ChargeLoop.WebApi/ChargeLoop.WebApi.csproj" />
+</Solution>
