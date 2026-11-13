@@ -1,5 +1,6 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using ChargeLoop.Domain.Enums;
 using ChargeLoop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,7 @@ public class StationService : IStationService
             {
                 result.Add(new StationDto(
                     station.Id,
+                    station.PartnerId,
                     station.Name,
                     station.Address,
                     station.City,
@@ -53,6 +55,7 @@ public class StationService : IStationService
 
         return new StationDto(
             station.Id,
+            station.PartnerId,
             station.Name,
             station.Address,
             station.City,
@@ -64,6 +67,23 @@ public class StationService : IStationService
             station.Status,
             null
         );
+    }
+
+    public async Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId)
+    {
+        return await _context.Batteries
+            .AsNoTracking()
+            .Where(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.AvailableCharged)
+            .Select(b => new BatteryDto(
+                b.Id,
+                b.SerialNumber,
+                b.ModelType,
+                b.StateOfChargePercent,
+                b.StateOfHealthPercent,
+                b.CellTemperatureCelsius,
+                b.Status
+            ))
+            .ToListAsync();
     }
 
     public async Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes)
@@ -80,6 +100,7 @@ public class StationService : IStationService
 
         var dto = new StationDto(
             station.Id,
+            station.PartnerId,
             station.Name,
             station.Address,
             station.City,

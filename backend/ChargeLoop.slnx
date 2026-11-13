@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="../tests/ChargeLoop.UnitTests/ChargeLoop.UnitTests.csproj" />
   <Project Path="ChargeLoop.Application/ChargeLoop.Application.csproj" />
   <Project Path="ChargeLoop.Domain/ChargeLoop.Domain.csproj" />
   <Project Path="ChargeLoop.Infrastructure/ChargeLoop.Infrastructure.csproj" />

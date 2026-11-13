@@ -7,8 +7,9 @@ import '../widgets/battery_gauge.dart';
 
 class SwapScreen extends StatefulWidget {
   final DriverProfile profile;
+  final Station? initialStation;
 
-  const SwapScreen({Key? key, required this.profile}) : super(key: key);
+  const SwapScreen({Key? key, required this.profile, this.initialStation}) : super(key: key);
 
   @override
   State<SwapScreen> createState() => _SwapScreenState();
@@ -16,38 +17,119 @@ class SwapScreen extends StatefulWidget {
 
 class _SwapScreenState extends State<SwapScreen> {
   final ApiClient _apiClient = ApiClient();
-  int _swapStep = 0; // 0: Ready to scan, 1: Validating, 2: Exchanging, 3: Completed
+  int _swapStep = 0; // 0: Ready, 1: Validating, 2: Exchanging, 3: Completed
   bool _isLoading = false;
   SwapRecord? _currentSwap;
+
+  List<Station> _stations = [];
+  Station? _selectedStation;
+  List<BatteryModel> _readyBatteries = [];
+  BatteryModel? _selectedIssuedBattery;
+  final TextEditingController _depletedSerialController = TextEditingController();
+  int _depletedSoc = 18;
 
   Timer? _timer;
   int _secondsElapsed = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    try {
+      final list = await _apiClient.getNearbyStations();
+      final driverDetails = await _apiClient.getDriverDetails(widget.profile.id);
+      if (mounted) {
+        setState(() {
+          _stations = list;
+          _selectedStation = widget.initialStation ?? (list.isNotEmpty ? list.first : null);
+          if (driverDetails.activeBattery != null) {
+            _depletedSerialController.text = driverDetails.activeBattery!.serialNumber;
+            _depletedSoc = driverDetails.activeBattery!.stateOfChargePercent;
+          }
+        });
+        if (_selectedStation != null) {
+          _loadStationBatteries(_selectedStation!.id);
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _loadStationBatteries(String stationId) async {
+    try {
+      final batteries = await _apiClient.getStationBatteries(stationId);
+      if (mounted) {
+        setState(() {
+          _readyBatteries = batteries;
+          _selectedIssuedBattery = batteries.isNotEmpty ? batteries.first : null;
+        });
+      }
+    } catch (_) {}
+  }
+
   void _startSwap() async {
+    if (_selectedStation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a station')));
+      return;
+    }
+
+    if (_selectedIssuedBattery == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No charged batteries ready at this station')));
+      return;
+    }
+
+    final depletedSerial = _depletedSerialController.text.trim();
+    if (depletedSerial.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter or scan your depleted battery serial')));
+      return;
+    }
+
+    final issuedSerial = _selectedIssuedBattery!.serialNumber;
+
     setState(() {
       _isLoading = true;
       _swapStep = 1;
     });
 
-    // Simulate rapid QR scan of station and batteries
-    final swap = await _apiClient.initiateSwap(
-      driverId: widget.profile.id,
-      stationId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
-      partnerId: '11111111-1111-1111-1111-111111111111',
-      depletedBatterySerial: 'BAT-48V-9999',
-      issuedBatterySerial: 'BAT-48V-1001',
-    );
+    try {
+      final swapRes = await _apiClient.initiateSwap(
+        driverId: widget.profile.id,
+        stationId: _selectedStation!.id,
+        partnerId: _selectedStation!.partnerId,
+        depletedBatterySerial: depletedSerial,
+        issuedBatterySerial: issuedSerial,
+      );
 
-    setState(() {
-      _currentSwap = swap;
-      _isLoading = false;
-      _swapStep = 2; // In physical exchange
-      _secondsElapsed = 0;
-    });
+      setState(() {
+        _currentSwap = SwapRecord(
+          swapId: swapRes.swapId,
+          status: swapRes.status,
+          depletedSerial: swapRes.depletedSerial,
+          depletedSoc: swapRes.depletedSoc,
+          issuedSerial: swapRes.issuedSerial,
+          issuedSoc: swapRes.issuedSoc,
+          totalAmount: swapRes.totalAmount,
+          message: swapRes.message,
+        );
+        _isLoading = false;
+        _swapStep = 2; // Physical exchange
+        _secondsElapsed = 0;
+      });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() => _secondsElapsed++);
-    });
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() => _secondsElapsed++);
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _swapStep = 0;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: AppColors.dangerRed, content: Text('Error: $e')));
+      }
+    }
   }
 
   void _completeSwap() async {
@@ -55,16 +137,23 @@ class _SwapScreenState extends State<SwapScreen> {
     setState(() => _isLoading = true);
 
     if (_currentSwap != null) {
-      final confirmed = await _apiClient.confirmSwap(
-        swapId: _currentSwap!.swapId,
-        paymentMethod: 1, // Wallet
-      );
+      try {
+        final confirmed = await _apiClient.confirmSwap(
+          swapId: _currentSwap!.swapId,
+          paymentMethod: 1, // Wallet
+        );
 
-      setState(() {
-        _currentSwap = confirmed;
-        _isLoading = false;
-        _swapStep = 3; // Done
-      });
+        setState(() {
+          _currentSwap = confirmed;
+          _isLoading = false;
+          _swapStep = 3; // Done
+        });
+      } catch (e) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: AppColors.dangerRed, content: Text('Error: $e')));
+        }
+      }
     }
   }
 
@@ -80,6 +169,7 @@ class _SwapScreenState extends State<SwapScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _depletedSerialController.dispose();
     super.dispose();
   }
 
@@ -106,66 +196,109 @@ class _SwapScreenState extends State<SwapScreen> {
   // Step 0: Ready
   Widget _buildInitialStep() {
     return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: ListView(
         children: [
-          const BatteryGauge(percentage: 16, size: 140),
-          const SizedBox(height: 24),
-          const Text(
-            'Low Battery Warning (16%)',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.dangerRed,
+          Center(child: BatteryGauge(percentage: _depletedSoc, size: 130)),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              'Battery Level: $_depletedSoc%',
+              style: TextStyle(
+                fontSize: 18, 
+                fontWeight: FontWeight.bold, 
+                color: _depletedSoc < 20 ? AppColors.dangerRed : (_depletedSoc < 50 ? AppColors.warningAmber : AppColors.neonGreen)
+              ),
             ),
           ),
+          const SizedBox(height: 24),
+          const Text('Select Station from Database', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
           const SizedBox(height: 8),
-          const Text(
-            'Estimated Range: ~12 km remaining',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          const Spacer(),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.qr_code_scanner, color: AppColors.neonGreen, size: 36),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Janakpuri Swap Hub',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-                      ),
-                      Text('Operator: Ramesh Kumar (Kirana)', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.neonGreen.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('8 Ready', style: TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold)),
-                ),
-              ],
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<Station>(
+                isExpanded: true,
+                dropdownColor: AppColors.surface,
+                value: _selectedStation,
+                items: _stations.map((s) {
+                  return DropdownMenuItem(
+                    value: s,
+                    child: Text('${s.name} (${s.availableCharged} Ready)', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedStation = val);
+                    _loadStationBatteries(val.id);
+                  }
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _startSwap,
-            icon: const Icon(Icons.qr_code),
-            label: const Text('Scan & Initiate 2-Min Swap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          const Text('Returned Battery Barcode / Serial', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: TextField(
+              controller: _depletedSerialController,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.qr_code_scanner, color: AppColors.warningAmber),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                hintText: 'Enter or scan battery serial',
+                hintStyle: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
+          const Text('Ready Charged Battery at Station', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: _readyBatteries.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Text('No charged batteries currently available', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                  )
+                : DropdownButtonHideUnderline(
+                    child: DropdownButton<BatteryModel>(
+                      isExpanded: true,
+                      dropdownColor: AppColors.surface,
+                      value: _selectedIssuedBattery,
+                      items: _readyBatteries.map((b) {
+                        return DropdownMenuItem(
+                          value: b,
+                          child: Text('${b.serialNumber} (${b.stateOfChargePercent}% Full, ${b.modelType})', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedIssuedBattery = val);
+                      },
+                    ),
+                  ),
+          ),
+          const SizedBox(height: 28),
+          ElevatedButton.icon(
+            onPressed: _startSwap,
+            icon: const Icon(Icons.flash_on),
+            label: const Text('Initiate 2-Min Swap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -180,15 +313,7 @@ class _SwapScreenState extends State<SwapScreen> {
           children: [
             CircularProgressIndicator(color: AppColors.neonGreen, strokeWidth: 3),
             SizedBox(height: 20),
-            Text(
-              'Handshake in progress (< 1.5s)...',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Verifying battery SOH, health & subscription rules',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
+            Text('Validating with PostgreSQL DB (< 1.5s)...', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
           ],
         ),
       ),
@@ -212,20 +337,9 @@ class _SwapScreenState extends State<SwapScreen> {
             ),
             child: Column(
               children: [
-                const Text(
-                  'SWAP TIMER (TARGET: < 2:00)',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13, letterSpacing: 1.0),
-                ),
+                const Text('SWAP STOPWATCH (TARGET: < 2:00)', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, letterSpacing: 1.0)),
                 const SizedBox(height: 10),
-                Text(
-                  '$minutes:$seconds',
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.brightCyan,
-                    fontFamily: 'monospace',
-                  ),
-                ),
+                Text('$minutes:$seconds', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.brightCyan, fontFamily: 'monospace')),
               ],
             ),
           ),
@@ -235,9 +349,9 @@ class _SwapScreenState extends State<SwapScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  _buildBatteryRow('Returned Battery', _currentSwap?.depletedSerial ?? 'BAT-OLD', '${_currentSwap?.depletedSoc ?? 16}%', AppColors.warningAmber),
+                  _buildBatteryRow('Returned Battery', _currentSwap?.depletedSerial ?? '', '${_currentSwap?.depletedSoc ?? 16}%', AppColors.warningAmber),
                   const Divider(color: AppColors.border, height: 24),
-                  _buildBatteryRow('New Charged Battery', _currentSwap?.issuedSerial ?? 'BAT-NEW', '100% Full', AppColors.neonGreen),
+                  _buildBatteryRow('Issued Battery', _currentSwap?.issuedSerial ?? '', '100% Full', AppColors.neonGreen),
                 ],
               ),
             ),
@@ -261,15 +375,9 @@ class _SwapScreenState extends State<SwapScreen> {
         children: [
           const Icon(Icons.check_circle, color: AppColors.neonGreen, size: 72),
           const SizedBox(height: 16),
-          const Text(
-            'Swap Completed Successfully!',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
+          const Text('Swap Completed in PostgreSQL!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 6),
-          Text(
-            'Duration: ${_secondsElapsed > 0 ? "$_secondsElapsed seconds" : "1 min 42 sec"}',
-            style: const TextStyle(color: AppColors.neonGreen, fontSize: 15, fontWeight: FontWeight.w600),
-          ),
+          Text('Duration: ${_secondsElapsed > 0 ? "$_secondsElapsed seconds" : "Completed"}', style: const TextStyle(color: AppColors.neonGreen, fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 24),
           Card(
             child: Padding(
@@ -281,7 +389,7 @@ class _SwapScreenState extends State<SwapScreen> {
                   const Divider(color: AppColors.border),
                   _buildReceiptRow('Total Charged', '₹118.00', isBold: true),
                   _buildReceiptRow('Payment Method', 'Driver Wallet'),
-                  _buildReceiptRow('Partner Instant Share', '₹25.00 Credited'),
+                  _buildReceiptRow('Partner Commission', '₹25.00 Credited'),
                 ],
               ),
             ),
@@ -310,10 +418,7 @@ class _SwapScreenState extends State<SwapScreen> {
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: socColor.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(6),
-          ),
+          decoration: BoxDecoration(color: socColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
           child: Text(soc, style: TextStyle(color: socColor, fontWeight: FontWeight.bold, fontSize: 13)),
         ),
       ],

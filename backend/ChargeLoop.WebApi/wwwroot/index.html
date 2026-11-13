@@ -2,238 +2,350 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChargeLoop Mobile App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ChargeLoop — EV Battery Swapping Network</title>
   <style>
     :root {
-      --bg: #0F141A;
-      --surface: #1A222C;
-      --surface-elevated: #242E3B;
+      --bg: #0A0E17;
+      --surface: #141B2D;
+      --surface-elevated: #1E293B;
+      --border: #334155;
       --neon-green: #00E676;
       --bright-cyan: #00E5FF;
-      --amber: #FFB300;
-      --danger: #FF3D00;
-      --text: #FFFFFF;
-      --text-muted: #90A4AE;
-      --border: #2C3949;
+      --warning-amber: #FFB300;
+      --danger-red: #FF3D00;
+      --text-primary: #FFFFFF;
+      --text-muted: #94A3B8;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-      background: #0a0d11;
-      color: var(--text);
+      background: #030712;
+      color: var(--text-primary);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 16px;
+      padding: 20px 10px;
     }
-    /* Mobile Device Frame */
+
     .phone-container {
       width: 100%;
-      max-width: 412px;
-      height: 840px;
+      max-width: 420px;
+      height: 890px;
       background: var(--bg);
       border-radius: 40px;
-      border: 8px solid #232a34;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 20px rgba(0, 230, 118, 0.15);
+      border: 8px solid #1E293B;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 230, 118, 0.15);
+      position: relative;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      position: relative;
     }
-    /* Status Bar */
+
     .status-bar {
       height: 38px;
-      padding: 0 24px;
+      padding: 10px 24px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
       color: var(--text-muted);
       z-index: 10;
     }
+
     .status-pill {
-      background: rgba(0, 230, 118, 0.15);
-      color: var(--neon-green);
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 12px;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
+      background: rgba(0, 230, 118, 0.15);
+      border: 1px solid rgba(0, 230, 118, 0.4);
+      padding: 2px 8px;
+      border-radius: 12px;
+      color: var(--neon-green);
+      font-weight: 700;
+      font-size: 11px;
     }
+
     .status-dot {
       width: 6px;
       height: 6px;
       background: var(--neon-green);
       border-radius: 50%;
-      animation: pulse 2s infinite;
+      box-shadow: 0 0 6px var(--neon-green);
     }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-    /* App Header */
     .app-header {
-      padding: 12px 20px;
+      padding: 12px 20px 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
+
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 19px;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 900;
       letter-spacing: 0.5px;
     }
+
     .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: rgba(0, 230, 118, 0.2);
+      width: 28px;
+      height: 28px;
+      background: rgba(0, 230, 118, 0.15);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--neon-green);
-      font-size: 18px;
     }
+
+    .app-mode-bar {
+      display: flex;
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 3px;
+      margin: 10px 20px 6px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 7px 0;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .mode-btn.active {
+      background: var(--neon-green);
+      color: #000;
+    }
+
     .lang-toggle {
       background: var(--surface);
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 4px 10px;
+      color: var(--text-primary);
+      padding: 4px 8px;
       border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
+      font-size: 11px;
+      outline: none;
     }
 
-    /* Screen Content Area */
     .screen-content {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 20px;
+      padding: 14px 20px 90px;
       display: none;
     }
-    .screen-content.active { display: block; }
 
-    /* Bottom Navigation */
-    .bottom-nav {
-      height: 68px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
+    .screen-content.active {
+      display: block;
     }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-    .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
-    .nav-item.active { color: var(--neon-green); }
 
-    /* Cards & Components */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
     }
-    .badge-stock {
-      background: rgba(0, 230, 118, 0.15);
-      border: 1px solid var(--neon-green);
-      color: var(--neon-green);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+
+    .card-highlight {
+      background: linear-gradient(135deg, rgba(0, 230, 118, 0.12), rgba(0, 229, 255, 0.08));
+      border: 1px solid rgba(0, 230, 118, 0.35);
     }
+
     .btn-primary {
       width: 100%;
-      height: 52px;
+      height: 48px;
       background: var(--neon-green);
       color: #000;
-      border: none;
-      border-radius: 14px;
-      font-size: 15px;
       font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: transform 0.1s;
+      transition: transform 0.1s ease;
     }
     .btn-primary:active { transform: scale(0.98); }
+
     .btn-outline {
       width: 100%;
-      height: 44px;
+      height: 42px;
       background: transparent;
-      color: var(--bright-cyan);
-      border: 1px solid var(--bright-cyan);
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 13px;
+      border-radius: 10px;
       cursor: pointer;
     }
 
-    /* Battery Gauge */
+    .btn-secondary {
+      background: var(--surface-elevated);
+      color: var(--bright-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+    .input-box:focus { border-color: var(--neon-green); }
+
+    .badge-stock {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--neon-green);
+    }
+
+    .badge-amber {
+      background: rgba(255, 179, 0, 0.15);
+      color: var(--warning-amber);
+    }
+
+    .badge-danger {
+      background: rgba(255, 61, 0, 0.15);
+      color: var(--danger-red);
+    }
+
+    /* Gauge */
     .gauge-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 20px 0;
+      padding: 14px 0;
     }
     .gauge-circle {
-      width: 130px;
-      height: 130px;
+      width: 124px;
+      height: 124px;
       border-radius: 50%;
       background: var(--surface);
-      border: 4px solid var(--amber);
+      border: 4px solid var(--neon-green);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px rgba(255, 179, 0, 0.25);
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.25);
+      transition: all 0.3s ease;
     }
-    .gauge-soc { font-size: 28px; font-weight: 800; }
-    .gauge-label { font-size: 10px; letter-spacing: 1px; color: var(--text-muted); }
+    .gauge-soc { font-size: 26px; font-weight: 800; }
+    .gauge-label { font-size: 9px; letter-spacing: 1px; color: var(--text-muted); }
 
     /* Timer Display */
     .timer-box {
       background: var(--surface);
       border: 1px solid rgba(0, 229, 255, 0.4);
       border-radius: 18px;
-      padding: 20px;
+      padding: 18px;
       text-align: center;
-      margin: 16px 0;
+      margin: 14px 0;
     }
     .timer-digits {
-      font-size: 44px;
+      font-size: 40px;
       font-weight: 900;
       color: var(--bright-cyan);
       font-family: monospace;
       letter-spacing: 2px;
     }
-    .receipt-row {
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 68px;
+      background: rgba(20, 27, 45, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
       display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      font-size: 13px;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 10px 10px;
     }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 10px;
+    }
+
+    .nav-item.active {
+      color: var(--neon-green);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Bay Grid in Partner App */
+    .bay-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .bay-cell {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .bay-cell.ready {
+      border-color: var(--neon-green);
+      background: rgba(0, 230, 118, 0.12);
+    }
+    .bay-cell.charging {
+      border-color: var(--warning-amber);
+      background: rgba(255, 179, 0, 0.12);
+    }
+    .bay-num { font-weight: 800; font-size: 12px; }
+    .bay-soc { font-weight: 700; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -241,10 +353,10 @@
 <div class="phone-container">
   <!-- Status Bar -->
   <div class="status-bar">
-    <span>07:25 PM</span>
+    <span id="clockTime">08:00 PM</span>
     <div class="status-pill">
       <div class="status-dot"></div>
-      <span>Online</span>
+      <span>PostgreSQL Live</span>
     </div>
     <span>5G ⚡</span>
   </div>
@@ -256,16 +368,44 @@
       <span>ChargeLoop</span>
     </div>
     <select class="lang-toggle" id="langSelector" onchange="toggleLanguage()">
-      <option value="hi">🇮🇳 हिन्दी</option>
       <option value="en">🇬🇧 English</option>
+      <option value="hi">🇮🇳 हिन्दी</option>
     </select>
   </div>
 
-  <!-- SCREEN 1: STATIONS -->
+  <!-- App Mode Toggle (Driver vs Partner Station) -->
+  <div class="app-mode-bar">
+    <button class="mode-btn active" id="btnModeDriver" onclick="switchMode('driver')">Driver App</button>
+    <button class="mode-btn" id="btnModePartner" onclick="switchMode('partner')">Partner Station App</button>
+  </div>
+
+  <!-- ======================== DRIVER SCREENS ======================== -->
+
+  <!-- SCREEN 0: SIGN IN -->
+  <div id="screen-auth" class="screen-content">
+    <div style="margin-top: 20px;">
+      <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Driver Sign In</h2>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Enter your phone number to access your account stored in PostgreSQL.</p>
+
+      <input type="tel" id="authPhoneInput" class="input-box" placeholder="Enter 10-digit mobile number" />
+      <input type="text" id="authNameInput" class="input-box" placeholder="Full Name (optional for existing users)" />
+
+      <button class="btn-primary" onclick="submitAuth()">Verify & Sign In</button>
+
+      <div style="margin-top: 24px;">
+        <span style="color: var(--text-muted); font-size: 12px;">Drivers loaded from PostgreSQL:</span>
+        <div id="dbDriversList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="color: var(--text-muted); font-size: 12px;">Querying database...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: STATIONS DISCOVERY -->
   <div id="screen-stations" class="screen-content active">
-    <div style="background: linear-gradient(135deg, rgba(0,230,118,0.15), rgba(0,229,255,0.08)); border: 1px solid rgba(0,230,118,0.3); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
-      <div style="font-weight: 700; font-size: 15px;" id="txt-radar-title">Stations Near You (Delhi NCR)</div>
-      <div style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;">● 25 Charged Batteries Ready (2W 48V)</div>
+    <div class="card card-highlight">
+      <div style="font-weight: 700; font-size: 15px;" id="txt-radar-title">Stations from PostgreSQL</div>
+      <div style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="stationsSummary">Loading live station availability...</div>
     </div>
 
     <div id="stations-list">
@@ -273,36 +413,34 @@
     </div>
   </div>
 
-  <!-- SCREEN 2: SWAP -->
+  <!-- SCREEN 2: 2-MINUTE SWAP -->
   <div id="screen-swap" class="screen-content">
     <div id="swap-step-init">
       <div class="gauge-wrapper">
         <div class="gauge-circle" id="socCircle">
-          <div style="color: var(--amber); font-size: 20px;">⚡</div>
-          <div class="gauge-soc" id="socVal">16%</div>
+          <div style="color: var(--neon-green); font-size: 20px;">⚡</div>
+          <div class="gauge-soc" id="socVal">--%</div>
           <div class="gauge-label">SOC LEVEL</div>
         </div>
-        <div style="color: var(--danger); font-weight: 700; margin-top: 14px;" id="txt-battery-low">Low Battery Warning (16%)</div>
-        <div style="color: var(--text-muted); font-size: 13px;">Estimated Range: ~12 km remaining</div>
+        <div style="color: var(--neon-green); font-weight: 700; margin-top: 12px;" id="txt-battery-status">Loading Mounted Battery...</div>
+        <div style="color: var(--text-muted); font-size: 13px;" id="txt-battery-range">Estimated Range: -- km</div>
       </div>
 
-      <div class="card">
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <div style="font-size: 28px;">📍</div>
-          <div>
-            <div style="font-weight: 700; font-size: 15px;">Janakpuri Swap Hub</div>
-            <div style="color: var(--text-muted); font-size: 12px;">Partner: Ramesh Kumar (Kirana)</div>
-          </div>
-          <div style="margin-left: auto;" class="badge-stock">8 Ready</div>
-        </div>
-      </div>
+      <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">SELECTED STATION</div>
+      <select id="swapStationSelect" class="input-box" onchange="onStationChanged()"></select>
+
+      <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">RETURNED BATTERY SERIAL</div>
+      <input type="text" id="swapDepletedSerialInput" class="input-box" placeholder="Enter or scan returned battery serial" />
+
+      <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">READY CHARGED BATTERY AT STATION</div>
+      <select id="swapIssuedBatterySelect" class="input-box"></select>
 
       <button class="btn-primary" onclick="startSwapHandshake()">
         <span>⚡ Scan & Initiate 2-Min Swap</span>
       </button>
     </div>
 
-    <!-- Active Swap Timer Step -->
+    <!-- Active Swap Timer -->
     <div id="swap-step-timer" style="display: none;">
       <div class="timer-box">
         <div style="color: var(--text-muted); font-size: 12px; letter-spacing: 1px;">SWAP TIMER (TARGET: &lt; 2:00)</div>
@@ -310,132 +448,179 @@
       </div>
 
       <div class="card">
-        <div class="receipt-row">
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
           <span style="color: var(--text-muted);">Returned Battery:</span>
-          <span style="font-weight: 700; color: var(--amber);">BAT-48V-9999 (16%)</span>
+          <span style="font-weight: 700; color: var(--warning-amber);" id="timerReturnedSerial">-</span>
         </div>
         <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
-        <div class="receipt-row">
-          <span style="color: var(--text-muted);">Issued New Battery:</span>
-          <span style="font-weight: 700; color: var(--neon-green);">BAT-48V-1001 (100% Full)</span>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
+          <span style="color: var(--text-muted);">Issued Ready Battery:</span>
+          <span style="font-weight: 700; color: var(--neon-green);" id="timerIssuedSerial">-</span>
         </div>
       </div>
 
-      <button class="btn-primary" onclick="completeSwapTransaction()">
-        <span>✓ Confirm Physical Swap Completed</span>
+      <button class="btn-primary" style="margin-top: 14px;" onclick="completeSwapTransaction()">
+        Confirm Physical Swap Completed
       </button>
     </div>
 
-    <!-- Swap Completed Receipt Step -->
-    <div id="swap-step-receipt" style="display: none; text-align: center;">
-      <div style="font-size: 54px; color: var(--neon-green); margin: 16px 0;">✓</div>
-      <div style="font-size: 20px; font-weight: 800;">Swap Completed!</div>
-      <div style="color: var(--neon-green); font-size: 14px; margin-top: 4px;" id="receipt-duration">Duration: 1m 38s</div>
-
-      <div class="card" style="margin-top: 20px; text-align: left;">
-        <div class="receipt-row"><span>Base Fee</span><span>₹100.00</span></div>
-        <div class="receipt-row"><span>GST (18%)</span><span>₹18.00</span></div>
-        <div style="height: 1px; background: var(--border); margin: 6px 0;"></div>
-        <div class="receipt-row" style="font-weight: 800; font-size: 15px;"><span>Total Deducted</span><span style="color: var(--neon-green);">₹118.00</span></div>
-        <div class="receipt-row"><span>Payment Method</span><span>Driver Wallet</span></div>
-        <div class="receipt-row"><span>Partner Share</span><span style="color: var(--bright-cyan);">₹25.00 Credited</span></div>
+    <!-- Swap Completed Receipt -->
+    <div id="swap-step-receipt" style="display: none;">
+      <div style="text-align: center; padding: 16px 0;">
+        <div style="font-size: 48px; color: var(--neon-green);">✓</div>
+        <h3 style="font-size: 20px; font-weight: 800; margin-top: 8px;">Swap Recorded in Database!</h3>
+        <p style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="receipt-duration">Duration: 48s (&lt; 2 min)</p>
       </div>
 
-      <button class="btn-primary" onclick="resetSwap()">
-        <span>Back to Home & Resume Driving</span>
-      </button>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
+          <span style="color: var(--text-muted);">Base Swap Fee:</span>
+          <span>₹100.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
+          <span style="color: var(--text-muted);">GST (18%):</span>
+          <span>₹18.00</span>
+        </div>
+        <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; font-weight: 700;">
+          <span>Total Deducted:</span>
+          <span style="color: var(--neon-green);">₹118.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+          <span>Station Operator Commission:</span>
+          <span style="color: var(--bright-cyan);">₹25.00 Credited</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="resetSwap()">Back to Stations</button>
     </div>
   </div>
 
-  <!-- SCREEN 3: WALLET -->
+  <!-- SCREEN 3: WALLET & SUBSCRIPTIONS -->
   <div id="screen-wallet" class="screen-content">
-    <div style="background: linear-gradient(135deg, #1E2836, #141C24); border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 20px;">
-      <div style="color: var(--text-muted); font-size: 12px; letter-spacing: 1px;">TOTAL WALLET BALANCE</div>
-      <div style="font-size: 36px; font-weight: 800; margin: 8px 0;" id="walletBalance">₹450.00</div>
-      <div style="color: var(--neon-green); font-size: 13px;">✓ Sufficient for approx. 3 battery swaps</div>
+    <div class="card card-highlight">
+      <div style="color: var(--text-muted); font-size: 12px;">DRIVER WALLET (POSTGRESQL)</div>
+      <div style="font-size: 32px; font-weight: 900; color: var(--neon-green); margin: 6px 0;" id="walletBalance">₹0.00</div>
+      <div style="color: var(--text-muted); font-size: 12px;" id="walletStatusText">Loading ledger balance...</div>
     </div>
 
-    <div style="font-weight: 700; margin-bottom: 10px;">Quick Top-Up (UPI AutoPay)</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 24px;">
-      <button class="btn-outline" onclick="topUpWallet(100)">+ ₹100</button>
-      <button class="btn-outline" onclick="topUpWallet(250)">+ ₹250</button>
-      <button class="btn-outline" onclick="topUpWallet(500)">+ ₹500</button>
+    <!-- Quick Top-Up -->
+    <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Instant Top-Up (UPI AutoPay)</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
+      <button class="btn-outline btn-secondary" onclick="topUpWallet(200)">+₹200</button>
+      <button class="btn-outline btn-secondary" onclick="topUpWallet(500)">+₹500</button>
+      <button class="btn-outline btn-secondary" onclick="topUpWallet(1000)">+₹1,000</button>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-      <span style="font-weight: 700;">Recent Transactions</span>
-      <span style="color: var(--bright-cyan); font-size: 13px; font-weight: 600;">GST Invoices</span>
+    <!-- Active Subscription Plans from Database -->
+    <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Subscription Plans (From DB)</div>
+    <div id="subscriptionPlansList">
+      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading plans...</div>
     </div>
 
+    <!-- Swap History from Database -->
+    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Recent Swaps in Database</div>
     <div id="wallet-history">
-      <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-weight: 600; font-size: 14px;">Battery Swap Fee</div>
-          <div style="color: var(--text-muted); font-size: 12px;">Janakpuri Hub • Today</div>
-        </div>
-        <div style="font-weight: 700; color: #fff;">-₹118.00</div>
-      </div>
-      <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-weight: 600; font-size: 14px;">UPI AutoPay Top-Up</div>
-          <div style="color: var(--text-muted); font-size: 12px;">Google Pay • Yesterday</div>
-        </div>
-        <div style="font-weight: 700; color: var(--neon-green);">+₹500.00</div>
-      </div>
+      <div class="card" style="color: var(--text-muted); font-size: 13px;">No transactions yet.</div>
     </div>
   </div>
 
-  <!-- SCREEN 4: PROFILE -->
+  <!-- SCREEN 4: PROFILE & SUPPORT -->
   <div id="screen-profile" class="screen-content">
-    <div style="text-align: center; margin-bottom: 24px;">
-      <div style="width: 72px; height: 72px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 32px; color: var(--neon-green);">👤</div>
-      <div style="font-size: 20px; font-weight: 800;">Ravi Sharma</div>
-      <div style="color: var(--text-muted); font-size: 13px;">+91 98765 00001</div>
-      <div class="badge-stock" style="margin-top: 8px;">✓ KYC & Parivahan Verified</div>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="width: 64px; height: 64px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 28px; color: var(--neon-green);">👤</div>
+      <div style="font-size: 18px; font-weight: 800;" id="profName">Loading...</div>
+      <div style="color: var(--text-muted); font-size: 13px;" id="profPhone">-</div>
+      <div class="badge-stock" style="margin-top: 6px;">✓ PostgreSQL Account</div>
     </div>
 
-    <div style="font-weight: 700; margin-bottom: 8px;">Linked EV Vehicle</div>
+    <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">LINKED EV VEHICLES</div>
+    <div id="profVehiclesList">
+      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading vehicles...</div>
+    </div>
+
+    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">MOUNTED BATTERY TELEMETRY</div>
+    <div id="profBatteryDetails" class="card">
+      <div style="color: var(--text-muted); font-size: 12px;">Loading battery state...</div>
+    </div>
+
+    <!-- Grievance & Dispute Redressal (DR-12) -->
+    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">GRIEVANCE & SUPPORT TICKET</div>
     <div class="card">
-      <div style="font-weight: 700; font-size: 15px;">DL 01 AB 1234</div>
-      <div style="color: var(--text-muted); font-size: 13px; margin: 2px 0;">Quantum Energy - Plaza EV 2W</div>
-      <div style="color: var(--bright-cyan); font-size: 12px; font-weight: 600;">Battery Type: 2W_48V Compatible</div>
+      <input type="text" id="ticketSubject" class="input-box" placeholder="Issue Subject (e.g. Defective Battery / Refund)" />
+      <textarea id="ticketDesc" class="input-box" rows="2" style="resize: none;" placeholder="Describe issue details..."></textarea>
+      <button class="btn-outline btn-secondary" onclick="submitTicket()">Submit Support Ticket to DB</button>
+      <div id="recentTicketsList" style="margin-top: 10px; font-size: 12px;"></div>
     </div>
 
-    <div style="font-weight: 700; margin-bottom: 8px;">Driver Welfare & Safety</div>
+    <button class="btn-outline" style="margin-top: 16px; border-color: var(--border); color: var(--text-muted);" onclick="showAuthScreen()">Switch Driver / Sign Out</button>
+  </div>
+
+  <!-- ======================== PARTNER STATION SCREEN ======================== -->
+  <div id="screen-partner" class="screen-content">
+    <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">SELECT PARTNER OPERATOR</div>
+    <select id="partnerStationSelect" class="input-box" onchange="onPartnerStationChanged()"></select>
+
+    <!-- Partner Earnings Card -->
+    <div class="card card-highlight">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div style="color: var(--text-muted); font-size: 11px;">PARTNER COMMISSION EARNED</div>
+          <div style="font-size: 26px; font-weight: 900; color: var(--bright-cyan); margin: 4px 0;" id="partnerWalletBalance">₹0.00</div>
+          <div style="color: var(--neon-green); font-size: 12px; font-weight: 600;">₹25.00 Instant Payout per Swap</div>
+        </div>
+        <button class="btn-outline" style="width: auto; padding: 6px 12px; height: auto; font-size: 11px;" onclick="alert('Payout transfer initiated to Partner UPI ID!')">Withdraw</button>
+      </div>
+    </div>
+
+    <!-- Station Controls -->
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <div style="font-weight: 600; font-size: 14px;">Welfare Fund Insurance</div>
-          <div style="color: var(--text-muted); font-size: 12px;">Active: ₹5,00,000 accidental cover</div>
+          <div style="font-weight: 700; font-size: 14px;" id="partnerStationTitle">Station Status</div>
+          <div style="color: var(--text-muted); font-size: 11px;" id="partnerStationAddress">Address</div>
         </div>
-        <span style="color: var(--neon-green); font-size: 18px;">🛡️</span>
+        <div class="badge-stock" id="partnerStationStatusBadge">Open 06:00 - 23:00</div>
       </div>
-      <div style="height: 1px; background: var(--border); margin: 10px 0;"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-weight: 600; font-size: 14px; color: var(--danger);">SOS Helpline</div>
-          <div style="color: var(--text-muted); font-size: 12px;">24/7 Roadside & Battery Safety</div>
-        </div>
-        <button style="background: var(--danger); color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 700;" onclick="alert('SOS Alert Sent to ChargeLoop Operations Team!')">SOS</button>
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <button class="btn-outline" style="font-size: 11px; height: 34px;" onclick="toggleStationStatus(0)">Open</button>
+        <button class="btn-outline" style="font-size: 11px; height: 34px;" onclick="toggleStationStatus(2)">Maintenance</button>
+        <button class="btn-outline" style="font-size: 11px; height: 34px;" onclick="toggleStationStatus(1)">Closed</button>
       </div>
+    </div>
+
+    <!-- Live Bay Inventory Grid (BRD Section 11.2) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+      <div style="font-weight: 700; font-size: 13px;">LIVE BAY INVENTORY GRID</div>
+      <div style="font-size: 11px; color: var(--neon-green); font-weight: 600;" id="bayGridSummary">-- Ready</div>
+    </div>
+    <div class="bay-grid" id="partnerBayGrid">
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 10px;">Loading bays...</div>
+    </div>
+
+    <!-- Partner Ticket Report -->
+    <div class="card">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 6px;">Report Charger Hardware Issue</div>
+      <input type="text" id="partnerTicketSubject" class="input-box" placeholder="e.g. Bay 4 Connector Thermal Warning" />
+      <button class="btn-outline btn-secondary" onclick="submitPartnerTicket()">Report Issue to Ops</button>
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
-  <div class="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('stations')">
+  <!-- Bottom Navigation (Only visible in Driver Mode) -->
+  <div class="bottom-nav" id="driverBottomNav">
+    <div class="nav-item active" onclick="switchDriverTab('stations')">
       <svg viewBox="0 0 24 24"><path d="M19 12h-2V7h-4v2h2v5H9V5h6V3H7v11H5v2h2v5h10v-5h2v-4zm-4 7H9v-3h6v3z"/></svg>
       <span id="tab-stations">Stations</span>
     </div>
-    <div class="nav-item" onclick="switchTab('swap')">
+    <div class="nav-item" onclick="switchDriverTab('swap')">
       <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
       <span id="tab-swap">Swap</span>
     </div>
-    <div class="nav-item" onclick="switchTab('wallet')">
+    <div class="nav-item" onclick="switchDriverTab('wallet')">
       <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
       <span id="tab-wallet">Wallet</span>
     </div>
-    <div class="nav-item" onclick="switchTab('profile')">
+    <div class="nav-item" onclick="switchDriverTab('profile')">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       <span id="tab-profile">Profile</span>
     </div>
@@ -443,73 +628,311 @@
 </div>
 
 <script>
-  let currentBalance = 450.0;
+  let currentMode = 'driver'; // 'driver' or 'partner'
+  let activeDriver = null;
+  let loadedStations = [];
   let timerInterval = null;
   let timerSeconds = 0;
   let activeSwapId = null;
 
-  function switchTab(name) {
+  // Mode switching
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('btnModeDriver').classList.toggle('active', mode === 'driver');
+    document.getElementById('btnModePartner').classList.toggle('active', mode === 'partner');
+    document.getElementById('driverBottomNav').style.display = mode === 'driver' ? 'flex' : 'none';
+
+    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
+    if (mode === 'driver') {
+      if (!activeDriver) {
+        showAuthScreen();
+      } else {
+        switchDriverTab('stations');
+      }
+    } else {
+      document.getElementById('screen-partner').classList.add('active');
+      loadPartnerStationView();
+    }
+  }
+
+  function switchDriverTab(name) {
     document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById(`screen-${name}`).classList.add('active');
-    event.currentTarget.classList.add('active');
+    const navItems = document.querySelectorAll('.nav-item');
+    if (name === 'stations') navItems[0].classList.add('active');
+    if (name === 'swap') navItems[1].classList.add('active');
+    if (name === 'wallet') navItems[2].classList.add('active');
+    if (name === 'profile') navItems[3].classList.add('active');
   }
 
-  // Load live stations from backend
+  // App Initialization
+  async function initApp() {
+    await loadDbDrivers();
+    await loadStations();
+    await loadSubscriptionPlans();
+  }
+
+  async function loadDbDrivers() {
+    const listEl = document.getElementById('dbDriversList');
+    try {
+      const res = await fetch('/api/v1/auth/drivers');
+      if (res.ok) {
+        const drivers = await res.json();
+        if (drivers && drivers.length > 0) {
+          listEl.innerHTML = drivers.map(d => `
+            <button class="btn-outline" style="text-align:left; padding:8px 12px; height:auto; display:flex; justify-content:space-between; align-items:center;" onclick="selectDriver('${d.id}')">
+              <div>
+                <div style="font-weight:700;">${d.fullName}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${d.phoneNumber}</div>
+              </div>
+              <div style="font-weight:700; color:var(--neon-green);">₹${(d.walletBalance || 0).toFixed(2)}</div>
+            </button>
+          `).join('');
+
+          // Select first driver by default if none selected
+          if (!activeDriver) {
+            await selectDriver(drivers[0].id);
+          }
+          return;
+        }
+      }
+    } catch (_) {}
+    listEl.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No drivers found in database.</div>`;
+  }
+
+  async function selectDriver(driverId) {
+    try {
+      const res = await fetch(`/api/v1/auth/profile/${driverId}`);
+      if (res.ok) {
+        activeDriver = await res.json();
+        updateDriverUI(activeDriver);
+        switchDriverTab('stations');
+      }
+    } catch (e) {
+      console.error('Select driver error', e);
+    }
+  }
+
+  function updateDriverUI(detail) {
+    document.getElementById('profName').innerText = detail.fullName || 'Driver';
+    document.getElementById('profPhone').innerText = detail.phoneNumber || '';
+    document.getElementById('walletBalance').innerText = `₹${(detail.walletBalance || 0).toFixed(2)}`;
+    document.getElementById('walletStatusText').innerText = detail.walletBalance >= 118 
+      ? '✓ Sufficient balance for swaps' 
+      : '⚠ Low balance. Please top up.';
+
+    // Update Mounted Battery & Gauge
+    if (detail.activeBattery) {
+      const b = detail.activeBattery;
+      const soc = b.stateOfChargePercent;
+      document.getElementById('socVal').innerText = `${soc}%`;
+      document.getElementById('swapDepletedSerialInput').value = b.serialNumber;
+
+      const circle = document.getElementById('socCircle');
+      const statusText = document.getElementById('txt-battery-status');
+      if (soc < 20) {
+        circle.style.borderColor = 'var(--danger-red)';
+        circle.style.boxShadow = '0 0 20px rgba(255, 61, 0, 0.3)';
+        statusText.innerText = `Low Battery (${soc}% SOC) - Swap Needed`;
+        statusText.style.color = 'var(--danger-red)';
+      } else if (soc < 50) {
+        circle.style.borderColor = 'var(--warning-amber)';
+        circle.style.boxShadow = '0 0 20px rgba(255, 179, 0, 0.3)';
+        statusText.innerText = `Active Battery (${soc}% SOC)`;
+        statusText.style.color = 'var(--warning-amber)';
+      } else {
+        circle.style.borderColor = 'var(--neon-green)';
+        circle.style.boxShadow = '0 0 20px rgba(0, 230, 118, 0.3)';
+        statusText.innerText = `Healthy Battery (${soc}% SOC)`;
+        statusText.style.color = 'var(--neon-green)';
+      }
+      document.getElementById('txt-battery-range').innerText = `Estimated Range: ~${Math.round(soc * 0.75)} km`;
+
+      document.getElementById('profBatteryDetails').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700;">${b.serialNumber} (${b.modelType})</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Health (SOH): ${b.stateOfHealthPercent}% | Temp: ${b.cellTemperatureCelsius}°C</div>
+          </div>
+          <div class="badge-stock ${soc < 20 ? 'badge-danger' : (soc < 50 ? 'badge-amber' : '')}">⚡ ${soc}% SOC</div>
+        </div>
+      `;
+    } else {
+      document.getElementById('socVal').innerText = '0%';
+      document.getElementById('swapDepletedSerialInput').value = '';
+      document.getElementById('txt-battery-status').innerText = 'No Battery Mounted';
+      document.getElementById('txt-battery-range').innerText = 'Range: 0 km';
+      document.getElementById('profBatteryDetails').innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No active battery currently assigned in database.</div>`;
+    }
+
+    // Vehicles list
+    const vList = document.getElementById('profVehiclesList');
+    if (detail.vehicles && detail.vehicles.length > 0) {
+      vList.innerHTML = detail.vehicles.map(v => `
+        <div class="card">
+          <div style="font-weight:700; font-size:14px;">${v.registrationNumber}</div>
+          <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${v.oem} — ${v.model}</div>
+          <div style="color:var(--bright-cyan); font-size:11px; font-weight:600;">Battery Spec: ${v.batteryCompatibilityType}</div>
+        </div>
+      `).join('');
+    } else {
+      vList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No linked vehicle in database.</div>`;
+    }
+
+    loadDriverSwapHistory(detail.id);
+    loadDriverTickets(detail.id);
+  }
+
+  async function submitAuth() {
+    const phone = document.getElementById('authPhoneInput').value.trim();
+    const name = document.getElementById('authNameInput').value.trim();
+    if (!phone || phone.length < 10) { alert('Please enter a valid 10-digit phone number'); return; }
+
+    try {
+      const res = await fetch('/api/v1/auth/phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, fullName: name || null, languageCode: 'hi' })
+      });
+      if (res.ok) {
+        const authRes = await res.json();
+        await selectDriver(authRes.driverId);
+        await loadDbDrivers();
+      } else {
+        alert('Authentication failed: ' + (await res.text()));
+      }
+    } catch (e) {
+      alert('Error connecting to backend: ' + e);
+    }
+  }
+
+  function showAuthScreen() {
+    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('screen-auth').classList.add('active');
+  }
+
+  // Stations Discovery
   async function loadStations() {
     const listEl = document.getElementById('stations-list');
     try {
       const res = await fetch('/api/v1/stations/nearby', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latitude: 28.6289, longitude: 77.0818, radiusKm: 15 })
+        body: JSON.stringify({ latitude: 28.6289, longitude: 77.0818, radiusKm: 30 })
       });
       if (res.ok) {
-        const stations = await res.json();
-        listEl.innerHTML = stations.map(s => `
+        loadedStations = await res.json();
+        document.getElementById('stationsSummary').innerText = `● ${loadedStations.length} Hubs Connected across NCR`;
+
+        listEl.innerHTML = loadedStations.map(s => `
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
-                <div style="font-weight:700; font-size:16px;">${s.name}</div>
-                <div style="color:var(--text-muted); font-size:12px; margin-top:2px;">${s.address}</div>
+                <div style="font-weight:700; font-size:15px;">${s.name}</div>
+                <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">${s.address}</div>
               </div>
-              <div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px; font-weight:700; color:var(--bright-cyan);">
+              <div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:3px 8px; font-size:11px; font-weight:700; color:var(--bright-cyan);">
                 🧭 ${s.distanceKm || 0} km
               </div>
             </div>
-            <div style="height:1px; background:var(--border); margin:12px 0;"></div>
+            <div style="height:1px; background:var(--border); margin:10px 0;"></div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div class="badge-stock">⚡ ${s.availableChargedBatteries} Ready to Swap</div>
-              <div style="color:var(--text-muted); font-size:12px;">${s.estimatedWaitMinutes === 0 ? 'No wait' : '~' + s.estimatedWaitMinutes + ' min wait'}</div>
+              <div style="color:var(--text-muted); font-size:11px;">${s.estimatedWaitMinutes === 0 ? 'No wait' : '~' + s.estimatedWaitMinutes + ' min wait'}</div>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">
-              <button class="btn-outline" onclick="alert('Starting navigation to ${s.name}')">Directions</button>
-              <button class="btn-primary" style="height:44px;" onclick="selectStationForSwap('${s.name}')">Swap Here</button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+              <button class="btn-outline" onclick="holdReservation('${s.id}')">Hold Battery (15m)</button>
+              <button class="btn-primary" style="height:40px; font-size:13px;" onclick="selectStationForSwap('${s.id}')">Swap Here</button>
             </div>
           </div>
         `).join('');
-        return;
-      }
-    } catch (e) {
-      console.log("Using local offline fallback for stations", e);
-    }
 
-    // Offline fallback
-    listEl.innerHTML = `
-      <div class="card">
-        <div style="font-weight:700;">ChargeLoop Janakpuri Hub</div>
-        <div style="color:var(--text-muted); font-size:12px;">District Centre, Janakpuri, West Delhi</div>
-        <div style="margin-top:10px;" class="badge-stock">⚡ 8 Ready to Swap</div>
-      </div>
-    `;
+        populateSwapDropdown();
+        populatePartnerStationDropdown();
+      }
+    } catch (_) {}
   }
 
-  function selectStationForSwap(name) {
-    switchTab('swap');
+  function populateSwapDropdown() {
+    const select = document.getElementById('swapStationSelect');
+    select.innerHTML = loadedStations.map(s => `
+      <option value="${s.id}" data-partner="${s.partnerId}">${s.name} (${s.availableChargedBatteries} Ready)</option>
+    `).join('');
+    onStationChanged();
+  }
+
+  async function onStationChanged() {
+    const select = document.getElementById('swapStationSelect');
+    const stationId = select.value;
+    const issuedSelect = document.getElementById('swapIssuedBatterySelect');
+    if (!stationId) return;
+
+    issuedSelect.innerHTML = `<option>Loading batteries from station bays...</option>`;
+    try {
+      const res = await fetch(`/api/v1/stations/${stationId}/batteries`);
+      if (res.ok) {
+        const batteries = await res.json();
+        if (batteries && batteries.length > 0) {
+          issuedSelect.innerHTML = batteries.map(b => `
+            <option value="${b.serialNumber}">${b.serialNumber} (${b.stateOfChargePercent}% Full, ${b.modelType})</option>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    issuedSelect.innerHTML = `<option value="">No charged batteries available at this station</option>`;
+  }
+
+  function selectStationForSwap(stationId) {
+    switchDriverTab('swap');
+    document.getElementById('swapStationSelect').value = stationId;
+    onStationChanged();
+  }
+
+  // Pre-Reservation (DR-06)
+  async function holdReservation(stationId) {
+    if (!activeDriver) { alert('Please sign in first'); return; }
+    try {
+      const res = await fetch('/api/v1/reservations/hold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driverId: activeDriver.id, stationId: stationId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Battery ${data.batterySerial || ''} reserved at ${data.stationName}! 15-minute hold active.`);
+      } else {
+        alert('Could not place reservation');
+      }
+    } catch (e) {
+      alert('Error holding battery: ' + e);
+    }
   }
 
   // 2-Minute Swap Execution
   async function startSwapHandshake() {
+    if (!activeDriver) { alert('Please sign in first'); return; }
+
+    const stationSelect = document.getElementById('swapStationSelect');
+    const selectedOpt = stationSelect.options[stationSelect.selectedIndex];
+    const stationId = stationSelect.value;
+    const partnerId = selectedOpt ? selectedOpt.getAttribute('data-partner') : null;
+    const depletedSerial = document.getElementById('swapDepletedSerialInput').value.trim();
+    const issuedSerial = document.getElementById('swapIssuedBatterySelect').value;
+
+    if (!depletedSerial) {
+      alert('Please enter or scan your depleted battery serial number');
+      return;
+    }
+    if (!issuedSerial) {
+      alert('No ready charged battery selected at this station');
+      return;
+    }
+
+    document.getElementById('timerReturnedSerial').innerText = depletedSerial;
+    document.getElementById('timerIssuedSerial').innerText = `${issuedSerial} (100% Full)`;
+
     document.getElementById('swap-step-init').style.display = 'none';
     document.getElementById('swap-step-timer').style.display = 'block';
 
@@ -520,47 +943,38 @@
       updateTimerText();
     }, 1000);
 
-    // Call API
     try {
       const res = await fetch('/api/v1/swaps/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          driverId: '99999999-9999-9999-9999-999999999999',
-          stationId: 'aaaa1111-aaaa-1111-aaaa-111111111111',
-          partnerId: '11111111-1111-1111-1111-111111111111',
-          depletedBatterySerial: 'BAT-48V-9999',
-          issuedBatterySerial: 'BAT-48V-1001'
+          driverId: activeDriver.id,
+          stationId: stationId,
+          partnerId: partnerId,
+          depletedBatterySerial: depletedSerial,
+          issuedBatterySerial: issuedSerial
         })
       });
       if (res.ok) {
         const data = await res.json();
         activeSwapId = data.swapId;
       }
-    } catch (_) {}
+    } catch (e) {
+      console.error('Swap initiation error', e);
+    }
   }
 
   function updateTimerText() {
-    const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-    const secs = String(timerSeconds % 60).padStart(2, '0');
-    document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    document.getElementById('timerDisplay').innerText = `${m}:${s}`;
   }
 
   async function completeSwapTransaction() {
     clearInterval(timerInterval);
     document.getElementById('swap-step-timer').style.display = 'none';
     document.getElementById('swap-step-receipt').style.display = 'block';
-    document.getElementById('receipt-duration').innerText = `Duration: ${timerSeconds} seconds (Target: < 2 min)`;
-
-    currentBalance -= 118.0;
-    document.getElementById('walletBalance').innerText = `₹${currentBalance.toFixed(2)}`;
-
-    // Update battery gauge to 100%
-    document.getElementById('socVal').innerText = '100%';
-    document.getElementById('socCircle').style.borderColor = 'var(--neon-green)';
-    document.getElementById('socCircle').style.boxShadow = '0 0 20px rgba(0, 230, 118, 0.3)';
-    document.getElementById('txt-battery-low').innerText = 'Battery Fully Charged (100%)';
-    document.getElementById('txt-battery-low').style.color = 'var(--neon-green)';
+    document.getElementById('receipt-duration').innerText = `Duration: ${timerSeconds}s (Target: < 2 min)`;
 
     if (activeSwapId) {
       try {
@@ -569,6 +983,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ swapId: activeSwapId, paymentMethod: 1 })
         });
+        await selectDriver(activeDriver.id);
+        await loadStations();
       } catch (_) {}
     }
   }
@@ -576,48 +992,302 @@
   function resetSwap() {
     document.getElementById('swap-step-receipt').style.display = 'none';
     document.getElementById('swap-step-init').style.display = 'block';
-    switchTab('stations');
-    loadStations();
+    switchDriverTab('stations');
   }
 
   // Wallet Top-Up
   async function topUpWallet(amt) {
-    currentBalance += amt;
-    document.getElementById('walletBalance').innerText = `₹${currentBalance.toFixed(2)}`;
+    if (!activeDriver) { alert('Please sign in first'); return; }
     try {
-      await fetch('/api/v1/wallet/topup', {
+      const res = await fetch('/api/v1/wallet/topup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          accountId: '99999999-9999-9999-9999-999999999999',
+          accountId: activeDriver.id,
           accountType: 0,
           amount: amt,
           paymentReference: 'UPI-' + Date.now()
         })
       });
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('walletBalance').innerText = `₹${data.balance.toFixed(2)}`;
+        alert(`₹${amt} added successfully to your database wallet!`);
+        await selectDriver(activeDriver.id);
+      }
+    } catch (e) {
+      alert('Error updating wallet: ' + e);
+    }
+  }
+
+  // Subscription Plans
+  async function loadSubscriptionPlans() {
+    const el = document.getElementById('subscriptionPlansList');
+    try {
+      const res = await fetch('/api/v1/subscriptions/plans');
+      if (res.ok) {
+        const plans = await res.json();
+        el.innerHTML = plans.map(p => `
+          <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:14px;">${p.name}</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${p.description}</div>
+              <div style="font-size:11px; color:var(--bright-cyan); margin-top:2px;">Validity: ${p.validityDays} Days (${p.maxSwapsAllowed} Swaps)</div>
+            </div>
+            <button class="btn-outline" style="width:auto; padding:6px 12px; height:auto; font-size:12px; font-weight:700; color:var(--neon-green); border-color:var(--neon-green);" onclick="subscribePlan('${p.id}', '${p.name}', ${p.price})">₹${p.price.toFixed(0)}</button>
+          </div>
+        `).join('');
+      }
     } catch (_) {}
-    alert(`₹${amt} added successfully via UPI AutoPay!`);
+  }
+
+  async function subscribePlan(planId, name, price) {
+    if (!activeDriver) { alert('Please sign in first'); return; }
+    if (activeDriver.walletBalance < price) {
+      alert(`Insufficient balance. Please top up ₹${price} first.`);
+      return;
+    }
+    try {
+      const res = await fetch('/api/v1/subscriptions/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driverId: activeDriver.id, planId: planId })
+      });
+      if (res.ok) {
+        alert(`Successfully subscribed to ${name}!`);
+        await selectDriver(activeDriver.id);
+      } else {
+        const err = await res.json();
+        alert('Subscription failed: ' + (err.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Error subscribing: ' + e);
+    }
+  }
+
+  // Swap History
+  async function loadDriverSwapHistory(driverId) {
+    const el = document.getElementById('wallet-history');
+    try {
+      const res = await fetch(`/api/v1/swaps/history/${driverId}`);
+      if (res.ok) {
+        const swaps = await res.json();
+        if (swaps.length > 0) {
+          el.innerHTML = swaps.slice(0, 5).map(s => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:600; font-size:13px;">Swap (${s.issuedBatterySerial})</div>
+                <div style="color:var(--text-muted); font-size:11px;">${new Date(s.initiatedAt).toLocaleDateString()} • Base ₹100 + GST ₹18</div>
+              </div>
+              <div style="font-weight:700; color:#fff;">-₹${s.totalAmount.toFixed(2)}</div>
+            </div>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No previous swap transactions.</div>`;
+  }
+
+  // Support & Grievance Tickets (DR-12)
+  async function submitTicket() {
+    if (!activeDriver) { alert('Please sign in first'); return; }
+    const subject = document.getElementById('ticketSubject').value.trim();
+    const desc = document.getElementById('ticketDesc').value.trim();
+    if (!subject || !desc) { alert('Please enter ticket subject and description'); return; }
+
+    try {
+      const res = await fetch('/api/v1/support/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userType: 0,
+          userId: activeDriver.id,
+          category: 'Driver Issue',
+          subject: subject,
+          description: desc
+        })
+      });
+      if (res.ok) {
+        alert('Ticket submitted successfully! Stored in PostgreSQL.');
+        document.getElementById('ticketSubject').value = '';
+        document.getElementById('ticketDesc').value = '';
+        loadDriverTickets(activeDriver.id);
+      }
+    } catch (e) {
+      alert('Error submitting ticket: ' + e);
+    }
+  }
+
+  async function loadDriverTickets(driverId) {
+    const el = document.getElementById('recentTicketsList');
+    try {
+      const res = await fetch(`/api/v1/support/tickets/${driverId}`);
+      if (res.ok) {
+        const tickets = await res.json();
+        if (tickets.length > 0) {
+          el.innerHTML = tickets.slice(0, 3).map(t => `
+            <div style="padding:6px 0; border-top:1px solid var(--border); display:flex; justify-content:space-between;">
+              <span><strong>#${t.id.slice(0, 6)}</strong> ${t.subject}</span>
+              <span class="badge-stock badge-amber">Open</span>
+            </div>
+          `).join('');
+          return;
+        }
+      }
+    } catch (_) {}
+    el.innerHTML = '';
+  }
+
+  // ======================== PARTNER STATION APP LOGIC ========================
+  function populatePartnerStationDropdown() {
+    const select = document.getElementById('partnerStationSelect');
+    select.innerHTML = loadedStations.map(s => `
+      <option value="${s.id}">${s.name} (${s.city})</option>
+    `).join('');
+  }
+
+  async function onPartnerStationChanged() {
+    loadPartnerStationView();
+  }
+
+  async function loadPartnerStationView() {
+    const select = document.getElementById('partnerStationSelect');
+    const stationId = select.value || (loadedStations.length > 0 ? loadedStations[0].id : null);
+    if (!stationId) return;
+
+    const station = loadedStations.find(s => s.id === stationId);
+    if (station) {
+      document.getElementById('partnerStationTitle').innerText = station.name;
+      document.getElementById('partnerStationAddress').innerText = station.address;
+    }
+
+    // Load station batteries to render bay grid
+    try {
+      const res = await fetch(`/api/v1/stations/${stationId}/batteries`);
+      if (res.ok) {
+        const batteries = await res.json();
+        renderBayGrid(batteries);
+      }
+    } catch (_) {}
+
+    // Partner wallet balance
+    if (station) {
+      try {
+        const res = await fetch(`/api/v1/wallet/balance/${station.partnerId}?accountType=1`);
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('partnerWalletBalance').innerText = `₹${data.balance.toFixed(2)}`;
+        }
+      } catch (_) {}
+    }
+  }
+
+  function renderBayGrid(batteries) {
+    const grid = document.getElementById('partnerBayGrid');
+    const totalBays = 16;
+    let readyCount = 0;
+    let html = '';
+
+    for (let i = 1; i <= totalBays; i++) {
+      const b = batteries[i - 1];
+      if (b) {
+        readyCount++;
+        html += `
+          <div class="bay-cell ready">
+            <div class="bay-num">Bay ${i}</div>
+            <div class="bay-soc" style="color:var(--neon-green);">⚡ ${b.stateOfChargePercent}%</div>
+            <div style="font-size:9px; color:var(--text-muted);">${b.serialNumber.replace('BAT-48V-', '#')}</div>
+          </div>
+        `;
+      } else if (i <= totalBays - 4) {
+        const chargingSoc = 25 + (i * 4);
+        html += `
+          <div class="bay-cell charging">
+            <div class="bay-num">Bay ${i}</div>
+            <div class="bay-soc" style="color:var(--warning-amber);">🔋 ${chargingSoc}%</div>
+            <div style="font-size:9px; color:var(--text-muted);">Charging</div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="bay-cell">
+            <div class="bay-num">Bay ${i}</div>
+            <div class="bay-soc" style="color:var(--text-muted);">Empty</div>
+            <div style="font-size:9px; color:var(--text-muted);">Ready in</div>
+          </div>
+        `;
+      }
+    }
+    grid.innerHTML = html;
+    document.getElementById('bayGridSummary').innerText = `${readyCount} Ready Batteries`;
+  }
+
+  async function toggleStationStatus(statusInt) {
+    const select = document.getElementById('partnerStationSelect');
+    const stationId = select.value;
+    if (!stationId) return;
+
+    try {
+      const res = await fetch(`/api/v1/stations/${stationId}/availability?availableCharged=8&charging=6&waitMinutes=2`, { method: 'POST' });
+      if (res.ok) {
+        alert('Station status updated in PostgreSQL!');
+      }
+    } catch (e) {
+      alert('Error updating status: ' + e);
+    }
+  }
+
+  async function submitPartnerTicket() {
+    const subject = document.getElementById('partnerTicketSubject').value.trim();
+    if (!subject) { alert('Please enter issue description'); return; }
+    const select = document.getElementById('partnerStationSelect');
+    const station = loadedStations.find(s => s.id === select.value);
+
+    try {
+      const res = await fetch('/api/v1/support/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userType: 1,
+          userId: station ? station.partnerId : '11111111-1111-1111-1111-111111111111',
+          category: 'Hardware Charger',
+          subject: subject,
+          description: `Reported by station ${station ? station.name : ''}`
+        })
+      });
+      if (res.ok) {
+        alert('Hardware maintenance ticket created in PostgreSQL!');
+        document.getElementById('partnerTicketSubject').value = '';
+      }
+    } catch (e) {
+      alert('Error reporting hardware issue: ' + e);
+    }
   }
 
   function toggleLanguage() {
     const lang = document.getElementById('langSelector').value;
     if (lang === 'hi') {
-      document.getElementById('txt-radar-title').innerText = 'आपके नज़दीकी स्वैप स्टेशन (दिल्ली NCR)';
+      document.getElementById('txt-radar-title').innerText = 'डेटाबेस के नज़दीकी स्वैप स्टेशन';
       document.getElementById('tab-stations').innerText = 'स्टेशन';
       document.getElementById('tab-swap').innerText = 'स्वैप';
       document.getElementById('tab-wallet').innerText = 'वॉलेट';
       document.getElementById('tab-profile').innerText = 'प्रोफ़ाइल';
+      document.getElementById('btnModeDriver').innerText = 'ड्राइवर ऐप';
+      document.getElementById('btnModePartner').innerText = 'पार्टनर स्टेशन ऐप';
     } else {
-      document.getElementById('txt-radar-title').innerText = 'Stations Near You (Delhi NCR)';
+      document.getElementById('txt-radar-title').innerText = 'Stations from PostgreSQL';
       document.getElementById('tab-stations').innerText = 'Stations';
       document.getElementById('tab-swap').innerText = 'Swap';
       document.getElementById('tab-wallet').innerText = 'Wallet';
       document.getElementById('tab-profile').innerText = 'Profile';
+      document.getElementById('btnModeDriver').innerText = 'Driver App';
+      document.getElementById('btnModePartner').innerText = 'Partner Station App';
     }
   }
 
-  // Initial load
-  loadStations();
+  // Run
+  initApp();
 </script>
 </body>
 </html>

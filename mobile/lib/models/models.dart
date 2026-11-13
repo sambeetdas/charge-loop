@@ -1,5 +1,6 @@
 class Station {
   final String id;
+  final String partnerId;
   final String name;
   final String address;
   final String city;
@@ -12,6 +13,7 @@ class Station {
 
   Station({
     required this.id,
+    required this.partnerId,
     required this.name,
     required this.address,
     required this.city,
@@ -26,6 +28,7 @@ class Station {
   factory Station.fromJson(Map<String, dynamic> json) {
     return Station(
       id: json['id'] ?? '',
+      partnerId: json['partnerId'] ?? '',
       name: json['name'] ?? '',
       address: json['address'] ?? '',
       city: json['city'] ?? '',
@@ -58,12 +61,119 @@ class DriverProfile {
 
   factory DriverProfile.fromJson(Map<String, dynamic> json) {
     return DriverProfile(
-      id: json['driverId'] ?? '',
+      id: json['driverId'] ?? json['id'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
-      fullName: json['fullName'] ?? 'Ravi Sharma',
+      fullName: json['fullName'] ?? 'Driver',
       token: json['token'] ?? '',
-      kycStatus: json['kycStatus'] ?? 1,
+      kycStatus: json['kycStatus'] ?? 0,
       walletBalance: (json['walletBalance'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class VehicleModel {
+  final String id;
+  final String registrationNumber;
+  final String oem;
+  final String model;
+  final String batteryCompatibilityType;
+
+  VehicleModel({
+    required this.id,
+    required this.registrationNumber,
+    required this.oem,
+    required this.model,
+    required this.batteryCompatibilityType,
+  });
+
+  factory VehicleModel.fromJson(Map<String, dynamic> json) {
+    return VehicleModel(
+      id: json['id'] ?? '',
+      registrationNumber: json['registrationNumber'] ?? '',
+      oem: json['oem'] ?? '',
+      model: json['model'] ?? '',
+      batteryCompatibilityType: json['batteryCompatibilityType'] ?? '2W_48V',
+    );
+  }
+}
+
+class BatteryModel {
+  final String id;
+  final String serialNumber;
+  final String modelType;
+  final int stateOfCharge;
+  final int stateOfHealth;
+  final double temperature;
+  final int status;
+
+  BatteryModel({
+    required this.id,
+    required this.serialNumber,
+    required this.modelType,
+    required this.stateOfCharge,
+    required this.stateOfHealth,
+    required this.temperature,
+    required this.status,
+  });
+
+  factory BatteryModel.fromJson(Map<String, dynamic> json) {
+    return BatteryModel(
+      id: json['id'] ?? '',
+      serialNumber: json['serialNumber'] ?? '',
+      modelType: json['modelType'] ?? '2W_48V',
+      stateOfCharge: json['stateOfChargePercent'] ?? json['stateOfCharge'] ?? 100,
+      stateOfHealth: json['stateOfHealthPercent'] ?? json['stateOfHealth'] ?? 100,
+      temperature: (json['cellTemperatureCelsius'] as num?)?.toDouble() ?? 30.0,
+      status: json['status'] ?? 0,
+    );
+  }
+}
+
+class DriverDetailModel {
+  final String id;
+  final String phoneNumber;
+  final String fullName;
+  final String languageCode;
+  final int kycStatus;
+  final String? drivingLicenseNumber;
+  final String? aadhaarMasked;
+  final double walletBalance;
+  final List<VehicleModel> vehicles;
+  final BatteryModel? activeBattery;
+
+  DriverDetailModel({
+    required this.id,
+    required this.phoneNumber,
+    required this.fullName,
+    required this.languageCode,
+    required this.kycStatus,
+    this.drivingLicenseNumber,
+    this.aadhaarMasked,
+    required this.walletBalance,
+    required this.vehicles,
+    this.activeBattery,
+  });
+
+  factory DriverDetailModel.fromJson(Map<String, dynamic> json) {
+    var vehiclesList = <VehicleModel>[];
+    if (json['vehicles'] != null) {
+      vehiclesList = (json['vehicles'] as List)
+          .map((v) => VehicleModel.fromJson(v))
+          .toList();
+    }
+    return DriverDetailModel(
+      id: json['id'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      fullName: json['fullName'] ?? 'Driver',
+      languageCode: json['languageCode'] ?? 'hi',
+      kycStatus: json['kycStatus'] ?? 0,
+      drivingLicenseNumber: json['drivingLicenseNumber'],
+      aadhaarMasked: json['aadhaarMasked'],
+      walletBalance: (json['walletBalance'] as num?)?.toDouble() ?? 0.0,
+      vehicles: vehiclesList,
+      activeBattery: json['activeBattery'] != null
+          ? BatteryModel.fromJson(json['activeBattery'])
+          : null,
     );
   }
 }

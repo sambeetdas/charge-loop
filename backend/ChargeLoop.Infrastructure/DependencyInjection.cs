@@ -22,6 +22,9 @@ public static class DependencyInjection
         services.AddScoped<ISwapService, SwapService>();
         services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<IDriverService, DriverService>();
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
+        services.AddScoped<IReservationService, ReservationService>();
+        services.AddScoped<ISupportService, SupportService>();
 
         return services;
     }

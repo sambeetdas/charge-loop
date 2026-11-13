@@ -30,6 +30,13 @@ public class StationsController : ControllerBase
         return Ok(station);
     }
 
+    [HttpGet("{id:guid}/batteries")]
+    public async Task<ActionResult<IReadOnlyList<BatteryDto>>> GetStationBatteries(Guid id)
+    {
+        var batteries = await _stationService.GetStationBatteriesAsync(id);
+        return Ok(batteries);
+    }
+
     [HttpPost("{id:guid}/availability")]
     public async Task<ActionResult> UpdateAvailability(
         Guid id, 

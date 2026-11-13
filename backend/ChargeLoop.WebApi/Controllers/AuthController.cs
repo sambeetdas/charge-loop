@@ -28,11 +28,18 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("profile/{driverId:guid}")]
-    public async Task<ActionResult> GetProfile(Guid driverId)
+    public async Task<ActionResult<DriverDetailDto>> GetProfile(Guid driverId)
     {
-        var profile = await _driverService.GetProfileAsync(driverId);
+        var profile = await _driverService.GetDriverDetailsAsync(driverId);
         if (profile == null) return NotFound("Driver not found");
         return Ok(profile);
+    }
+
+    [HttpGet("drivers")]
+    public async Task<ActionResult> GetAllDrivers()
+    {
+        var drivers = await _driverService.GetAllDriversAsync();
+        return Ok(drivers);
     }
 
     [HttpPost("kyc")]

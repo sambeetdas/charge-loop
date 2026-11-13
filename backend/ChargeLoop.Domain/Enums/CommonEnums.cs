@@ -51,3 +51,19 @@ public enum WalletAccountType
     Driver = 0,
     Partner = 1
 }
+
+public enum ReservationStatus
+{
+    Active = 0,
+    Fulfilled = 1,
+    Expired = 2,
+    Cancelled = 3
+}
+
+public enum TicketStatus
+{
+    Open = 0,
+    InReview = 1,
+    Resolved = 2,
+    Closed = 3
+}

@@ -1,3 +1,4 @@
+using ChargeLoop.Domain.Entities;
 using ChargeLoop.Domain.Enums;
 
 namespace ChargeLoop.Application.DTOs;
@@ -10,6 +11,7 @@ public record VehicleLinkRequest(Guid DriverId, string RegistrationNumber, strin
 
 public record StationDto(
     Guid Id,
+    Guid PartnerId,
     string Name,
     string Address,
     string City,
@@ -23,6 +25,29 @@ public record StationDto(
 );
 
 public record NearbyStationsRequest(double Latitude, double Longitude, double RadiusKm = 10.0);
+
+public record BatteryDto(
+    Guid Id,
+    string SerialNumber,
+    string ModelType,
+    int StateOfChargePercent,
+    int StateOfHealthPercent,
+    double CellTemperatureCelsius,
+    BatteryStatus Status
+);
+
+public record DriverDetailDto(
+    Guid Id,
+    string PhoneNumber,
+    string FullName,
+    string LanguageCode,
+    KycStatus KycStatus,
+    string? DrivingLicenseNumber,
+    string? AadhaarMasked,
+    decimal WalletBalance,
+    List<Vehicle> Vehicles,
+    BatteryDto? ActiveBattery
+);
 
 public record InitiateSwapRequest(
     Guid DriverId,
@@ -63,4 +88,62 @@ public record BatteryTelemetryReport(
     int CycleCount,
     double? Latitude,
     double? Longitude
+);
+
+// Subscription & Value-Add Feature DTOs
+public record SubscriptionPlanDto(
+    Guid Id,
+    string Name,
+    string Description,
+    int ValidityDays,
+    int MaxSwapsAllowed,
+    decimal Price,
+    bool IsActive
+);
+
+public record SubscribeRequest(Guid DriverId, Guid PlanId);
+
+public record DriverSubscriptionDto(
+    Guid Id,
+    Guid DriverId,
+    Guid PlanId,
+    string PlanName,
+    DateTime StartDate,
+    DateTime EndDate,
+    int SwapsUsed,
+    int SwapsTotalAllowed,
+    bool IsActive
+);
+
+public record ReservationRequest(Guid DriverId, Guid StationId);
+
+public record ReservationDto(
+    Guid Id,
+    Guid DriverId,
+    Guid StationId,
+    string StationName,
+    Guid? ReservedBatteryId,
+    string? BatterySerial,
+    DateTime ReservedAt,
+    DateTime ExpiresAt,
+    ReservationStatus Status
+);
+
+public record CreateTicketRequest(
+    WalletAccountType UserType,
+    Guid UserId,
+    string Category,
+    string Subject,
+    string Description
+);
+
+public record SupportTicketDto(
+    Guid Id,
+    WalletAccountType UserType,
+    Guid UserId,
+    string Category,
+    string Subject,
+    string Description,
+    TicketStatus Status,
+    DateTime CreatedAt
 );

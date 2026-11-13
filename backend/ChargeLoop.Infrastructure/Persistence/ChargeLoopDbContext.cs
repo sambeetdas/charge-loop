@@ -14,6 +14,10 @@ public class ChargeLoopDbContext : DbContext
     public DbSet<Battery> Batteries => Set<Battery>();
     public DbSet<SwapTransaction> Swaps => Set<SwapTransaction>();
     public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
+    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    public DbSet<DriverSubscription> DriverSubscriptions => Set<DriverSubscription>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,7 +44,10 @@ public class ChargeLoopDbContext : DbContext
              .HasForeignKey(x => x.DriverId)
              .OnDelete(DeleteBehavior.Cascade);
 
-            b.Ignore(x => x.Subscriptions);
+            b.HasMany(x => x.Subscriptions)
+             .WithOne()
+             .HasForeignKey(x => x.DriverId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Vehicles mapping
@@ -155,6 +162,64 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.Reason).HasColumnName("reason");
             b.Property(x => x.ReferenceId).HasColumnName("reference_id");
             b.Property(x => x.Timestamp).HasColumnName("timestamp");
+        });
+
+        // Subscription Plans mapping
+        modelBuilder.Entity<SubscriptionPlan>(b =>
+        {
+            b.ToTable("subscription_plans");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.Name).HasColumnName("name");
+            b.Property(x => x.Description).HasColumnName("description");
+            b.Property(x => x.ValidityDays).HasColumnName("validity_days");
+            b.Property(x => x.MaxSwapsAllowed).HasColumnName("max_swaps_allowed");
+            b.Property(x => x.Price).HasColumnName("price").HasColumnType("numeric(10,2)");
+            b.Property(x => x.IsActive).HasColumnName("is_active");
+        });
+
+        // Driver Subscriptions mapping
+        modelBuilder.Entity<DriverSubscription>(b =>
+        {
+            b.ToTable("driver_subscriptions");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.DriverId).HasColumnName("driver_id");
+            b.Property(x => x.PlanId).HasColumnName("plan_id");
+            b.Property(x => x.StartDate).HasColumnName("start_date");
+            b.Property(x => x.EndDate).HasColumnName("end_date");
+            b.Property(x => x.SwapsUsed).HasColumnName("swaps_used");
+            b.Property(x => x.SwapsTotalAllowed).HasColumnName("swaps_total_allowed");
+            b.Property(x => x.IsActive).HasColumnName("is_active");
+        });
+
+        // Reservations mapping
+        modelBuilder.Entity<Reservation>(b =>
+        {
+            b.ToTable("reservations");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.DriverId).HasColumnName("driver_id");
+            b.Property(x => x.StationId).HasColumnName("station_id");
+            b.Property(x => x.ReservedBatteryId).HasColumnName("reserved_battery_id");
+            b.Property(x => x.ReservedAt).HasColumnName("reserved_at");
+            b.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+            b.Property(x => x.Status).HasColumnName("status");
+        });
+
+        // Support Tickets mapping
+        modelBuilder.Entity<SupportTicket>(b =>
+        {
+            b.ToTable("support_tickets");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.UserType).HasColumnName("user_type");
+            b.Property(x => x.UserId).HasColumnName("user_id");
+            b.Property(x => x.Category).HasColumnName("category");
+            b.Property(x => x.Subject).HasColumnName("subject");
+            b.Property(x => x.Description).HasColumnName("description");
+            b.Property(x => x.Status).HasColumnName("status");
+            b.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
     }
 }

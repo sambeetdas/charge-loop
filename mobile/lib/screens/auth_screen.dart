@@ -11,21 +11,41 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final TextEditingController _phoneController = TextEditingController(text: '+91 98765 00001');
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   bool _isLoading = false;
   String _selectedLanguage = 'hi';
 
   void _login() async {
+    final phone = _phoneController.text.trim().replaceAll(' ', '');
+    final name = _nameController.text.trim();
+
+    if (phone.isEmpty || phone.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     final client = ApiClient();
-    final profile = await client.authenticate(_phoneController.text.replaceAll(' ', ''));
-    setState(() => _isLoading = false);
+    try {
+      final profile = await client.authenticate(phone, name: name.isEmpty ? null : name);
+      setState(() => _isLoading = false);
 
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => HomeScreen(profile: profile)),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen(profile: profile)),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: AppColors.dangerRed, content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -33,7 +53,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,9 +108,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(height: 48),
               Text(
-                _selectedLanguage == 'hi' ? 'नमस्ते ड्राइवर साथी!' : 'Welcome Driver Partner!',
+                _selectedLanguage == 'hi' ? 'ड्राइवर लॉगिन' : 'Driver Sign In',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -100,8 +120,8 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 8),
               Text(
                 _selectedLanguage == 'hi'
-                    ? '2 मिनट में बैटरी बदलें और बिना रुके कमाई करें।'
-                    : 'Swap your EV battery in 2 minutes & stay on the road.',
+                    ? 'अपना मोबाइल नंबर दर्ज करें और नेटवर्क से जुड़ें।'
+                    : 'Enter your phone number to access your battery network.',
                 style: const TextStyle(
                   fontSize: 15,
                   color: AppColors.textSecondary,
@@ -109,6 +129,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
               const SizedBox(height: 32),
+              // Mobile Number Input
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
@@ -123,8 +144,29 @@ class _AuthScreenState extends State<AuthScreen> {
                     prefixIcon: Icon(Icons.phone, color: AppColors.neonGreen),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    hintText: 'Enter Mobile Number',
-                    hintStyle: TextStyle(color: AppColors.textSecondary),
+                    hintText: 'Enter 10-digit mobile number',
+                    hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Full Name Input (Optional if already registered in DB)
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: TextField(
+                  controller: _nameController,
+                  keyboardType: TextInputType.name,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.person_outline, color: AppColors.textSecondary),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    hintText: 'Full Name (optional for existing drivers)',
+                    hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                   ),
                 ),
               ),
@@ -138,18 +180,17 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
                       )
                     : Text(
-                        _selectedLanguage == 'hi' ? 'OTP प्राप्त करें व आगे बढ़ें' : 'Send OTP & Continue',
+                        _selectedLanguage == 'hi' ? 'आगे बढ़ें (Verify & Login)' : 'Verify & Continue',
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               const Center(
                 child: Text(
-                  'By signing in, you agree to DPDP Act 2023 privacy terms',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  'Connected to PostgreSQL Database',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ),
-              const Spacer(),
             ],
           ),
         ),

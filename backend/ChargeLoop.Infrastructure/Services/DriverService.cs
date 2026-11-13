@@ -24,11 +24,16 @@ public class DriverService : IDriverService
             existing = new Driver
             {
                 PhoneNumber = request.PhoneNumber,
-                FullName = request.FullName ?? "New Driver",
+                FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Driver " + request.PhoneNumber[^4..] : request.FullName,
                 LanguageCode = request.LanguageCode ?? "hi",
-                WalletBalance = 200.00m // Welcome balance
+                WalletBalance = 200.00m // Welcome promotional balance
             };
             await _context.Drivers.AddAsync(existing);
+            await _context.SaveChangesAsync();
+        }
+        else if (!string.IsNullOrWhiteSpace(request.FullName) && existing.FullName != request.FullName)
+        {
+            existing.FullName = request.FullName;
             await _context.SaveChangesAsync();
         }
 
@@ -48,6 +53,51 @@ public class DriverService : IDriverService
         return await _context.Drivers
             .Include(d => d.Vehicles)
             .FirstOrDefaultAsync(d => d.Id == driverId);
+    }
+
+    public async Task<DriverDetailDto?> GetDriverDetailsAsync(Guid driverId)
+    {
+        var driver = await _context.Drivers
+            .Include(d => d.Vehicles)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == driverId);
+
+        if (driver == null) return null;
+
+        var activeBattery = await _context.Batteries
+            .AsNoTracking()
+            .Where(b => b.CurrentDriverId == driverId)
+            .Select(b => new BatteryDto(
+                b.Id,
+                b.SerialNumber,
+                b.ModelType,
+                b.StateOfChargePercent,
+                b.StateOfHealthPercent,
+                b.CellTemperatureCelsius,
+                b.Status
+            ))
+            .FirstOrDefaultAsync();
+
+        return new DriverDetailDto(
+            driver.Id,
+            driver.PhoneNumber,
+            driver.FullName,
+            driver.LanguageCode,
+            driver.KycStatus,
+            driver.DrivingLicenseNumber,
+            driver.AadhaarMasked,
+            driver.WalletBalance,
+            driver.Vehicles,
+            activeBattery
+        );
+    }
+
+    public async Task<IReadOnlyList<Driver>> GetAllDriversAsync()
+    {
+        return await _context.Drivers
+            .Include(d => d.Vehicles)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<bool> SubmitKycAsync(KycSubmissionRequest request)
