@@ -7,7 +7,7 @@ ChargeLoop operates an enterprise Battery-as-a-Service (BaaS) swapping network f
 ## 🏗️ System Architecture
 
 * **Mobile App Client**: **Flutter (Dart)** — Multiplatform codebase designed for **Android first** (budget device friendly, high-contrast sunlight readability) and seamlessly deployable to **iOS & macOS**.
-* **Backend Core API**: **ASP.NET Core (.NET 8/9, C#)** — High-throughput Clean Architecture API with:
+* **Backend Core API**: **ASP.NET Core (.NET 11, C#)** — High-throughput Clean Architecture API with:
   * **Real-time SignalR Hub** (`/hubs/stations`) for instant battery count and swap state broadcasting.
   * **Swap Engine** for sub-1.5s battery validation and 2-minute physical swap verification.
   * **Double-entry Wallet & Commission Ledger** for drivers and station partners.
@@ -45,9 +45,9 @@ ChargeLoop/
 
 ## 🚀 Getting Started
 
-### 1. Run the .NET 8 Backend API
+### 1. Run the .NET 11 Backend API
 
-Ensure .NET 8 or 10 SDK is installed:
+Ensure .NET 11 SDK is installed:
 
 ```powershell
 cd backend
