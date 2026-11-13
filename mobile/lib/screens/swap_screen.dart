@@ -211,7 +211,7 @@ class _SwapScreenState extends State<SwapScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Select Station from Database', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          const Text('Select Swapping Station', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -313,7 +313,7 @@ class _SwapScreenState extends State<SwapScreen> {
           children: [
             CircularProgressIndicator(color: AppColors.neonGreen, strokeWidth: 3),
             SizedBox(height: 20),
-            Text('Validating with PostgreSQL DB (< 1.5s)...', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text('Validating Station Handshake (< 1.5s)...', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
           ],
         ),
       ),
@@ -375,7 +375,7 @@ class _SwapScreenState extends State<SwapScreen> {
         children: [
           const Icon(Icons.check_circle, color: AppColors.neonGreen, size: 72),
           const SizedBox(height: 16),
-          const Text('Swap Completed in PostgreSQL!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          const Text('Swap Completed Successfully!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 6),
           Text('Duration: ${_secondsElapsed > 0 ? "$_secondsElapsed seconds" : "Completed"}', style: const TextStyle(color: AppColors.neonGreen, fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 24),

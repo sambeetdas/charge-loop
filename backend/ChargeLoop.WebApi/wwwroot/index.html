@@ -356,7 +356,7 @@
     <span id="clockTime">08:00 PM</span>
     <div class="status-pill">
       <div class="status-dot"></div>
-      <span>PostgreSQL Live</span>
+      <span>Network Live</span>
     </div>
     <span>5G ⚡</span>
   </div>
@@ -385,7 +385,7 @@
   <div id="screen-auth" class="screen-content">
     <div style="margin-top: 20px;">
       <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Driver Sign In</h2>
-      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Enter your phone number to access your account stored in PostgreSQL.</p>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Enter your phone number to access your account.</p>
 
       <input type="tel" id="authPhoneInput" class="input-box" placeholder="Enter 10-digit mobile number" />
       <input type="text" id="authNameInput" class="input-box" placeholder="Full Name (optional for existing users)" />
@@ -393,9 +393,9 @@
       <button class="btn-primary" onclick="submitAuth()">Verify & Sign In</button>
 
       <div style="margin-top: 24px;">
-        <span style="color: var(--text-muted); font-size: 12px;">Drivers loaded from PostgreSQL:</span>
+        <span style="color: var(--text-muted); font-size: 12px;">Select Driver Profile:</span>
         <div id="dbDriversList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-          <div style="color: var(--text-muted); font-size: 12px;">Querying database...</div>
+          <div style="color: var(--text-muted); font-size: 12px;">Loading profiles...</div>
         </div>
       </div>
     </div>
@@ -404,7 +404,7 @@
   <!-- SCREEN 1: STATIONS DISCOVERY -->
   <div id="screen-stations" class="screen-content active">
     <div class="card card-highlight">
-      <div style="font-weight: 700; font-size: 15px;" id="txt-radar-title">Stations from PostgreSQL</div>
+      <div style="font-weight: 700; font-size: 15px;" id="txt-radar-title">Nearby Swapping Stations</div>
       <div style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="stationsSummary">Loading live station availability...</div>
     </div>
 
@@ -499,7 +499,7 @@
   <!-- SCREEN 3: WALLET & SUBSCRIPTIONS -->
   <div id="screen-wallet" class="screen-content">
     <div class="card card-highlight">
-      <div style="color: var(--text-muted); font-size: 12px;">DRIVER WALLET (POSTGRESQL)</div>
+      <div style="color: var(--text-muted); font-size: 12px;">DRIVER DIGITAL WALLET</div>
       <div style="font-size: 32px; font-weight: 900; color: var(--neon-green); margin: 6px 0;" id="walletBalance">₹0.00</div>
       <div style="color: var(--text-muted); font-size: 12px;" id="walletStatusText">Loading ledger balance...</div>
     </div>
@@ -531,7 +531,7 @@
       <div style="width: 64px; height: 64px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 28px; color: var(--neon-green);">👤</div>
       <div style="font-size: 18px; font-weight: 800;" id="profName">Loading...</div>
       <div style="color: var(--text-muted); font-size: 13px;" id="profPhone">-</div>
-      <div class="badge-stock" style="margin-top: 6px;">✓ PostgreSQL Account</div>
+      <div class="badge-stock" style="margin-top: 6px;">✓ Verified Driver</div>
     </div>
 
     <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">LINKED EV VEHICLES</div>
@@ -1109,7 +1109,7 @@
         })
       });
       if (res.ok) {
-        alert('Ticket submitted successfully! Stored in PostgreSQL.');
+        alert('Ticket submitted successfully! Our support team is on it.');
         document.getElementById('ticketSubject').value = '';
         document.getElementById('ticketDesc').value = '';
         loadDriverTickets(activeDriver.id);
@@ -1231,7 +1231,7 @@
     try {
       const res = await fetch(`/api/v1/stations/${stationId}/availability?availableCharged=8&charging=6&waitMinutes=2`, { method: 'POST' });
       if (res.ok) {
-        alert('Station status updated in PostgreSQL!');
+        alert('Station status updated successfully!');
       }
     } catch (e) {
       alert('Error updating status: ' + e);
@@ -1257,7 +1257,7 @@
         })
       });
       if (res.ok) {
-        alert('Hardware maintenance ticket created in PostgreSQL!');
+        alert('Hardware maintenance ticket created successfully!');
         document.getElementById('partnerTicketSubject').value = '';
       }
     } catch (e) {
@@ -1268,7 +1268,7 @@
   function toggleLanguage() {
     const lang = document.getElementById('langSelector').value;
     if (lang === 'hi') {
-      document.getElementById('txt-radar-title').innerText = 'डेटाबेस के नज़दीकी स्वैप स्टेशन';
+      document.getElementById('txt-radar-title').innerText = 'नज़दीकी स्वैप स्टेशन';
       document.getElementById('tab-stations').innerText = 'स्टेशन';
       document.getElementById('tab-swap').innerText = 'स्वैप';
       document.getElementById('tab-wallet').innerText = 'वॉलेट';
@@ -1276,7 +1276,7 @@
       document.getElementById('btnModeDriver').innerText = 'ड्राइवर ऐप';
       document.getElementById('btnModePartner').innerText = 'पार्टनर स्टेशन ऐप';
     } else {
-      document.getElementById('txt-radar-title').innerText = 'Stations from PostgreSQL';
+      document.getElementById('txt-radar-title').innerText = 'Nearby Swapping Stations';
       document.getElementById('tab-stations').innerText = 'Stations';
       document.getElementById('tab-swap').innerText = 'Swap';
       document.getElementById('tab-wallet').innerText = 'Wallet';

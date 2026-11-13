@@ -187,7 +187,7 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 20),
               const Center(
                 child: Text(
-                  'Connected to PostgreSQL Database',
+                  'ChargeLoop EV Battery Swapping Network',
                   style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ),

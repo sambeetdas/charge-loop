@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Icon(Icons.verified, color: AppColors.neonGreen, size: 16),
                             SizedBox(width: 6),
                             Text(
-                              'PostgreSQL Registered Account',
+                              'Verified Driver Account',
                               style: TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold, fontSize: 12),
                             ),
                           ],
@@ -96,8 +96,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Linked Vehicles from Database
-                const Text('Linked EV Vehicles (From Database)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                // Linked Vehicles
+                const Text('Linked EV Vehicles', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
                 const SizedBox(height: 10),
                 if (vehicles.isEmpty)
                   Card(
