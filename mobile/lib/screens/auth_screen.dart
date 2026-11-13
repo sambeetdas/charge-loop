@@ -80,49 +80,130 @@ class _AuthScreenState extends State<AuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              // Brand Logo
+              // Official Brand Header
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.neonGreen.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/logo_icon.png',
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.neonGreen.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.electric_bolt, color: AppColors.neonGreen, size: 20),
+                      ),
                     ),
-                    child: const Icon(Icons.electric_bolt, color: AppColors.neonGreen, size: 28),
                   ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'ChargeLoop',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                      letterSpacing: 0.5,
-                    ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          text: 'Charge',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Loop',
+                              style: TextStyle(color: AppColors.neonGreen),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Text(
+                        'ENERGY SOLUTIONS',
+                        style: TextStyle(
+                          fontSize: 8,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 20),
+
+              // Official Brand Banner
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/banner_horizontal.jpg',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Official Tagline & Value Props
+              Center(
+                child: Column(
+                  children: [
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        text: 'Swap. Ride. ',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -0.4,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: 'Repeat.',
+                            style: TextStyle(color: AppColors.neonGreen),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _buildFeaturePill('⚡ Quick swaps', AppColors.neonGreen),
+                        _buildFeaturePill('🔋 Charged & tested batteries', AppColors.brightCyan),
+                        _buildFeaturePill('📋 Fleet plans', AppColors.warningAmber),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
 
               const Text(
                 'Sign In / Sign Up',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               const Text(
                 'Select your account type to access the battery network.',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: AppColors.textSecondary,
                   height: 1.4,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Account Role Selection
               const Text(
@@ -278,16 +359,40 @@ class _AuthScreenState extends State<AuthScreen> {
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
-              const SizedBox(height: 24),
-              const Center(
-                child: Text(
-                  'ChargeLoop EV Battery Swapping Network',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              const SizedBox(height: 20),
+              Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Swap. Ride. Repeat.',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.neonGreen),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'www.chargeloopsln.in',
+                      style: TextStyle(fontSize: 12, color: AppColors.brightCyan.withOpacity(0.8), decoration: TextDecoration.underline),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturePill(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.35)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }

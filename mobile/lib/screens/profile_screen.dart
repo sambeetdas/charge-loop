@@ -183,6 +183,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                   child: const Text('Switch Account / Sign Out'),
                 ),
+                const SizedBox(height: 24),
+
+                // Brand Footer
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: const TextSpan(
+                          text: 'Swap. Ride. ',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Repeat.',
+                              style: TextStyle(color: AppColors.neonGreen),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Quick swaps • Charged & tested batteries • Fleet plans',
+                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'www.chargeloopsln.in',
+                        style: TextStyle(fontSize: 12, color: AppColors.brightCyan, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 20),
               ],
             ),
