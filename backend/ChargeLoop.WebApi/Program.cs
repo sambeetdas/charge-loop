@@ -23,7 +23,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddSignalR();
 
 // Application & Infrastructure Services
-builder.Services.AddInfrastructureServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // CORS setup for mobile and web clients
 builder.Services.AddCors(options =>

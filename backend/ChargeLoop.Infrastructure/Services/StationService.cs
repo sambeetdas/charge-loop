@@ -1,25 +1,28 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
 using ChargeLoop.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChargeLoop.Infrastructure.Services;
 
 public class StationService : IStationService
 {
-    private readonly InMemoryDataStore _dataStore;
+    private readonly ChargeLoopDbContext _context;
     private readonly IRealTimeNotificationService _notificationService;
 
-    public StationService(InMemoryDataStore dataStore, IRealTimeNotificationService notificationService)
+    public StationService(ChargeLoopDbContext context, IRealTimeNotificationService notificationService)
     {
-        _dataStore = dataStore;
+        _context = context;
         _notificationService = notificationService;
     }
 
-    public Task<IReadOnlyList<StationDto>> GetNearbyStationsAsync(NearbyStationsRequest request)
+    public async Task<IReadOnlyList<StationDto>> GetNearbyStationsAsync(NearbyStationsRequest request)
     {
+        // Read directly from PostgreSQL database
+        var stations = await _context.Stations.AsNoTracking().ToListAsync();
         var result = new List<StationDto>();
 
-        foreach (var station in _dataStore.Stations.Values)
+        foreach (var station in stations)
         {
             var distance = CalculateDistanceKm(request.Latitude, request.Longitude, station.Latitude, station.Longitude);
             if (distance <= request.RadiusKm)
@@ -40,64 +43,62 @@ public class StationService : IStationService
             }
         }
 
-        var sorted = result.OrderBy(s => s.DistanceKm).ToList();
-        return Task.FromResult<IReadOnlyList<StationDto>>(sorted);
+        return result.OrderBy(s => s.DistanceKm).ToList();
     }
 
-    public Task<StationDto?> GetStationByIdAsync(Guid stationId)
+    public async Task<StationDto?> GetStationByIdAsync(Guid stationId)
     {
-        if (_dataStore.Stations.TryGetValue(stationId, out var station))
-        {
-            var dto = new StationDto(
-                station.Id,
-                station.Name,
-                station.Address,
-                station.City,
-                station.Latitude,
-                station.Longitude,
-                station.AvailableChargedBatteriesCount,
-                station.ChargingBatteriesCount,
-                station.EstimatedWaitTimeMinutes,
-                station.Status,
-                null
-            );
-            return Task.FromResult<StationDto?>(dto);
-        }
-        return Task.FromResult<StationDto?>(null);
+        var station = await _context.Stations.AsNoTracking().FirstOrDefaultAsync(s => s.Id == stationId);
+        if (station == null) return null;
+
+        return new StationDto(
+            station.Id,
+            station.Name,
+            station.Address,
+            station.City,
+            station.Latitude,
+            station.Longitude,
+            station.AvailableChargedBatteriesCount,
+            station.ChargingBatteriesCount,
+            station.EstimatedWaitTimeMinutes,
+            station.Status,
+            null
+        );
     }
 
     public async Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes)
     {
-        if (_dataStore.Stations.TryGetValue(stationId, out var station))
-        {
-            station.AvailableChargedBatteriesCount = availableCharged;
-            station.ChargingBatteriesCount = charging;
-            station.EstimatedWaitTimeMinutes = waitTimeMinutes;
-            station.LastStatusUpdate = DateTime.UtcNow;
+        var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId);
+        if (station == null) return false;
 
-            var dto = new StationDto(
-                station.Id,
-                station.Name,
-                station.Address,
-                station.City,
-                station.Latitude,
-                station.Longitude,
-                station.AvailableChargedBatteriesCount,
-                station.ChargingBatteriesCount,
-                station.EstimatedWaitTimeMinutes,
-                station.Status,
-                null
-            );
+        station.AvailableChargedBatteriesCount = availableCharged;
+        station.ChargingBatteriesCount = charging;
+        station.EstimatedWaitTimeMinutes = waitTimeMinutes;
+        station.LastStatusUpdate = DateTime.UtcNow;
 
-            await _notificationService.NotifyStationUpdatedAsync(dto);
-            return true;
-        }
-        return false;
+        await _context.SaveChangesAsync();
+
+        var dto = new StationDto(
+            station.Id,
+            station.Name,
+            station.Address,
+            station.City,
+            station.Latitude,
+            station.Longitude,
+            station.AvailableChargedBatteriesCount,
+            station.ChargingBatteriesCount,
+            station.EstimatedWaitTimeMinutes,
+            station.Status,
+            null
+        );
+
+        await _notificationService.NotifyStationUpdatedAsync(dto);
+        return true;
     }
 
     private static double CalculateDistanceKm(double lat1, double lon1, double lat2, double lon2)
     {
-        const double r = 6371.0; // Earth radius in km
+        const double r = 6371.0;
         var dLat = ToRadians(lat2 - lat1);
         var dLon = ToRadians(lon2 - lon1);
         var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +

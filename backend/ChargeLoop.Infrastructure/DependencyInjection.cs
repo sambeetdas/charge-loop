@@ -1,15 +1,22 @@
 using ChargeLoop.Application.Interfaces;
 using ChargeLoop.Infrastructure.Persistence;
 using ChargeLoop.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ChargeLoop.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<InMemoryDataStore>();
+        var connectionString = configuration.GetConnectionString("DefaultConnection") 
+            ?? "Host=localhost;Port=5432;Database=chargeloop;Username=postgres;Password=Sambeet@123;Include Error Detail=true;";
+
+        services.AddDbContext<ChargeLoopDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
         services.AddSingleton<IRealTimeNotificationService, RealTimeNotificationService>();
         services.AddScoped<IStationService, StationService>();
         services.AddScoped<ISwapService, SwapService>();

@@ -3,43 +3,40 @@ using ChargeLoop.Application.Interfaces;
 using ChargeLoop.Domain.Entities;
 using ChargeLoop.Domain.Enums;
 using ChargeLoop.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChargeLoop.Infrastructure.Services;
 
 public class WalletService : IWalletService
 {
-    private readonly InMemoryDataStore _dataStore;
+    private readonly ChargeLoopDbContext _context;
 
-    public WalletService(InMemoryDataStore dataStore)
+    public WalletService(ChargeLoopDbContext context)
     {
-        _dataStore = dataStore;
+        _context = context;
     }
 
-    public Task<decimal> GetBalanceAsync(Guid accountId, WalletAccountType accountType)
+    public async Task<decimal> GetBalanceAsync(Guid accountId, WalletAccountType accountType)
     {
         if (accountType == WalletAccountType.Driver)
         {
-            if (_dataStore.Drivers.TryGetValue(accountId, out var driver))
-            {
-                return Task.FromResult(driver.WalletBalance);
-            }
+            var driver = await _context.Drivers.FindAsync(accountId);
+            return driver?.WalletBalance ?? 0.00m;
         }
-        else if (accountType == WalletAccountType.Partner)
+        else
         {
-            if (_dataStore.Partners.TryGetValue(accountId, out var partner))
-            {
-                return Task.FromResult(partner.WalletBalance);
-            }
+            var partner = await _context.Partners.FindAsync(accountId);
+            return partner?.WalletBalance ?? 0.00m;
         }
-        return Task.FromResult(0.00m);
     }
 
-    public Task<WalletBalanceResponse> TopUpAsync(WalletTopUpRequest request)
+    public async Task<WalletBalanceResponse> TopUpAsync(WalletTopUpRequest request)
     {
         decimal newBalance = 0.00m;
         if (request.AccountType == WalletAccountType.Driver)
         {
-            if (_dataStore.Drivers.TryGetValue(request.AccountId, out var driver))
+            var driver = await _context.Drivers.FindAsync(request.AccountId);
+            if (driver != null)
             {
                 driver.WalletBalance += request.Amount;
                 newBalance = driver.WalletBalance;
@@ -47,7 +44,8 @@ public class WalletService : IWalletService
         }
         else
         {
-            if (_dataStore.Partners.TryGetValue(request.AccountId, out var partner))
+            var partner = await _context.Partners.FindAsync(request.AccountId);
+            if (partner != null)
             {
                 partner.WalletBalance += request.Amount;
                 newBalance = partner.WalletBalance;
@@ -61,46 +59,50 @@ public class WalletService : IWalletService
             Amount = request.Amount,
             Type = WalletTransactionType.Credit,
             Reason = $"Top-up via reference {request.PaymentReference}",
-            ReferenceId = request.PaymentReference
+            ReferenceId = request.PaymentReference,
+            Timestamp = DateTime.UtcNow
         };
-        _dataStore.WalletTransactions[transaction.Id] = transaction;
+        await _context.WalletTransactions.AddAsync(transaction);
+        await _context.SaveChangesAsync();
 
-        var recent = _dataStore.WalletTransactions.Values
+        var recent = await _context.WalletTransactions
+            .AsNoTracking()
             .Where(t => t.AccountId == request.AccountId)
             .OrderByDescending(t => t.Timestamp)
             .Take(10)
             .Select(t => new WalletTransactionDto(t.Id, t.Amount, t.Type, t.Reason, t.Timestamp))
-            .ToList();
+            .ToListAsync();
 
-        return Task.FromResult(new WalletBalanceResponse(request.AccountId, newBalance, recent));
+        return new WalletBalanceResponse(request.AccountId, newBalance, recent);
     }
 
-    public Task<bool> DeductDriverAmountAsync(Guid driverId, decimal amount, string reason, Guid swapId)
+    public async Task<bool> DeductDriverAmountAsync(Guid driverId, decimal amount, string reason, Guid swapId)
     {
-        if (_dataStore.Drivers.TryGetValue(driverId, out var driver))
+        var driver = await _context.Drivers.FindAsync(driverId);
+        if (driver != null && driver.WalletBalance >= amount)
         {
-            if (driver.WalletBalance >= amount)
+            driver.WalletBalance -= amount;
+            var transaction = new WalletTransaction
             {
-                driver.WalletBalance -= amount;
-                var transaction = new WalletTransaction
-                {
-                    AccountId = driverId,
-                    AccountType = WalletAccountType.Driver,
-                    Amount = amount,
-                    Type = WalletTransactionType.Debit,
-                    Reason = reason,
-                    ReferenceId = swapId.ToString()
-                };
-                _dataStore.WalletTransactions[transaction.Id] = transaction;
-                return Task.FromResult(true);
-            }
+                AccountId = driverId,
+                AccountType = WalletAccountType.Driver,
+                Amount = amount,
+                Type = WalletTransactionType.Debit,
+                Reason = reason,
+                ReferenceId = swapId.ToString(),
+                Timestamp = DateTime.UtcNow
+            };
+            await _context.WalletTransactions.AddAsync(transaction);
+            await _context.SaveChangesAsync();
+            return true;
         }
-        return Task.FromResult(false);
+        return false;
     }
 
-    public Task<bool> CreditPartnerCommissionAsync(Guid partnerId, decimal commission, Guid swapId)
+    public async Task<bool> CreditPartnerCommissionAsync(Guid partnerId, decimal commission, Guid swapId)
     {
-        if (_dataStore.Partners.TryGetValue(partnerId, out var partner))
+        var partner = await _context.Partners.FindAsync(partnerId);
+        if (partner != null)
         {
             partner.WalletBalance += commission;
             var transaction = new WalletTransaction
@@ -110,11 +112,13 @@ public class WalletService : IWalletService
                 Amount = commission,
                 Type = WalletTransactionType.Credit,
                 Reason = "Instant swap commission share",
-                ReferenceId = swapId.ToString()
+                ReferenceId = swapId.ToString(),
+                Timestamp = DateTime.UtcNow
             };
-            _dataStore.WalletTransactions[transaction.Id] = transaction;
-            return Task.FromResult(true);
+            await _context.WalletTransactions.AddAsync(transaction);
+            await _context.SaveChangesAsync();
+            return true;
         }
-        return Task.FromResult(false);
+        return false;
     }
 }

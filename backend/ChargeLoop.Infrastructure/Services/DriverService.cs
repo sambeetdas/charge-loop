@@ -3,64 +3,66 @@ using ChargeLoop.Application.Interfaces;
 using ChargeLoop.Domain.Entities;
 using ChargeLoop.Domain.Enums;
 using ChargeLoop.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChargeLoop.Infrastructure.Services;
 
 public class DriverService : IDriverService
 {
-    private readonly InMemoryDataStore _dataStore;
+    private readonly ChargeLoopDbContext _context;
 
-    public DriverService(InMemoryDataStore dataStore)
+    public DriverService(ChargeLoopDbContext context)
     {
-        _dataStore = dataStore;
+        _context = context;
     }
 
-    public Task<AuthResponse> AuthenticateWithPhoneAsync(AuthRequest request)
+    public async Task<AuthResponse> AuthenticateWithPhoneAsync(AuthRequest request)
     {
-        var existing = _dataStore.Drivers.Values.FirstOrDefault(d => d.PhoneNumber == request.PhoneNumber);
+        var existing = await _context.Drivers.FirstOrDefaultAsync(d => d.PhoneNumber == request.PhoneNumber);
         if (existing == null)
         {
-            // Auto-create new driver
             existing = new Driver
             {
                 PhoneNumber = request.PhoneNumber,
                 FullName = request.FullName ?? "New Driver",
                 LanguageCode = request.LanguageCode ?? "hi",
-                WalletBalance = 200.00m // Welcome promotional balance
+                WalletBalance = 200.00m // Welcome balance
             };
-            _dataStore.Drivers[existing.Id] = existing;
+            await _context.Drivers.AddAsync(existing);
+            await _context.SaveChangesAsync();
         }
 
-        var token = $"ey-chargeloop-mock-jwt-{existing.Id}";
-        return Task.FromResult(new AuthResponse(
+        var token = $"ey-chargeloop-jwt-{existing.Id}";
+        return new AuthResponse(
             existing.Id,
             existing.PhoneNumber,
             existing.FullName,
             token,
             existing.KycStatus,
             existing.WalletBalance
-        ));
+        );
     }
 
-    public Task<Driver?> GetProfileAsync(Guid driverId)
+    public async Task<Driver?> GetProfileAsync(Guid driverId)
     {
-        _dataStore.Drivers.TryGetValue(driverId, out var driver);
-        return Task.FromResult(driver);
+        return await _context.Drivers
+            .Include(d => d.Vehicles)
+            .FirstOrDefaultAsync(d => d.Id == driverId);
     }
 
-    public Task<bool> SubmitKycAsync(KycSubmissionRequest request)
+    public async Task<bool> SubmitKycAsync(KycSubmissionRequest request)
     {
-        if (_dataStore.Drivers.TryGetValue(request.DriverId, out var driver))
-        {
-            driver.DrivingLicenseNumber = request.DrivingLicenseNumber;
-            driver.AadhaarMasked = $"XXXXXXXX{request.AadhaarNumber[^4..]}";
-            driver.KycStatus = KycStatus.Verified;
-            return Task.FromResult(true);
-        }
-        return Task.FromResult(false);
+        var driver = await _context.Drivers.FindAsync(request.DriverId);
+        if (driver == null) return false;
+
+        driver.DrivingLicenseNumber = request.DrivingLicenseNumber;
+        driver.AadhaarMasked = $"XXXXXXXX{request.AadhaarNumber[^4..]}";
+        driver.KycStatus = KycStatus.Verified;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
-    public Task<Vehicle> LinkVehicleAsync(VehicleLinkRequest request)
+    public async Task<Vehicle> LinkVehicleAsync(VehicleLinkRequest request)
     {
         var vehicle = new Vehicle
         {
@@ -70,13 +72,8 @@ public class DriverService : IDriverService
             Model = request.Model,
             BatteryCompatibilityType = request.BatteryType
         };
-        _dataStore.Vehicles[vehicle.Id] = vehicle;
-
-        if (_dataStore.Drivers.TryGetValue(request.DriverId, out var driver))
-        {
-            driver.Vehicles.Add(vehicle);
-        }
-
-        return Task.FromResult(vehicle);
+        await _context.Vehicles.AddAsync(vehicle);
+        await _context.SaveChangesAsync();
+        return vehicle;
     }
 }
