@@ -21,23 +21,30 @@ ChargeLoop operates an enterprise Battery-as-a-Service (BaaS) swapping network f
 
 ```
 ChargeLoop/
+├── database/                             # Database migrations, schema DDL, seed data & setup scripts
+│   ├── 01_init_schema.sql                # Core schema DDL & performance indexes
+│   ├── 02_seed_data.sql                  # Seed partners, stations, drivers, vehicles & batteries
+│   ├── 03_reset_database.sql             # Teardown & reset script
+│   ├── setup_database.ps1                # Automated PowerShell setup script
+│   ├── setup_database.sh                 # Automated Bash setup script
+│   └── README.md                         # Comprehensive PostgreSQL setup documentation
 ├── requirement/
 │   └── 2026-11-13/
 │       └── ChargeLoop_BRD.docx           # Business Requirements Document
-├── backend/                              # .NET 8 Clean Architecture Solution
-│   ├── ChargeLoop.slnx
-│   ├── ChargeLoop.Domain/                # Entities (Driver, Vehicle, Battery, Station, Swap)
+├── doc/                                  # Project documentation (PRD, Requirements, Architecture, Tasks)
+├── backend/                              # .NET 11 Clean Architecture Solution
+│   ├── ChargeLoop.Domain/                # Entities (Driver, Vehicle, Battery, Station, Swap, Partner)
 │   ├── ChargeLoop.Application/           # DTOs, Service Interfaces
-│   ├── ChargeLoop.Infrastructure/        # Services, In-memory seed store, SignalR event bridge
-│   └── ChargeLoop.WebApi/                # Controllers (Auth, Stations, Swaps, Wallet, Telemetry), SignalR Hubs
-├── mobile/                               # Flutter Multiplatform Driver App
+│   ├── ChargeLoop.Infrastructure/        # PostgreSQL EF Core DbContext, Services, SignalR event bridge
+│   └── ChargeLoop.WebApi/                # Controllers (Auth, Stations, Swaps, Wallet, Support), SignalR Hubs
+├── mobile/                               # Flutter Multiplatform Driver & Vendor App
 │   ├── pubspec.yaml
 │   └── lib/
 │       ├── core/theme/                   # High-contrast electric UI theme
-│       ├── core/network/                 # REST & SignalR API client with offline fallback
-│       ├── models/                       # Data models
+│       ├── core/network/                 # REST & SignalR API client
+│       ├── models/                       # Data models (Driver, Vendor, Station, Battery)
 │       ├── widgets/                      # Custom Battery Gauge (SOC %), status badges
-│       └── screens/                      # Auth, Stations Map, 2-Min Swap, Wallet, Profile
+│       └── screens/                      # Auth, Stations Map, 2-Min Swap, Wallet, Vendor Operations & Profiles
 └── docker-compose.yml                    # PostgreSQL + PostGIS & Redis services
 ```
 
@@ -62,7 +69,26 @@ This script:
 
 ### Manual Launch (Step-by-Step)
 
-#### 1. Run the .NET 11 Backend API
+#### 1. Setup PostgreSQL Database
+
+Initialize the `chargeloop` database and seed data with one command:
+
+```powershell
+# Using the automated setup script
+.\database\setup_database.ps1
+```
+
+Or execute directly with `psql`:
+```bash
+psql -h localhost -p 5432 -U postgres -d postgres -c "CREATE DATABASE chargeloop;"
+psql -h localhost -p 5432 -U postgres -d chargeloop -f database/01_init_schema.sql
+psql -h localhost -p 5432 -U postgres -d chargeloop -f database/02_seed_data.sql
+```
+*(See [`database/README.md`](database/README.md) for full guide, table dictionary, and reset instructions).*
+
+---
+
+#### 2. Run the .NET 11 Backend API
 
 Ensure .NET 11 SDK is installed:
 
@@ -76,7 +102,7 @@ dotnet run --project ChargeLoop.WebApi
 
 ---
 
-### 2. Start PostgreSQL + PostGIS and Redis (Optional for local persistent DB)
+#### 3. Run with Docker Compose (Alternative)
 
 ```powershell
 docker compose up -d
