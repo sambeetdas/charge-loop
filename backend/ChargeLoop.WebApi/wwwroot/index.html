@@ -336,7 +336,15 @@
   <!-- Header (Official Logo & Tagline Branding) -->
   <div class="app-header">
     <div class="brand">
-      <img src="/assets/logo_icon.png" alt="ChargeLoop Logo" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover;" />
+      <div style="width: 32px; height: 32px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #00C853; box-shadow: 0 0 10px rgba(0, 200, 83, 0.4);">
+        <svg viewBox="0 0 100 100" width="30" height="30">
+          <path d="M 28 52 A 26 26 0 0 1 72 44" fill="none" stroke="#0B1E36" stroke-width="8.5" stroke-linecap="round" />
+          <polygon points="78,42 66,35 69,48" fill="#0B1E36" />
+          <path d="M 72 48 A 26 26 0 0 1 28 56" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" />
+          <polygon points="22,58 34,65 31,52" fill="#FFFFFF" />
+          <polygon points="53,24 38,49 48,49 45,76 64,45 52,45" fill="#FFA500" />
+        </svg>
+      </div>
       <div>
         <div style="font-size: 18px; font-weight: 900; letter-spacing: -0.3px; line-height: 1.1;">
           Charge<span style="color: var(--neon-green);">Loop</span>
@@ -352,26 +360,43 @@
 
   <!-- ======================== SCREEN: AUTH & SIGN UP (DRIVER / VENDOR) ======================== -->
   <div id="screen-auth" class="screen-content active">
-    <!-- Brand Banner Card with Logo & Tagline -->
-    <div style="border-radius: 16px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-      <img src="/assets/banner_horizontal.jpg" alt="ChargeLoop - Swap. Ride. Repeat." style="width: 100%; height: auto; display: block;" />
-    </div>
+    <!-- Sleek Native Brand Hero Card -->
+    <div style="background: linear-gradient(145deg, rgba(20, 27, 45, 0.95), rgba(10, 14, 23, 0.9)); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 20px; padding: 22px 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+      <!-- Glowing Circular Brand Mark -->
+      <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+        <div style="width: 72px; height: 72px; border-radius: 18px; background: #00C853; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 24px rgba(0, 200, 83, 0.45); border: 1.5px solid rgba(255,255,255,0.2);">
+          <svg viewBox="0 0 100 100" width="66" height="66">
+            <!-- Dark Navy Upper Arc Arrow -->
+            <path d="M 28 52 A 26 26 0 0 1 72 44" fill="none" stroke="#0B1E36" stroke-width="8.5" stroke-linecap="round" />
+            <polygon points="78,42 66,35 69,48" fill="#0B1E36" />
+            <!-- White Lower Arc Arrow -->
+            <path d="M 72 48 A 26 26 0 0 1 28 56" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" />
+            <polygon points="22,58 34,65 31,52" fill="#FFFFFF" />
+            <!-- Golden Center Lightning Bolt -->
+            <polygon points="53,24 38,49 48,49 45,76 64,45 52,45" fill="#FFA500" />
+          </svg>
+        </div>
+      </div>
 
-    <!-- Official Tagline & Value Props -->
-    <div style="text-align: center; margin-bottom: 18px;">
-      <div style="font-size: 26px; font-weight: 900; line-height: 1.2; letter-spacing: -0.5px;">
+      <!-- Tagline -->
+      <div style="font-size: 26px; font-weight: 900; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 4px;">
         Swap. Ride. <span style="color: var(--neon-green);">Repeat.</span>
       </div>
-      <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 10px;">
-        <span style="background: rgba(0, 230, 118, 0.12); color: var(--neon-green); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0, 230, 118, 0.3);">⚡ Quick swaps</span>
-        <span style="background: rgba(0, 229, 255, 0.12); color: var(--bright-cyan); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0, 229, 255, 0.3);">🔋 Charged & tested batteries</span>
-        <span style="background: rgba(255, 179, 0, 0.12); color: var(--warning-amber); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255, 179, 0, 0.3);">📋 Fleet plans</span>
+      <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 14px;">
+        SMART EV BATTERY SWAPPING NETWORK
+      </div>
+
+      <!-- Value Assurance Chips -->
+      <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
+        <span style="background: rgba(0, 230, 118, 0.1); color: var(--neon-green); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 230, 118, 0.25);">⚡ Quick swaps</span>
+        <span style="background: rgba(0, 229, 255, 0.1); color: var(--bright-cyan); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 229, 255, 0.25);">🔋 Tested batteries</span>
+        <span style="background: rgba(255, 179, 0, 0.1); color: var(--warning-amber); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255, 179, 0, 0.25);">📋 Fleet plans</span>
       </div>
     </div>
 
     <div style="margin-top: 10px;">
-      <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 4px;">Sign In / Sign Up</h2>
-      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 18px;">Choose your account type to access the platform.</p>
+      <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Sign In / Sign Up</h2>
+      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Choose your account type to access the platform.</p>
 
       <!-- Role Selection Field -->
       <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px; color: var(--text-muted);">ACCOUNT TYPE</div>
@@ -399,10 +424,15 @@
       </div>
 
       <div id="vendorAuthFields" style="display: none;">
-        <input type="tel" id="authVendorPhone" class="input-box" placeholder="Vendor Mobile Number" />
+        <input type="tel" id="authVendorPhone" class="input-box" placeholder="Vendor Mobile Number (e.g. 9811223344)" />
         <input type="text" id="authVendorName" class="input-box" placeholder="Contact Person Name" />
-        <input type="text" id="authVendorBusiness" class="input-box" placeholder="Station / Business Name (e.g. Metro Swapping Hub)" />
-        <button class="btn-primary" onclick="submitVendorAuth()">Sign In as Vendor</button>
+        <input type="text" id="authVendorBusiness" class="input-box" placeholder="Vendor / Enterprise Name (e.g. Verma Mobility)" />
+
+        <div style="font-size: 11px; color: var(--bright-cyan); line-height: 1.4; margin-bottom: 12px; background: rgba(0, 229, 255, 0.08); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0, 229, 255, 0.2);">
+          ℹ️ <strong>Multi-Station Support:</strong> One vendor can operate multiple stations/hubs. You can register and manage your stations after sign in.
+        </div>
+
+        <button class="btn-primary" onclick="submitVendorAuth()">Sign In / Register as Vendor</button>
 
         <div style="margin-top: 24px;">
           <span style="color: var(--text-muted); font-size: 12px;">Quick Select Active Vendor:</span>
@@ -433,7 +463,15 @@
           Quick swaps • Tested & charged batteries
         </div>
       </div>
-      <img src="/assets/logo_icon.png" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;" />
+      <div style="width: 36px; height: 36px; border-radius: 9px; background: #00C853; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0, 200, 83, 0.4);">
+        <svg viewBox="0 0 100 100" width="32" height="32">
+          <path d="M 28 52 A 26 26 0 0 1 72 44" fill="none" stroke="#0B1E36" stroke-width="8.5" stroke-linecap="round" />
+          <polygon points="78,42 66,35 69,48" fill="#0B1E36" />
+          <path d="M 72 48 A 26 26 0 0 1 28 56" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" />
+          <polygon points="22,58 34,65 31,52" fill="#FFFFFF" />
+          <polygon points="53,24 38,49 48,49 45,76 64,45 52,45" fill="#FFA500" />
+        </svg>
+      </div>
     </div>
 
     <div class="card card-highlight">
@@ -604,45 +642,82 @@
 
   <!-- VENDOR SCREEN 1: OPERATIONS / STATIONS -->
   <div id="screen-vendor-stations" class="screen-content">
-    <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">OPERATED STATION</div>
+    <!-- Header with Station Switcher & Add Hub Button -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+      <div style="font-weight: 700; font-size: 12px; color: var(--text-muted);">MANAGED STATION / HUB</div>
+      <button class="btn-outline" style="width: auto; height: 30px; padding: 2px 10px; font-size: 11px; font-weight: 700; color: var(--neon-green); border-color: rgba(0, 230, 118, 0.4); display: flex; align-items: center; gap: 4px;" onclick="toggleAddStationForm()">
+        <span>+ Add Station / Hub</span>
+      </button>
+    </div>
     <select id="vendorStationSelect" class="input-box" onchange="onVendorStationSelectChanged()"></select>
 
+    <!-- Inline Add Station Card -->
+    <div id="addStationCard" class="card" style="display: none; border-color: rgba(0, 230, 118, 0.4); background: rgba(0, 230, 118, 0.04); margin-bottom: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="font-weight: 800; font-size: 14px; color: var(--neon-green);">➕ Register New Station / Hub</div>
+        <button class="btn-outline" style="width: auto; height: 26px; padding: 0 8px; font-size: 11px; border: none; color: var(--text-muted);" onclick="toggleAddStationForm()">✕ Close</button>
+      </div>
+      <input type="text" id="newStationName" class="input-box" placeholder="Station / Hub Name (e.g. Metro Swapping Hub - Janakpuri)" />
+      <input type="text" id="newStationAddress" class="input-box" placeholder="Street Address / Metro Pillar / Landmark" />
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <input type="text" id="newStationCity" class="input-box" placeholder="City (e.g. New Delhi)" value="New Delhi" />
+        <input type="number" id="newStationBays" class="input-box" placeholder="Total Bays" value="12" />
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <input type="number" id="newStationCharged" class="input-box" placeholder="Initial Ready" value="6" />
+        <input type="number" id="newStationCharging" class="input-box" placeholder="Initial Charging" value="4" />
+      </div>
+      <button class="btn-primary" style="height: 42px; font-size: 13px; margin-top: 4px;" onclick="submitNewStation()">
+        Confirm & Link Station to Vendor
+      </button>
+    </div>
+
+    <!-- Empty State when Vendor has no stations -->
+    <div id="vendorNoStationsMsg" class="card" style="display: none; text-align: center; padding: 24px 16px;">
+      <div style="font-size: 32px; margin-bottom: 8px;">🏪</div>
+      <div style="font-weight: 800; font-size: 16px; margin-bottom: 4px;">No Stations Registered Yet</div>
+      <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">One vendor can operate multiple stations. Register your first swapping hub to start managing inventory and earning commissions.</div>
+      <button class="btn-primary" style="height: 40px; font-size: 13px;" onclick="toggleAddStationForm(true)">+ Add Swapping Station / Hub</button>
+    </div>
+
     <!-- Operational State Card -->
-    <div class="card card-highlight">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="font-weight: 800; font-size: 16px;" id="vendorStationTitle">Station Hub</div>
-          <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="vendorStationAddress">Address</div>
+    <div id="vendorStationCard">
+      <div class="card card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 800; font-size: 16px;" id="vendorStationTitle">Station Hub</div>
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="vendorStationAddress">Address</div>
+          </div>
+          <div class="badge-stock" id="vendorStationStatusBadge">Open</div>
         </div>
-        <div class="badge-stock" id="vendorStationStatusBadge">Open</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+          <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
+            <div style="font-size: 22px; font-weight: 900; color: var(--neon-green);" id="vendorReadyCount">0</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Ready Batteries</div>
+          </div>
+          <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
+            <div style="font-size: 22px; font-weight: 900; color: var(--warning-amber);" id="vendorChargingCount">0</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Charging Bays</div>
+          </div>
+        </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
-        <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
-          <div style="font-size: 22px; font-weight: 900; color: var(--neon-green);" id="vendorReadyCount">0</div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Ready Batteries</div>
-        </div>
-        <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
-          <div style="font-size: 22px; font-weight: 900; color: var(--warning-amber);" id="vendorChargingCount">0</div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Charging Bays</div>
+      <!-- Station Controls -->
+      <div class="card">
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Update Operational State</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--neon-green); border-color: var(--neon-green);" onclick="setStationStatus(0)">Set Open</button>
+          <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--warning-amber); border-color: var(--warning-amber);" onclick="setStationStatus(2)">Maintenance</button>
+          <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--danger-red); border-color: var(--danger-red);" onclick="setStationStatus(1)">Set Closed</button>
         </div>
       </div>
-    </div>
 
-    <!-- Station Controls -->
-    <div class="card">
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Update Operational State</div>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--neon-green); border-color: var(--neon-green);" onclick="setStationStatus(0)">Set Open</button>
-        <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--warning-amber); border-color: var(--warning-amber);" onclick="setStationStatus(2)">Maintenance</button>
-        <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--danger-red); border-color: var(--danger-red);" onclick="setStationStatus(1)">Set Closed</button>
+      <!-- Ready Batteries List at this station -->
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px; margin-top: 14px;">Charged Batteries in Stock</div>
+      <div id="vendorStationBatteriesList">
+        <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading battery inventory...</div>
       </div>
-    </div>
-
-    <!-- Ready Batteries List at this station -->
-    <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px; margin-top: 14px;">Charged Batteries in Stock</div>
-    <div id="vendorStationBatteriesList">
-      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading battery inventory...</div>
     </div>
   </div>
 
@@ -724,7 +799,10 @@
     </div>
 
     <!-- Operated Stations List -->
-    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">OPERATED STATIONS</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 14px;">
+      <div style="font-weight: 700; font-size: 13px;">OPERATED STATIONS (<span id="profVendorStationCount">0</span>)</div>
+      <button class="btn-outline" style="width: auto; height: 28px; padding: 2px 8px; font-size: 11px; color: var(--bright-cyan); border-color: rgba(0, 229, 255, 0.4);" onclick="switchVendorTab('stations'); toggleAddStationForm(true);">+ Add Hub</button>
+    </div>
     <div id="profVendorStationsList">
       <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading stations...</div>
     </div>
@@ -1012,18 +1090,28 @@
     // Populate Stations Dropdown & Stations in Profile
     const stSelect = document.getElementById('vendorStationSelect');
     const pStList = document.getElementById('profVendorStationsList');
+    const stationCountEl = document.getElementById('profVendorStationCount');
+    const noStationsMsg = document.getElementById('vendorNoStationsMsg');
+    const stationCard = document.getElementById('vendorStationCard');
 
-    if (vendor.stations && vendor.stations.length > 0) {
-      stSelect.innerHTML = vendor.stations.map(s => `
+    const stations = vendor.stations || [];
+    if (stationCountEl) stationCountEl.innerText = stations.length;
+
+    if (stations.length > 0) {
+      if (noStationsMsg) noStationsMsg.style.display = 'none';
+      if (stationCard) stationCard.style.display = 'block';
+      stSelect.style.display = 'block';
+
+      stSelect.innerHTML = stations.map(s => `
         <option value="${s.id}">${s.name} (${s.city})</option>
       `).join('');
 
-      pStList.innerHTML = vendor.stations.map(s => `
+      pStList.innerHTML = stations.map(s => `
         <div class="card">
           <div style="font-weight:700; font-size:14px;">${s.name}</div>
-          <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${s.address}</div>
+          <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${s.address} • ${s.city}</div>
           <div style="display:flex; justify-content:space-between; margin-top:8px;">
-            <span class="badge-stock">⚡ ${s.availableChargedBatteries} Ready</span>
+            <span class="badge-stock">⚡ ${s.availableChargedBatteries} Ready to Swap</span>
             <span style="font-size:11px; color:var(--text-muted);">${s.status === 0 ? '🟢 Open' : '🟡 Maintenance'}</span>
           </div>
         </div>
@@ -1031,12 +1119,78 @@
 
       onVendorStationSelectChanged();
     } else {
+      if (noStationsMsg) noStationsMsg.style.display = 'block';
+      if (stationCard) stationCard.style.display = 'none';
+      stSelect.style.display = 'none';
       stSelect.innerHTML = `<option value="">No stations registered</option>`;
-      pStList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No stations registered under this vendor.</div>`;
+      pStList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No stations registered under this vendor yet. Click "+ Add Hub" above to link your first station.</div>`;
     }
 
     loadVendorTickets(vendor.id);
     loadVendorCommissions(vendor.id);
+  }
+
+  function toggleAddStationForm(forceOpen = false) {
+    const card = document.getElementById('addStationCard');
+    if (!card) return;
+    if (forceOpen === true) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = card.style.display === 'none' ? 'block' : 'none';
+    }
+  }
+
+  async function submitNewStation() {
+    if (!activeUser || !activeUser.id) {
+      alert('Please sign in as a vendor first.');
+      return;
+    }
+    const name = document.getElementById('newStationName').value.trim();
+    const address = document.getElementById('newStationAddress').value.trim();
+    const city = document.getElementById('newStationCity').value.trim() || 'New Delhi';
+    const bays = parseInt(document.getElementById('newStationBays').value) || 12;
+    const charged = parseInt(document.getElementById('newStationCharged').value) || 6;
+    const charging = parseInt(document.getElementById('newStationCharging').value) || 4;
+
+    if (!name || !address) {
+      alert('Please enter Station Name and Address');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/stations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerId: activeUser.id,
+          name: name,
+          address: address,
+          city: city,
+          latitude: 28.6289 + (Math.random() - 0.5) * 0.04,
+          longitude: 77.0818 + (Math.random() - 0.5) * 0.04,
+          totalBays: bays,
+          initialChargedBatteries: charged,
+          initialChargingBatteries: charging
+        })
+      });
+
+      if (res.ok) {
+        const created = await res.json();
+        alert(`✓ Station "${created.name}" registered and linked to your vendor account!`);
+        document.getElementById('newStationName').value = '';
+        document.getElementById('newStationAddress').value = '';
+        document.getElementById('addStationCard').style.display = 'none';
+
+        // Reload vendor profile and update UI
+        await enterAsVendor(activeUser.id);
+        // Refresh driver stations list
+        await loadStations();
+      } else {
+        alert('Failed to register station: ' + (await res.text()));
+      }
+    } catch (e) {
+      alert('Error registering station: ' + e);
+    }
   }
 
   async function onVendorStationSelectChanged() {

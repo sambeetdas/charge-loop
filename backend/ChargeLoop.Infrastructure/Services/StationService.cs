@@ -1,5 +1,6 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using ChargeLoop.Domain.Entities;
 using ChargeLoop.Domain.Enums;
 using ChargeLoop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -115,6 +116,93 @@ public class StationService : IStationService
 
         await _notificationService.NotifyStationUpdatedAsync(dto);
         return true;
+    }
+
+    public async Task<StationDto> CreateStationAsync(CreateStationRequest request)
+    {
+        var station = new Station
+        {
+            Id = Guid.NewGuid(),
+            PartnerId = request.PartnerId,
+            Name = request.Name,
+            Address = request.Address,
+            City = string.IsNullOrWhiteSpace(request.City) ? "Delhi NCR" : request.City,
+            Latitude = request.Latitude != 0 ? request.Latitude : 28.6139,
+            Longitude = request.Longitude != 0 ? request.Longitude : 77.2090,
+            TotalBays = request.TotalBays > 0 ? request.TotalBays : 12,
+            AvailableChargedBatteriesCount = request.InitialChargedBatteries,
+            ChargingBatteriesCount = request.InitialChargingBatteries,
+            EstimatedWaitTimeMinutes = 0,
+            Status = StationStatus.Open,
+            OpenTime = new TimeSpan(6, 0, 0),
+            CloseTime = new TimeSpan(23, 0, 0),
+            LastStatusUpdate = DateTime.UtcNow
+        };
+
+        _context.Stations.Add(station);
+
+        // Seed initial charged batteries for this new station so drivers can immediately swap there
+        int chargedCount = request.InitialChargedBatteries > 0 ? request.InitialChargedBatteries : 6;
+        for (int i = 1; i <= chargedCount; i++)
+        {
+            var suffix = Guid.NewGuid().ToString("N")[..4].ToUpperInvariant();
+            _context.Batteries.Add(new Battery
+            {
+                Id = Guid.NewGuid(),
+                SerialNumber = $"CL-B{DateTime.UtcNow:MMdd}-{suffix}",
+                ModelType = "2W_48V",
+                StateOfChargePercent = 98 + (i % 3),
+                StateOfHealthPercent = 98,
+                CellTemperatureCelsius = 28.0 + (i * 0.4),
+                CycleCount = 10 + i,
+                Status = BatteryStatus.AvailableCharged,
+                CurrentStationId = station.Id,
+                LastTelemetryTimestamp = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        var dto = new StationDto(
+            station.Id,
+            station.PartnerId,
+            station.Name,
+            station.Address,
+            station.City,
+            station.Latitude,
+            station.Longitude,
+            station.AvailableChargedBatteriesCount,
+            station.ChargingBatteriesCount,
+            station.EstimatedWaitTimeMinutes,
+            station.Status,
+            null
+        );
+
+        await _notificationService.NotifyStationUpdatedAsync(dto);
+        return dto;
+    }
+
+    public async Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId)
+    {
+        var stations = await _context.Stations
+            .AsNoTracking()
+            .Where(s => s.PartnerId == partnerId)
+            .ToListAsync();
+
+        return stations.Select(s => new StationDto(
+            s.Id,
+            s.PartnerId,
+            s.Name,
+            s.Address,
+            s.City,
+            s.Latitude,
+            s.Longitude,
+            s.AvailableChargedBatteriesCount,
+            s.ChargingBatteriesCount,
+            s.EstimatedWaitTimeMinutes,
+            s.Status,
+            null
+        )).ToList();
     }
 
     private static double CalculateDistanceKm(double lat1, double lon1, double lat2, double lon2)

@@ -80,78 +80,58 @@ class _AuthScreenState extends State<AuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              // Official Brand Header
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/logo_icon.png',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.neonGreen.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.electric_bolt, color: AppColors.neonGreen, size: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: const TextSpan(
-                          text: 'Charge',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.3,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: 'Loop',
-                              style: TextStyle(color: AppColors.neonGreen),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Text(
-                        'ENERGY SOLUTIONS',
-                        style: TextStyle(
-                          fontSize: 8,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+              // Brand Hero Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.surfaceElevated,
+                      AppColors.surface,
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Official Brand Banner
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/images/banner_horizontal.jpg',
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.neonGreen.withOpacity(0.25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Official Tagline & Value Props
-              Center(
                 child: Column(
                   children: [
+                    // Official Circular Logo Icon
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00C853),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00C853).withOpacity(0.4),
+                            blurRadius: 18,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/images/logo_icon.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.bolt, color: Colors.amber, size: 36),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Tagline
                     RichText(
                       textAlign: TextAlign.center,
                       text: const TextSpan(
@@ -170,14 +150,26 @@ class _AuthScreenState extends State<AuthScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'SMART EV BATTERY SWAPPING NETWORK',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Feature Assurance Chips
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
                       alignment: WrapAlignment.center,
                       children: [
                         _buildFeaturePill('⚡ Quick swaps', AppColors.neonGreen),
-                        _buildFeaturePill('🔋 Charged & tested batteries', AppColors.brightCyan),
+                        _buildFeaturePill('🔋 Tested batteries', AppColors.brightCyan),
                         _buildFeaturePill('📋 Fleet plans', AppColors.warningAmber),
                       ],
                     ),
@@ -338,9 +330,30 @@ class _AuthScreenState extends State<AuthScreen> {
                       prefixIcon: Icon(Icons.business, color: AppColors.textSecondary),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      hintText: 'Station or Business Name',
+                      hintText: 'Vendor / Enterprise Name (e.g. Verma Mobility)',
                       hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.brightCyan.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.brightCyan.withOpacity(0.2)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: AppColors.brightCyan, size: 16),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'One vendor can operate multiple stations. Add & manage stations after sign in.',
+                          style: TextStyle(fontSize: 11, color: AppColors.brightCyan),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -355,7 +368,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
                       )
                     : Text(
-                        _selectedRole == 'driver' ? 'Sign In as Driver' : 'Sign In as Vendor',
+                        _selectedRole == 'driver' ? 'Sign In as Driver' : 'Sign In / Register as Vendor',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),

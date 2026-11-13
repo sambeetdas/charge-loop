@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
+import '../core/network/api_client.dart';
 import '../models/models.dart';
 import 'auth_screen.dart';
 
@@ -15,6 +16,115 @@ class VendorHomeScreen extends StatefulWidget {
 class _VendorHomeScreenState extends State<VendorHomeScreen> {
   int _currentIndex = 0;
   int _stationStatus = 0; // 0=Open, 1=Closed, 2=Maintenance
+  List<StationModel> _stations = [];
+  StationModel? _selectedStation;
+  bool _isLoadingStations = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVendorStations();
+  }
+
+  void _loadVendorStations() async {
+    try {
+      final list = await ApiClient().getVendorStations(widget.vendor.id);
+      if (mounted) {
+        setState(() {
+          _stations = list;
+          if (_stations.isNotEmpty) {
+            _selectedStation = _stations.first;
+            _stationStatus = _selectedStation!.status;
+          }
+          _isLoadingStations = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingStations = false);
+    }
+  }
+
+  void _showAddStationDialog() {
+    final nameCtrl = TextEditingController();
+    final addrCtrl = TextEditingController();
+    final cityCtrl = TextEditingController(text: 'New Delhi');
+    final baysCtrl = TextEditingController(text: '12');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Register New Station / Hub', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Station / Hub Name', hintText: 'e.g. Metro Swapping Hub'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: addrCtrl,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Address', hintText: 'e.g. Sector 14 Metro Station'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: cityCtrl,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'City'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: baysCtrl,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Total Charging Bays'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              final addr = addrCtrl.text.trim();
+              final city = cityCtrl.text.trim();
+              final bays = int.tryParse(baysCtrl.text.trim()) ?? 12;
+
+              if (name.isEmpty || addr.isEmpty) return;
+
+              Navigator.pop(ctx);
+              try {
+                final created = await ApiClient().createStation(
+                  partnerId: widget.vendor.id,
+                  name: name,
+                  address: addr,
+                  city: city,
+                  totalBays: bays,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(backgroundColor: AppColors.neonGreen, content: Text('Station "${created.name}" registered!')),
+                );
+                _loadVendorStations();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(backgroundColor: AppColors.dangerRed, content: Text('Error: $e')),
+                );
+              }
+            },
+            child: const Text('Register Station'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,39 +173,90 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.vendor.businessName,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Operator: ${widget.vendor.fullName}',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: _stationStatus == 0 ? AppColors.neonGreen.withOpacity(0.15) : AppColors.warningAmber.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _stationStatus == 0 ? AppColors.neonGreen : AppColors.warningAmber),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.vendor.businessName,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Operator: ${widget.vendor.fullName}',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  ),
+                ],
               ),
-              child: Text(
-                _stationStatus == 0 ? '🟢 Station Open' : '🟡 Maintenance',
-                style: TextStyle(
-                  color: _stationStatus == 0 ? AppColors.neonGreen : AppColors.warningAmber,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                ),
+            ),
+            ElevatedButton.icon(
+              onPressed: _showAddStationDialog,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add Hub', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.neonGreen,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ),
           ],
         ),
         const SizedBox(height: 20),
+
+        // Station Selector Dropdown (Multi-station support)
+        if (_stations.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<StationModel>(
+                value: _selectedStation,
+                isExpanded: true,
+                dropdownColor: AppColors.surfaceElevated,
+                items: _stations.map((s) {
+                  return DropdownMenuItem<StationModel>(
+                    value: s,
+                    child: Text('${s.name} (${s.city})', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedStation = val;
+                      _stationStatus = val.status;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ] else if (!_isLoadingStations) ...[
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const Icon(Icons.ev_station, size: 40, color: AppColors.neonGreen),
+                  const SizedBox(height: 10),
+                  const Text('No Stations Registered Yet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 6),
+                  const Text('Tap "Add Hub" to register your first swapping station.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13), textAlign: TextAlign.center),
+                  const SizedBox(height: 14),
+                  ElevatedButton(
+                    onPressed: _showAddStationDialog,
+                    child: const Text('Register First Station'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
 
         // Metrics Overview
         Row(
@@ -105,10 +266,13 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
-                    children: const [
-                      Text('8', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.neonGreen)),
-                      SizedBox(height: 4),
-                      Text('Ready Batteries', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    children: [
+                      Text(
+                        '${_selectedStation?.availableCharged ?? 0}',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.neonGreen),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text('Ready Batteries', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -120,10 +284,13 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
-                    children: const [
-                      Text('6', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.warningAmber)),
-                      SizedBox(height: 4),
-                      Text('Charging Bays', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    children: [
+                      Text(
+                        '${_selectedStation?.charging ?? 0}',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.warningAmber),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text('Charging Bays', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -303,7 +470,55 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Operated Hubs (${_stations.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+            TextButton.icon(
+              onPressed: _showAddStationDialog,
+              icon: const Icon(Icons.add, size: 16, color: AppColors.brightCyan),
+              label: const Text('Add Hub', style: TextStyle(color: AppColors.brightCyan, fontSize: 13, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (_stations.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: const Text('No stations registered yet under this vendor.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            ),
+          )
+        else
+          ..._stations.map((s) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+                          const SizedBox(height: 2),
+                          Text('${s.address} • ${s.city}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.neonGreen.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('⚡ ${s.availableCharged} Ready', style: const TextStyle(color: AppColors.neonGreen, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+        const SizedBox(height: 20),
         OutlinedButton(
           onPressed: () {
             Navigator.pushReplacement(

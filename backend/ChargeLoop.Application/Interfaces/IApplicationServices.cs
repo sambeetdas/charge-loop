@@ -20,6 +20,8 @@ public interface IStationService
     Task<StationDto?> GetStationByIdAsync(Guid stationId);
     Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId);
     Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes);
+    Task<StationDto> CreateStationAsync(CreateStationRequest request);
+    Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId);
 }
 
 public interface ISwapService

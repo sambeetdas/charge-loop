@@ -167,6 +167,55 @@ class ApiClient {
       throw Exception('Wallet top-up failed: ${response.body}');
     }
   }
+
+  // 8. Create & Register Station (Vendor Hub)
+  Future<StationModel> createStation({
+    required String partnerId,
+    required String name,
+    required String address,
+    required String city,
+    double latitude = 28.6289,
+    double longitude = 77.0818,
+    int totalBays = 12,
+    int initialCharged = 6,
+    int initialCharging = 4,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/v1/stations'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'partnerId': partnerId,
+        'name': name,
+        'address': address,
+        'city': city,
+        'latitude': latitude,
+        'longitude': longitude,
+        'totalBays': totalBays,
+        'initialChargedBatteries': initialCharged,
+        'initialChargingBatteries': initialCharging,
+      }),
+    ).timeout(const Duration(seconds: 8));
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return StationModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to register station: ${response.body}');
+    }
+  }
+
+  // 9. Fetch Vendor Stations
+  Future<List<StationModel>> getVendorStations(String partnerId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/v1/stations/partner/$partnerId'),
+    ).timeout(const Duration(seconds: 8));
+
+    if (response.statusCode == 200) {
+      final List list = jsonDecode(response.body);
+      return list.map((item) => StationModel.fromJson(item)).toList();
+    } else {
+      return [];
+    }
+  }
 }
 
 class SwapResponseModel {

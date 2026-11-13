@@ -48,4 +48,22 @@ public class StationsController : ControllerBase
         if (!updated) return NotFound("Station not found");
         return Ok(new { Message = "Station availability updated and broadcast to mobile clients" });
     }
+
+    [HttpPost]
+    public async Task<ActionResult<StationDto>> CreateStation([FromBody] CreateStationRequest request)
+    {
+        if (request.PartnerId == Guid.Empty || string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest("PartnerId and Station Name are required.");
+        }
+        var station = await _stationService.CreateStationAsync(request);
+        return CreatedAtAction(nameof(GetStationById), new { id = station.Id }, station);
+    }
+
+    [HttpGet("partner/{partnerId:guid}")]
+    public async Task<ActionResult<IReadOnlyList<StationDto>>> GetStationsByPartner(Guid partnerId)
+    {
+        var stations = await _stationService.GetStationsByPartnerIdAsync(partnerId);
+        return Ok(stations);
+    }
 }

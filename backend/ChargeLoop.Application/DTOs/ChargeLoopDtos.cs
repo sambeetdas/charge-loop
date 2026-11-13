@@ -28,6 +28,18 @@ public record StationDto(
     double? DistanceKm
 );
 
+public record CreateStationRequest(
+    Guid PartnerId,
+    string Name,
+    string Address,
+    string City,
+    double Latitude,
+    double Longitude,
+    int TotalBays = 12,
+    int InitialChargedBatteries = 6,
+    int InitialChargingBatteries = 4
+);
+
 public record NearbyStationsRequest(double Latitude, double Longitude, double RadiusKm = 10.0);
 
 public record BatteryDto(
