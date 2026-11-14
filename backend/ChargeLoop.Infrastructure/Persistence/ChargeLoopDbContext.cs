@@ -18,6 +18,7 @@ public class ChargeLoopDbContext : DbContext
     public DbSet<DriverSubscription> DriverSubscriptions => Set<DriverSubscription>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+    public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +38,9 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.AadhaarMasked).HasColumnName("aadhaar_masked");
             b.Property(x => x.WalletBalance).HasColumnName("wallet_balance").HasColumnType("numeric(12,2)");
             b.Property(x => x.ActiveSubscriptionId).HasColumnName("active_subscription_id");
+            b.Property(x => x.Email).HasColumnName("email");
+            b.Property(x => x.ReferralCode).HasColumnName("referral_code");
+            b.Property(x => x.ReferredByCode).HasColumnName("referred_by_code");
             b.Property(x => x.CreatedAt).HasColumnName("created_at");
 
             b.HasMany(x => x.Vehicles)
@@ -146,6 +150,8 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.TotalAmount).HasColumnName("total_amount").HasColumnType("numeric(10,2)");
             b.Property(x => x.PartnerCommissionEarned).HasColumnName("partner_commission_earned").HasColumnType("numeric(10,2)");
             b.Property(x => x.PaymentMethod).HasColumnName("payment_method");
+            b.Property(x => x.InvoiceNumber).HasColumnName("invoice_number");
+            b.Property(x => x.BillSentChannels).HasColumnName("bill_sent_channels");
             b.Property(x => x.Notes).HasColumnName("notes");
         });
 
@@ -219,6 +225,19 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.Subject).HasColumnName("subject");
             b.Property(x => x.Description).HasColumnName("description");
             b.Property(x => x.Status).HasColumnName("status");
+            b.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // OTP Verifications mapping
+        modelBuilder.Entity<OtpVerification>(b =>
+        {
+            b.ToTable("otp_verifications");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.PhoneNumber).HasColumnName("phone_number");
+            b.Property(x => x.OtpCode).HasColumnName("otp_code");
+            b.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+            b.Property(x => x.IsUsed).HasColumnName("is_used");
             b.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
     }

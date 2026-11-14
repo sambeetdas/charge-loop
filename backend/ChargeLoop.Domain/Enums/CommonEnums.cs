@@ -37,7 +37,8 @@ public enum PaymentMethod
     SubscriptionQuota = 0,
     Wallet = 1,
     UpiIntent = 2,
-    Cash = 3
+    Cash = 3,
+    Card = 4
 }
 
 public enum WalletTransactionType

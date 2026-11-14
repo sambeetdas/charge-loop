@@ -37,6 +37,25 @@ public class StationsController : ControllerBase
         return Ok(batteries);
     }
 
+    [HttpPost("{id:guid}/batteries")]
+    public async Task<ActionResult<BatteryDto>> RegisterBattery(Guid id, [FromBody] RegisterBatteryRequest request)
+    {
+        try
+        {
+            var effectiveRequest = request with { StationId = id };
+            var battery = await _stationService.RegisterBatteryAtStationAsync(effectiveRequest);
+            return Ok(battery);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpPost("{id:guid}/availability")]
     public async Task<ActionResult> UpdateAvailability(
         Guid id, 

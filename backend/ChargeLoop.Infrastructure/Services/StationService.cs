@@ -87,6 +87,60 @@ public class StationService : IStationService
             .ToListAsync();
     }
 
+    public async Task<BatteryDto> RegisterBatteryAtStationAsync(RegisterBatteryRequest request)
+    {
+        var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == request.StationId)
+            ?? throw new KeyNotFoundException("Station/store not found.");
+
+        var normalizedSerial = request.SerialNumber.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedSerial))
+            throw new ArgumentException("Battery serial number is required.");
+
+        var existing = await _context.Batteries.FirstOrDefaultAsync(b => b.SerialNumber == normalizedSerial);
+        if (existing != null)
+            throw new InvalidOperationException($"Battery {normalizedSerial} is already registered.");
+
+        var status = request.StateOfChargePercent >= 80
+            ? BatteryStatus.AvailableCharged
+            : BatteryStatus.ChargingInStation;
+
+        var battery = new Battery
+        {
+            SerialNumber = normalizedSerial,
+            ModelType = string.IsNullOrWhiteSpace(request.ModelType) ? "LFP-48V-30Ah" : request.ModelType.Trim(),
+            StateOfChargePercent = Math.Clamp(request.StateOfChargePercent, 0, 100),
+            StateOfHealthPercent = Math.Clamp(request.StateOfHealthPercent, 0, 100),
+            CellTemperatureCelsius = request.CellTemperatureCelsius,
+            Status = status,
+            CurrentStationId = station.Id,
+            CurrentDriverId = null
+        };
+
+        await _context.Batteries.AddAsync(battery);
+        if (status == BatteryStatus.AvailableCharged)
+            station.AvailableChargedBatteriesCount++;
+        else
+            station.ChargingBatteriesCount++;
+        station.LastStatusUpdate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        await _notificationService.NotifyStationUpdatedAsync(new StationDto(
+            station.Id, station.PartnerId, station.Name, station.Address, station.City,
+            station.Latitude, station.Longitude, station.AvailableChargedBatteriesCount,
+            station.ChargingBatteriesCount, station.EstimatedWaitTimeMinutes, station.Status, null));
+
+        return new BatteryDto(
+            battery.Id,
+            battery.SerialNumber,
+            battery.ModelType,
+            battery.StateOfChargePercent,
+            battery.StateOfHealthPercent,
+            battery.CellTemperatureCelsius,
+            battery.Status
+        );
+    }
+
     public async Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes)
     {
         var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId);

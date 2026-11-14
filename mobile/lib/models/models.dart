@@ -49,6 +49,8 @@ class DriverProfile {
   final String token;
   final int kycStatus;
   final double walletBalance;
+  final String? referralCode;
+  final String? email;
 
   DriverProfile({
     required this.id,
@@ -57,6 +59,8 @@ class DriverProfile {
     required this.token,
     required this.kycStatus,
     required this.walletBalance,
+    this.referralCode,
+    this.email,
   });
 
   factory DriverProfile.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,8 @@ class DriverProfile {
       token: json['token'] ?? '',
       kycStatus: json['kycStatus'] ?? 0,
       walletBalance: (json['walletBalance'] as num?)?.toDouble() ?? 0.0,
+      referralCode: json['referralCode'],
+      email: json['email'],
     );
   }
 }
@@ -175,6 +181,8 @@ class DriverDetailModel {
   final double walletBalance;
   final List<VehicleModel> vehicles;
   final BatteryModel? activeBattery;
+  final String? email;
+  final String? referralCode;
 
   DriverDetailModel({
     required this.id,
@@ -187,6 +195,8 @@ class DriverDetailModel {
     required this.walletBalance,
     required this.vehicles,
     this.activeBattery,
+    this.email,
+    this.referralCode,
   });
 
   factory DriverDetailModel.fromJson(Map<String, dynamic> json) {
@@ -200,7 +210,7 @@ class DriverDetailModel {
       id: json['id'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
       fullName: json['fullName'] ?? 'Driver',
-      languageCode: json['languageCode'] ?? 'hi',
+      languageCode: json['languageCode'] ?? 'en',
       kycStatus: json['kycStatus'] ?? 0,
       drivingLicenseNumber: json['drivingLicenseNumber'],
       aadhaarMasked: json['aadhaarMasked'],
@@ -209,6 +219,8 @@ class DriverDetailModel {
       activeBattery: json['activeBattery'] != null
           ? BatteryModel.fromJson(json['activeBattery'])
           : null,
+      email: json['email'],
+      referralCode: json['referralCode'],
     );
   }
 }

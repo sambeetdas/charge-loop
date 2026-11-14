@@ -30,6 +30,51 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("send-otp")]
+    public async Task<ActionResult<SendOtpResponse>> SendOtp([FromBody] SendOtpRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            return BadRequest(new { Error = "Phone number is required" });
+
+        var response = await _driverService.SendOtpAsync(request);
+        return Ok(response);
+    }
+
+    [HttpPost("verify-otp")]
+    public async Task<ActionResult<AuthResponse>> VerifyOtp([FromBody] VerifyOtpRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.OtpCode))
+            return BadRequest(new { Error = "Phone number and OTP code are required" });
+
+        try
+        {
+            var response = await _driverService.VerifyOtpAndAuthenticateAsync(request);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("referral/claim")]
+    public async Task<ActionResult<ReferralResponse>> ClaimReferral([FromBody] ClaimReferralRequest request)
+    {
+        try
+        {
+            var response = await _driverService.ClaimReferralCodeAsync(request);
+            return Ok(response);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpGet("profile/{driverId:guid}")]
     public async Task<ActionResult<DriverDetailDto>> GetProfile(Guid driverId)
     {

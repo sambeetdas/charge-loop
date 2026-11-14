@@ -43,12 +43,15 @@ CREATE TABLE IF NOT EXISTS drivers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     phone_number VARCHAR(20) NOT NULL UNIQUE,
     full_name VARCHAR(150) NOT NULL,
+    email VARCHAR(150),
     language_code VARCHAR(10) NOT NULL DEFAULT 'en',
     kyc_status INT NOT NULL DEFAULT 0, -- 0=Pending, 1=Verified, 2=Rejected
     driving_license_number VARCHAR(50),
     aadhaar_masked VARCHAR(20),
     wallet_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     active_subscription_id UUID,
+    referral_code VARCHAR(30) UNIQUE,
+    referred_by_code VARCHAR(30),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -96,7 +99,9 @@ CREATE TABLE IF NOT EXISTS swap_transactions (
     tax_amount NUMERIC(10, 2) NOT NULL DEFAULT 18.00,
     total_amount NUMERIC(10, 2) NOT NULL DEFAULT 118.00,
     partner_commission_earned NUMERIC(10, 2) NOT NULL DEFAULT 25.00,
-    payment_method INT NOT NULL DEFAULT 1, -- 0=UPI, 1=Wallet, 2=SubscriptionPass
+    payment_method INT NOT NULL DEFAULT 1, -- 0=SubscriptionQuota, 1=Wallet, 2=UPI, 3=Cash, 4=Card
+    invoice_number VARCHAR(50),
+    bill_sent_channels VARCHAR(100),
     notes TEXT
 );
 
@@ -158,6 +163,16 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 12. OTP_VERIFICATIONS (Phone OTP Registration & Sign-In)
+CREATE TABLE IF NOT EXISTS otp_verifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone_number VARCHAR(20) NOT NULL,
+    otp_code VARCHAR(10) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- Performance Indexes
 -- ==============================================================================
@@ -169,3 +184,4 @@ CREATE INDEX IF NOT EXISTS idx_swap_driver_id ON swap_transactions(driver_id);
 CREATE INDEX IF NOT EXISTS idx_swap_station_id ON swap_transactions(station_id);
 CREATE INDEX IF NOT EXISTS idx_wallet_account ON wallet_transactions(account_id, account_type);
 CREATE INDEX IF NOT EXISTS idx_reservations_driver_station ON reservations(driver_id, station_id);
+CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_verifications(phone_number);

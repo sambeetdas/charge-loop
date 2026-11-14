@@ -28,6 +28,8 @@
 | **DR-15** | **Driver Welfare Benefits**: In-app portal to view active accidental insurance cover (₹5,00,000) and milestone loyalty rewards. | **Should** |
 | **DR-16** | **Multi-Channel Notifications**: Push notifications, SMS, and WhatsApp alerts for low battery, renewal reminders, and receipts. | **Must** |
 | **DR-17** | **Offline-Tolerant Caching**: Graceful operation and cached station bookmarks when transitioning through 3G/low-network zones. | **Should** |
+| **DR-18** | **Credit / Debit Card Payment**: Support Credit Card and Debit Card payment flows alongside UPI, Wallet, Cash, and Subscription Passes for both wallet top-ups and direct swap payments. | **Must** |
+| **DR-19** | **Refer a Friend Program**: Generate unique driver referral codes, allow referral code application during signup, and credit referral rewards to driver wallets. | **Must** |
 
 ---
 
@@ -36,11 +38,11 @@
 | ID | Requirement Description | Priority |
 | :--- | :--- | :---: |
 | **PA-01** | **Partner Registration & Payout Setup**: Self-onboarding with business KYC, bank account / UPI ID payout configuration, and agreement e-sign. | **Must** |
-| **PA-02** | **Swap Creation & Validation**: Operator scans driver QR and barcodes of returned (depleted) and issued (charged) batteries to validate compatibility. | **Must** |
+| **PA-02** | **Driver Validation & Swap Execution**: Validate Driver (phone/ID, KYC, mounted battery, wallet/subscription status) before unlocking the Swap button; scan Driver's old battery QR for disconnection and scan new charged battery QR for assignment. | **Must** |
 | **PA-03** | **Exception Handling**: Reject incompatible batteries, report damaged/tampered batteries, and cancel swaps with standard reason codes. | **Must** |
-| **PA-04** | **Battery Bay Inventory Tracker**: Live visual grid of charging bays showing batteries charging, batteries fully charged (ready), and faulty bays. | **Must** |
-| **PA-05** | **Instant Commission Wallet**: Real-time credit of partner share (e.g. ₹25/swap) upon swap completion with 1-click withdrawal to bank/UPI. | **Must** |
-| **PA-06** | **Swap Audit Records**: Comprehensive swap history filterable by date, driver ID, battery serial, and payout status. | **Must** |
+| **PA-04** | **Battery Registration with Store Details**: Register new battery packs (Serial, Model, SOC %, SOH %) linked directly to the partner's store/station inventory, and provide live available charged battery counts. | **Must** |
+| **PA-05** | **Multi-Mode Payment Initiation & Instant Commission**: Initiate swap payment via Card, UPI, Cash, Wallet, or Weekly Subscription Pass; credit partner commission (₹25/swap) upon completion. | **Must** |
+| **PA-06** | **Multi-Channel Bill Publishing & Billing History**: Publish itemized GST swap bills to the Driver via WhatsApp, SMS, and Email, and generate complete billing history in the Driver app. | **Must** |
 | **PA-07** | **Daily & Monthly Earnings Dashboard**: Performance metrics, daily swap counts, revenue graphs, and incentive bonuses. | **Should** |
 | **PA-08** | **Station Status Control**: Toggle station operational state (Open, Closed, Maintenance, Power Outage) reflecting instantly on driver maps. | **Must** |
 | **PA-09** | **Hardware & Charger Ticket Raising**: Report station charger hardware failure or power issues directly to operations. | **Must** |

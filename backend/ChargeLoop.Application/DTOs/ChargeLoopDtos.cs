@@ -3,8 +3,15 @@ using ChargeLoop.Domain.Enums;
 
 namespace ChargeLoop.Application.DTOs;
 
-public record AuthRequest(string PhoneNumber, string? FullName, string? LanguageCode);
-public record AuthResponse(Guid DriverId, string PhoneNumber, string FullName, string Token, KycStatus KycStatus, decimal WalletBalance);
+public record AuthRequest(string PhoneNumber, string? FullName, string? LanguageCode, string? Email = null, string? ReferralCode = null);
+public record AuthResponse(Guid DriverId, string PhoneNumber, string FullName, string Token, KycStatus KycStatus, decimal WalletBalance, string? ReferralCode = null, string? Email = null);
+
+public record SendOtpRequest(string PhoneNumber);
+public record SendOtpResponse(string PhoneNumber, string DemoOtp, DateTime ExpiresAt, string Message);
+public record VerifyOtpRequest(string PhoneNumber, string OtpCode, string? FullName = null, string? Email = null, string? ReferralCode = null);
+
+public record ClaimReferralRequest(Guid DriverId, string ReferralCode);
+public record ReferralResponse(bool Success, decimal BonusAmount, decimal NewWalletBalance, string Message);
 
 public record VendorAuthRequest(string PhoneNumber, string? FullName, string? BusinessName);
 public record VendorAuthResponse(Guid VendorId, string PhoneNumber, string FullName, string BusinessName, string Token, decimal WalletBalance);
@@ -62,7 +69,34 @@ public record DriverDetailDto(
     string? AadhaarMasked,
     decimal WalletBalance,
     List<Vehicle> Vehicles,
-    BatteryDto? ActiveBattery
+    BatteryDto? ActiveBattery,
+    string? Email = null,
+    string? ReferralCode = null,
+    string? ReferredByCode = null
+);
+
+public record DriverValidationDto(
+    Guid DriverId,
+    string FullName,
+    string PhoneNumber,
+    string? Email,
+    KycStatus KycStatus,
+    decimal WalletBalance,
+    string? ActiveBatterySerial,
+    int? ActiveBatterySoc,
+    string? ActivePlanName,
+    int? RemainingPlanSwaps,
+    bool IsEligibleForSwap,
+    string ValidationMessage
+);
+
+public record RegisterBatteryRequest(
+    Guid StationId,
+    string SerialNumber,
+    string ModelType,
+    int StateOfChargePercent = 100,
+    int StateOfHealthPercent = 100,
+    double CellTemperatureCelsius = 28.0
 );
 
 public record InitiateSwapRequest(
@@ -89,8 +123,14 @@ public record SwapResponse(
     DateTime InitiatedAt,
     DateTime? CompletedAt,
     int? DurationSeconds,
-    string Message
+    string Message,
+    string? InvoiceNumber = null,
+    string? BillSentChannels = null,
+    PaymentMethod? PaymentMethod = null
 );
+
+public record PublishBillRequest(List<string> Channels, string? RecipientEmail = null, string? RecipientPhone = null);
+public record PublishBillResponse(Guid SwapId, string InvoiceNumber, List<string> SentChannels, DateTime PublishedAt, string Message);
 
 public record WalletTopUpRequest(Guid AccountId, WalletAccountType AccountType, decimal Amount, string PaymentReference);
 public record WalletBalanceResponse(Guid AccountId, decimal Balance, List<WalletTransactionDto> RecentTransactions);

@@ -59,7 +59,24 @@
 
 ---
 
-## 4. Phase 4: Production Integrations & Expansion (PENDING / ROADMAP 🟡)
+## 4. Phase 4: Partner & Driver Workflow Enhancements (PLANNED 📋)
+
+### 4.1 Partner (Vendor) Workflow Tasks
+- [ ] **TASK-PA07 (Driver Validation before Swap)**: Add `GET /api/v1/swaps/validate-driver?phoneOrId=...` endpoint and Partner Swap Desk UI to validate Driver KYC, active vehicle, currently mounted battery, subscription pass, and wallet balance before unlocking the Swap button.
+- [ ] **TASK-PA08 (Partner 2-Step Battery QR Scan)**: Add Partner-driven Swap workflow: (1) Scan Driver's old battery QR code for disconnection, and (2) Scan new charged station battery QR code for assignment to the driver.
+- [ ] **TASK-PA09 (Multi-Method Payment Initiation)**: Extend `PaymentMethod` enum and Swap confirmation flow to support **Card (Credit/Debit)**, **UPI**, **Cash**, **Wallet**, and **Weekly Subscription Quota**.
+- [ ] **TASK-PA10 (Register Battery with Store Details)**: Add `POST /api/v1/stations/{stationId}/batteries` endpoint and Partner UI form to register individual battery packs (Serial Number, Model Type, SOC %, SOH %) linked to a specific Store/Station.
+- [ ] **TASK-PA11 (Multi-Channel Bill Publishing)**: Generate GST Invoice numbers (`INV-YYYYMMDD-XXXX`) and implement `POST /api/v1/swaps/{swapId}/publish-bill` to dispatch bills to the Driver via **WhatsApp**, **SMS**, and **Email**.
+
+### 4.2 Driver Workflow Tasks
+- [ ] **TASK-DR01 (Phone Registration with OTP Verification)**: Implement 2-step OTP flow (`POST /api/v1/auth/send-otp` and `POST /api/v1/auth/verify-otp`) with 6-digit OTP verification screen during Driver registration/sign-in.
+- [ ] **TASK-DR02 (Billing History & Invoice Viewer)**: Upgrade Driver Swap History into a full Billing History view with invoice numbers, tax breakdown, payment mode badges, and downloadable/shareable bills.
+- [ ] **TASK-DR03 (Scan & Pay + Credit/Debit Card Support)**: Add QR Scan & Pay workflow and Credit/Debit Card payment processor (Card number, expiry, CVV) for both wallet top-ups and direct swap payments.
+- [ ] **TASK-DR04 (Refer a Friend Program)**: Add unique referral code generation per driver (`referral_code`, `referred_by_code` in `drivers` table), `POST /api/v1/auth/referral/apply` endpoint, and "Refer & Earn ₹50" UI card in the Driver app.
+
+---
+
+## 5. Phase 5: Production Hardware & Third-Party SDKs (ROADMAP 🟡)
 
 - [ ] **TASK-H01**: Integrate `mobile_scanner` plugin in Flutter to scan physical QR codes and battery barcodes using native camera.
 - [ ] **TASK-H02**: Integrate `google_maps_flutter` with Google Maps API key for live map tile rendering and marker clustering.

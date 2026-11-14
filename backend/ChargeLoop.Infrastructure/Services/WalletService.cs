@@ -30,6 +30,20 @@ public class WalletService : IWalletService
         }
     }
 
+    public async Task<WalletBalanceResponse> GetBalanceDetailsAsync(Guid accountId, WalletAccountType accountType)
+    {
+        var balance = await GetBalanceAsync(accountId, accountType);
+        var recent = await _context.WalletTransactions
+            .AsNoTracking()
+            .Where(t => t.AccountId == accountId && t.AccountType == accountType)
+            .OrderByDescending(t => t.Timestamp)
+            .Take(20)
+            .Select(t => new WalletTransactionDto(t.Id, t.Amount, t.Type, t.Reason, t.Timestamp))
+            .ToListAsync();
+
+        return new WalletBalanceResponse(accountId, balance, recent);
+    }
+
     public async Task<WalletBalanceResponse> TopUpAsync(WalletTopUpRequest request)
     {
         decimal newBalance = 0.00m;

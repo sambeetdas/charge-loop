@@ -42,6 +42,8 @@ public class SwapTransaction
     public decimal TotalAmount { get; set; } = 118.00m;
     public decimal PartnerCommissionEarned { get; set; } = 25.00m;
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.SubscriptionQuota;
+    public string? InvoiceNumber { get; set; }
+    public string? BillSentChannels { get; set; }
     public string? Notes { get; set; }
 }
 
@@ -78,4 +80,14 @@ public class WalletTransaction
     public string Reason { get; set; } = string.Empty;
     public string? ReferenceId { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
+
+public class OtpVerification
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string OtpCode { get; set; } = string.Empty;
+    public DateTime ExpiresAt { get; set; }
+    public bool IsUsed { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

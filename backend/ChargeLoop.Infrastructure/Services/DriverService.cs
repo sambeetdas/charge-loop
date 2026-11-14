@@ -21,20 +21,45 @@ public class DriverService : IDriverService
         var existing = await _context.Drivers.FirstOrDefaultAsync(d => d.PhoneNumber == request.PhoneNumber);
         if (existing == null)
         {
+            var suffix = request.PhoneNumber.Length >= 4 ? request.PhoneNumber[^4..] : request.PhoneNumber;
             existing = new Driver
             {
                 PhoneNumber = request.PhoneNumber,
-                FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Driver " + request.PhoneNumber[^4..] : request.FullName,
-                LanguageCode = request.LanguageCode ?? "hi",
-                WalletBalance = 200.00m // Welcome promotional balance
+                FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Driver " + suffix : request.FullName,
+                Email = request.Email,
+                LanguageCode = request.LanguageCode ?? "en",
+                WalletBalance = 200.00m, // Welcome promotional balance
+                ReferralCode = $"CL-{suffix}{Random.Shared.Next(10, 99)}"
             };
             await _context.Drivers.AddAsync(existing);
             await _context.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(request.ReferralCode))
+            {
+                await ClaimReferralCodeAsync(new ClaimReferralRequest(existing.Id, request.ReferralCode));
+                existing = await _context.Drivers.FirstAsync(d => d.Id == existing.Id);
+            }
         }
-        else if (!string.IsNullOrWhiteSpace(request.FullName) && existing.FullName != request.FullName)
+        else
         {
-            existing.FullName = request.FullName;
-            await _context.SaveChangesAsync();
+            bool changed = false;
+            if (!string.IsNullOrWhiteSpace(request.FullName) && existing.FullName != request.FullName)
+            {
+                existing.FullName = request.FullName;
+                changed = true;
+            }
+            if (!string.IsNullOrWhiteSpace(request.Email) && existing.Email != request.Email)
+            {
+                existing.Email = request.Email;
+                changed = true;
+            }
+            if (string.IsNullOrWhiteSpace(existing.ReferralCode))
+            {
+                var suffix = existing.PhoneNumber.Length >= 4 ? existing.PhoneNumber[^4..] : "0000";
+                existing.ReferralCode = $"CL-{suffix}{Random.Shared.Next(10, 99)}";
+                changed = true;
+            }
+            if (changed) await _context.SaveChangesAsync();
         }
 
         var token = $"ey-chargeloop-jwt-{existing.Id}";
@@ -44,8 +69,105 @@ public class DriverService : IDriverService
             existing.FullName,
             token,
             existing.KycStatus,
-            existing.WalletBalance
+            existing.WalletBalance,
+            existing.ReferralCode,
+            existing.Email
         );
+    }
+
+    public async Task<SendOtpResponse> SendOtpAsync(SendOtpRequest request)
+    {
+        var phone = request.PhoneNumber.Trim();
+        var otp = Random.Shared.Next(100000, 999999).ToString();
+        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+
+        var entry = new OtpVerification
+        {
+            PhoneNumber = phone,
+            OtpCode = otp,
+            ExpiresAt = expiresAt,
+            IsUsed = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _context.OtpVerifications.AddAsync(entry);
+        await _context.SaveChangesAsync();
+
+        return new SendOtpResponse(phone, otp, expiresAt, $"OTP sent to {phone}. Valid for 5 minutes.");
+    }
+
+    public async Task<AuthResponse> VerifyOtpAndAuthenticateAsync(VerifyOtpRequest request)
+    {
+        var phone = request.PhoneNumber.Trim();
+        var otpEntry = await _context.OtpVerifications
+            .Where(o => o.PhoneNumber == phone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otpEntry == null || otpEntry.OtpCode != request.OtpCode.Trim())
+        {
+            throw new InvalidOperationException("Invalid or expired OTP code.");
+        }
+
+        otpEntry.IsUsed = true;
+        await _context.SaveChangesAsync();
+
+        return await AuthenticateWithPhoneAsync(new AuthRequest(
+            phone,
+            request.FullName,
+            "en",
+            request.Email,
+            request.ReferralCode
+        ));
+    }
+
+    public async Task<ReferralResponse> ClaimReferralCodeAsync(ClaimReferralRequest request)
+    {
+        var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == request.DriverId)
+            ?? throw new KeyNotFoundException("Driver not found.");
+
+        if (!string.IsNullOrWhiteSpace(driver.ReferredByCode))
+            throw new InvalidOperationException("Referral bonus has already been claimed on this account.");
+
+        var code = request.ReferralCode.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("Referral code is required.");
+
+        if (string.Equals(driver.ReferralCode, code, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("You cannot use your own referral code.");
+
+        var referrer = await _context.Drivers.FirstOrDefaultAsync(d => d.ReferralCode != null && d.ReferralCode.ToUpper() == code)
+            ?? throw new KeyNotFoundException("Referral code not found.");
+
+        const decimal bonus = 50.00m;
+        driver.ReferredByCode = referrer.ReferralCode;
+        driver.WalletBalance += bonus;
+        referrer.WalletBalance += bonus;
+
+        await _context.WalletTransactions.AddRangeAsync(
+            new WalletTransaction
+            {
+                AccountId = driver.Id,
+                AccountType = WalletAccountType.Driver,
+                Amount = bonus,
+                Type = WalletTransactionType.Credit,
+                Reason = $"Referral Welcome Bonus ({code})",
+                ReferenceId = code,
+                Timestamp = DateTime.UtcNow
+            },
+            new WalletTransaction
+            {
+                AccountId = referrer.Id,
+                AccountType = WalletAccountType.Driver,
+                Amount = bonus,
+                Type = WalletTransactionType.Credit,
+                Reason = $"Friend Referral Bonus ({driver.FullName})",
+                ReferenceId = driver.Id.ToString(),
+                Timestamp = DateTime.UtcNow
+            }
+        );
+
+        await _context.SaveChangesAsync();
+        return new ReferralResponse(true, bonus, driver.WalletBalance, $"₹{bonus:F0} referral bonus credited to your wallet!");
     }
 
     public async Task<Driver?> GetProfileAsync(Guid driverId)
@@ -88,7 +210,10 @@ public class DriverService : IDriverService
             driver.AadhaarMasked,
             driver.WalletBalance,
             driver.Vehicles,
-            activeBattery
+            activeBattery,
+            driver.Email,
+            driver.ReferralCode,
+            driver.ReferredByCode
         );
     }
 

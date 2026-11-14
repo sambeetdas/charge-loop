@@ -23,6 +23,13 @@ public class WalletController : ControllerBase
         return Ok(new { AccountId = accountId, AccountType = accountType.ToString(), Balance = balance });
     }
 
+    [HttpGet("balance/{accountId:guid}")]
+    public async Task<ActionResult<WalletBalanceResponse>> GetBalanceDetails(Guid accountId, [FromQuery] WalletAccountType accountType = WalletAccountType.Driver)
+    {
+        var response = await _walletService.GetBalanceDetailsAsync(accountId, accountType);
+        return Ok(response);
+    }
+
     [HttpPost("topup")]
     public async Task<ActionResult<WalletBalanceResponse>> TopUp([FromBody] WalletTopUpRequest request)
     {

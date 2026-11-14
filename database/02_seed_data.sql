@@ -20,12 +20,12 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Seed Registered Drivers
-INSERT INTO drivers (id, phone_number, full_name, language_code, kyc_status, driving_license_number, aadhaar_masked, wallet_balance)
+INSERT INTO drivers (id, phone_number, full_name, email, language_code, kyc_status, driving_license_number, aadhaar_masked, wallet_balance, referral_code)
 VALUES 
-    ('a0000001-0000-0000-0000-000000000001', '+919811223344', 'Amit Verma', 'en', 1, 'DL-042021004567', 'XXXXXXXX4567', 450.00),
-    ('a0000002-0000-0000-0000-000000000002', '+919822334455', 'Rajesh Yadav', 'en', 1, 'DL-052022007890', 'XXXXXXXX7890', 620.00),
-    ('a0000003-0000-0000-0000-000000000003', '+919833445566', 'Sunita Devi', 'en', 1, 'DL-062023001122', 'XXXXXXXX1122', 890.00),
-    ('a0000004-0000-0000-0000-000000000004', '+919844556677', 'Mohammad Arif', 'en', 1, 'DL-082021009988', 'XXXXXXXX9988', 310.00)
+    ('a0000001-0000-0000-0000-000000000001', '+919811223344', 'Amit Verma', 'amit.verma@chargeloop.in', 'en', 1, 'DL-042021004567', 'XXXXXXXX4567', 450.00, 'CL-AMIT01'),
+    ('a0000002-0000-0000-0000-000000000002', '+919822334455', 'Rajesh Yadav', 'rajesh.yadav@chargeloop.in', 'en', 1, 'DL-052022007890', 'XXXXXXXX7890', 620.00, 'CL-RAJE02'),
+    ('a0000003-0000-0000-0000-000000000003', '+919833445566', 'Sunita Devi', 'sunita.devi@chargeloop.in', 'en', 1, 'DL-062023001122', 'XXXXXXXX1122', 890.00, 'CL-SUNI03'),
+    ('a0000004-0000-0000-0000-000000000004', '+919844556677', 'Mohammad Arif', 'arif.mohammad@chargeloop.in', 'en', 1, 'DL-082021009988', 'XXXXXXXX9988', 310.00, 'CL-ARIF04')
 ON CONFLICT (id) DO NOTHING;
 
 -- 4. Seed Linked Electric Vehicles

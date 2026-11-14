@@ -7,12 +7,15 @@ public class Driver
     public Guid Id { get; set; } = Guid.NewGuid();
     public string PhoneNumber { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
-    public string LanguageCode { get; set; } = "hi"; // Defaults to Hindi
+    public string? Email { get; set; }
+    public string LanguageCode { get; set; } = "en";
     public KycStatus KycStatus { get; set; } = KycStatus.Pending;
     public string? DrivingLicenseNumber { get; set; }
     public string? AadhaarMasked { get; set; }
     public decimal WalletBalance { get; set; } = 0.00m;
     public Guid? ActiveSubscriptionId { get; set; }
+    public string? ReferralCode { get; set; }
+    public string? ReferredByCode { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Vehicle> Vehicles { get; set; } = new();

@@ -16,7 +16,7 @@ class ApiClient {
       body: jsonEncode({
         'phoneNumber': phone.trim(),
         'fullName': name?.trim(),
-        'languageCode': 'hi',
+        'languageCode': 'en',
       }),
     ).timeout(const Duration(seconds: 8));
 
@@ -25,6 +25,88 @@ class ApiClient {
     } else {
       throw Exception('Authentication failed: ${response.body}');
     }
+  }
+
+  // 1a. OTP Send & Verify
+  Future<Map<String, dynamic>> sendOtp(String phone) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/send-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phoneNumber': phone.trim()}),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Failed to send OTP: ${response.body}');
+  }
+
+  Future<DriverProfile> verifyOtp({
+    required String phone,
+    required String otpCode,
+    String? fullName,
+    String? email,
+    String? referralCode,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'otpCode': otpCode.trim(),
+        'fullName': fullName?.trim(),
+        'email': email?.trim(),
+        'referralCode': referralCode?.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) return DriverProfile.fromJson(jsonDecode(response.body));
+    throw Exception('OTP verification failed: ${response.body}');
+  }
+
+  Future<Map<String, dynamic>> claimReferral(String driverId, String referralCode) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/referral/claim'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'driverId': driverId, 'referralCode': referralCode.trim()}),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Referral claim failed: ${response.body}');
+  }
+
+  Future<Map<String, dynamic>> validateDriverForSwap(String query) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/swaps/validate-driver?query=${Uri.encodeComponent(query.trim())}'),
+      headers: {'Content-Type': 'application/json'},
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Driver validation failed: ${response.body}');
+  }
+
+  Future<BatteryModel> registerBatteryAtStation({
+    required String stationId,
+    required String serialNumber,
+    String modelType = 'LFP-48V-30Ah',
+    int soc = 100,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/stations/$stationId/batteries'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'stationId': stationId,
+        'serialNumber': serialNumber.trim(),
+        'modelType': modelType.trim(),
+        'stateOfChargePercent': soc,
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) return BatteryModel.fromJson(jsonDecode(response.body));
+    throw Exception('Battery registration failed: ${response.body}');
+  }
+
+  Future<Map<String, dynamic>> publishSwapBill(String swapId, List<String> channels) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/swaps/$swapId/publish-bill'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'channels': channels}),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Bill publish failed: ${response.body}');
   }
 
   // 1b. Vendor Authentication
@@ -148,7 +230,7 @@ class ApiClient {
   }
 
   // 7. Wallet Top Up (Updates PostgreSQL driver balance and transaction history)
-  Future<double> topUpWallet(String accountId, double amount) async {
+  Future<double> topUpWallet(String accountId, double amount, {String paymentMethod = 'CARD'}) async {
     final response = await http.post(
       Uri.parse('$baseUrl${ApiConstants.walletTopUp}'),
       headers: {'Content-Type': 'application/json'},
@@ -156,7 +238,7 @@ class ApiClient {
         'accountId': accountId,
         'accountType': 0, // Driver
         'amount': amount,
-        'paymentReference': 'UPI-REF-${DateTime.now().millisecondsSinceEpoch}',
+        'paymentReference': '$paymentMethod-REF-${DateTime.now().millisecondsSinceEpoch}',
       }),
     ).timeout(const Duration(seconds: 8));
 

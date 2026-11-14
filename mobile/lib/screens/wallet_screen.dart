@@ -14,8 +14,10 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> {
   final ApiClient _apiClient = ApiClient();
+  final TextEditingController _refController = TextEditingController();
   double _balance = 450.0;
   bool _isProcessing = false;
+  String _paymentMode = 'CARD';
 
   @override
   void initState() {
@@ -25,7 +27,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
   void _topUp(double amount) async {
     setState(() => _isProcessing = true);
-    final newBal = await _apiClient.topUpWallet(widget.profile.id, amount);
+    final newBal = await _apiClient.topUpWallet(widget.profile.id, amount, paymentMethod: _paymentMode);
     setState(() {
       _balance = newBal;
       _isProcessing = false;
@@ -35,9 +37,34 @@ class _WalletScreenState extends State<WalletScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.surfaceElevated,
-          content: Text('₹${amount.toStringAsFixed(0)} added successfully via UPI AutoPay!'),
+          content: Text('₹${amount.toStringAsFixed(0)} added successfully via $_paymentMode!'),
         ),
       );
+    }
+  }
+
+  void _claimReferral() async {
+    final code = _refController.text.trim();
+    if (code.isEmpty) return;
+    setState(() => _isProcessing = true);
+    try {
+      final res = await _apiClient.claimReferral(widget.profile.id, code);
+      setState(() {
+        _balance = (res['newWalletBalance'] as num?)?.toDouble() ?? _balance;
+        _isProcessing = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['message'] ?? 'Referral bonus credited!')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isProcessing = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: AppColors.dangerRed, content: Text('$e')),
+        );
+      }
     }
   }
 
@@ -55,7 +82,7 @@ class _WalletScreenState extends State<WalletScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF1E2836), Color(0xFF141C24)],
+                colors: [AppColors.surfaceElevated, AppColors.surface],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -95,9 +122,24 @@ class _WalletScreenState extends State<WalletScreen> {
           const SizedBox(height: 24),
 
           // Quick Top-Up Section
-          const Text(
-            'Quick Recharge (UPI)',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Quick Recharge',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              ToggleButtons(
+                isSelected: [_paymentMode == 'CARD', _paymentMode == 'UPI'],
+                onPressed: (idx) => setState(() => _paymentMode = idx == 0 ? 'CARD' : 'UPI'),
+                borderRadius: BorderRadius.circular(10),
+                selectedColor: Colors.black,
+                fillColor: AppColors.neonGreen,
+                color: AppColors.textSecondary,
+                constraints: const BoxConstraints(minHeight: 32, minWidth: 64),
+                children: const [Text('Card'), Text('UPI')],
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(
@@ -109,7 +151,46 @@ class _WalletScreenState extends State<WalletScreen> {
               _buildTopUpChip(500),
             ],
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 20),
+
+          // Refer Your Friend Card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Refer Your Friend', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(widget.profile.referralCode ?? 'CL-FRIEND', style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text('Earn ₹50 each when a friend joins with your code.', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _refController,
+                          decoration: const InputDecoration(hintText: 'Enter friend code', isDense: true),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(minimumSize: const Size(84, 42), backgroundColor: AppColors.warningAmber),
+                        onPressed: _isProcessing ? null : _claimReferral,
+                        child: const Text('Claim'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
 
           // Recent Activity
           const Row(

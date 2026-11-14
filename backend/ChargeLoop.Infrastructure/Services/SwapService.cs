@@ -23,6 +23,67 @@ public class SwapService : ISwapService
         _notificationService = notificationService;
     }
 
+    public async Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return null;
+        var q = query.Trim();
+
+        Driver? driver = null;
+        if (Guid.TryParse(q, out var driverGuid))
+        {
+            driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverGuid);
+        }
+        if (driver == null)
+        {
+            var digits = new string(q.Where(char.IsDigit).ToArray());
+            driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d =>
+                d.PhoneNumber == q ||
+                (digits.Length >= 6 && d.PhoneNumber.EndsWith(digits)) ||
+                d.FullName.ToLower().Contains(q.ToLower()));
+        }
+
+        if (driver == null) return null;
+
+        var activeBattery = await _context.Batteries
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.CurrentDriverId == driver.Id);
+
+        var activeSub = await _context.DriverSubscriptions
+            .AsNoTracking()
+            .Where(s => s.DriverId == driver.Id && s.IsActive && s.EndDate >= DateTime.UtcNow && s.SwapsUsed < s.SwapsTotalAllowed)
+            .OrderByDescending(s => s.EndDate)
+            .FirstOrDefaultAsync();
+
+        string? planName = null;
+        int? remainingSwaps = null;
+        if (activeSub != null)
+        {
+            var plan = await _context.SubscriptionPlans.AsNoTracking().FirstOrDefaultAsync(p => p.Id == activeSub.PlanId);
+            planName = plan?.Name ?? "Weekly Pass";
+            remainingSwaps = activeSub.SwapsTotalAllowed - activeSub.SwapsUsed;
+        }
+
+        var eligible = driver.KycStatus == KycStatus.Verified || remainingSwaps > 0 || driver.WalletBalance >= 0;
+        var msg = driver.KycStatus == KycStatus.Verified
+            ? "Driver verified & cleared for battery swap."
+            : "Driver found (KYC Pending — cash/UPI/card swap allowed).";
+
+        return new DriverValidationDto(
+            driver.Id,
+            driver.FullName,
+            driver.PhoneNumber,
+            driver.Email,
+            driver.KycStatus,
+            driver.WalletBalance,
+            activeBattery?.SerialNumber,
+            activeBattery?.StateOfChargePercent,
+            planName,
+            remainingSwaps,
+            eligible,
+            msg
+        );
+    }
+
     public async Task<SwapResponse> InitiateSwapAsync(InitiateSwapRequest request)
     {
         // 1. Validate station and partner from database
@@ -91,7 +152,7 @@ public class SwapService : ISwapService
         var swap = await _context.Swaps.FindAsync(request.SwapId);
         if (swap == null) throw new ArgumentException("Swap transaction not found");
 
-        // 1. Process Driver payment / balance deduction
+        // 1. Process Driver payment / balance deduction / subscription quota
         if (request.PaymentMethod == PaymentMethod.Wallet)
         {
             var success = await _walletService.DeductDriverAmountAsync(swap.DriverId, swap.TotalAmount, "Battery Swap Fee", swap.Id);
@@ -101,6 +162,23 @@ public class SwapService : ISwapService
                 await _context.SaveChangesAsync();
                 throw new InvalidOperationException("Insufficient wallet balance to complete swap. Please top up your wallet.");
             }
+        }
+        else if (request.PaymentMethod == PaymentMethod.SubscriptionQuota)
+        {
+            var activeSub = await _context.DriverSubscriptions
+                .Where(s => s.DriverId == swap.DriverId && s.IsActive && s.EndDate >= DateTime.UtcNow && s.SwapsUsed < s.SwapsTotalAllowed)
+                .OrderByDescending(s => s.EndDate)
+                .FirstOrDefaultAsync();
+
+            if (activeSub == null)
+            {
+                throw new InvalidOperationException("No active weekly subscription with remaining swap quota found.");
+            }
+
+            activeSub.SwapsUsed++;
+            swap.BaseFee = 0m;
+            swap.TaxAmount = 0m;
+            swap.TotalAmount = 0m;
         }
 
         // 2. Instant credit of partner commission
@@ -139,6 +217,7 @@ public class SwapService : ISwapService
         swap.CompletedAt = DateTime.UtcNow;
         swap.DurationSeconds = (int)(swap.CompletedAt.Value - swap.InitiatedAt).TotalSeconds;
         swap.PaymentMethod = request.PaymentMethod;
+        swap.InvoiceNumber ??= $"INV-CL-{DateTime.UtcNow:yyyyMMdd}-{swap.Id.ToString()[..6].ToUpperInvariant()}";
 
         await _context.SaveChangesAsync();
 
@@ -169,6 +248,39 @@ public class SwapService : ISwapService
         return result;
     }
 
+    public async Task<PublishBillResponse> PublishSwapBillAsync(Guid swapId, PublishBillRequest request)
+    {
+        var swap = await _context.Swaps.FindAsync(swapId)
+            ?? throw new KeyNotFoundException("Swap transaction not found.");
+
+        swap.InvoiceNumber ??= $"INV-CL-{DateTime.UtcNow:yyyyMMdd}-{swap.Id.ToString()[..6].ToUpperInvariant()}";
+
+        var requestedChannels = request.Channels
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Select(c => c.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (requestedChannels.Count == 0)
+            requestedChannels.AddRange(new[] { "WhatsApp", "SMS", "Email" });
+
+        var existing = string.IsNullOrWhiteSpace(swap.BillSentChannels)
+            ? new List<string>()
+            : swap.BillSentChannels.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+        var merged = existing.Union(requestedChannels, StringComparer.OrdinalIgnoreCase).ToList();
+        swap.BillSentChannels = string.Join(", ", merged);
+        await _context.SaveChangesAsync();
+
+        return new PublishBillResponse(
+            swap.Id,
+            swap.InvoiceNumber,
+            requestedChannels,
+            DateTime.UtcNow,
+            $"Invoice {swap.InvoiceNumber} published via {string.Join(", ", requestedChannels)}."
+        );
+    }
+
     private static SwapResponse MapToResponse(SwapTransaction s, string dSerial, string iSerial, string message) =>
         new(
             s.Id,
@@ -184,6 +296,9 @@ public class SwapService : ISwapService
             s.InitiatedAt,
             s.CompletedAt,
             s.DurationSeconds,
-            message
+            message,
+            s.InvoiceNumber,
+            s.BillSentChannels,
+            s.PaymentMethod
         );
 }

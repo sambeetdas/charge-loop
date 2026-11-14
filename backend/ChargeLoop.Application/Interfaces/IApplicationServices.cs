@@ -7,6 +7,9 @@ namespace ChargeLoop.Application.Interfaces;
 public interface IDriverService
 {
     Task<AuthResponse> AuthenticateWithPhoneAsync(AuthRequest request);
+    Task<SendOtpResponse> SendOtpAsync(SendOtpRequest request);
+    Task<AuthResponse> VerifyOtpAndAuthenticateAsync(VerifyOtpRequest request);
+    Task<ReferralResponse> ClaimReferralCodeAsync(ClaimReferralRequest request);
     Task<Driver?> GetProfileAsync(Guid driverId);
     Task<DriverDetailDto?> GetDriverDetailsAsync(Guid driverId);
     Task<IReadOnlyList<Driver>> GetAllDriversAsync();
@@ -19,6 +22,7 @@ public interface IStationService
     Task<IReadOnlyList<StationDto>> GetNearbyStationsAsync(NearbyStationsRequest request);
     Task<StationDto?> GetStationByIdAsync(Guid stationId);
     Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId);
+    Task<BatteryDto> RegisterBatteryAtStationAsync(RegisterBatteryRequest request);
     Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes);
     Task<StationDto> CreateStationAsync(CreateStationRequest request);
     Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId);
@@ -26,14 +30,17 @@ public interface IStationService
 
 public interface ISwapService
 {
+    Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query);
     Task<SwapResponse> InitiateSwapAsync(InitiateSwapRequest request);
     Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request);
+    Task<PublishBillResponse> PublishSwapBillAsync(Guid swapId, PublishBillRequest request);
     Task<IReadOnlyList<SwapResponse>> GetDriverSwapHistoryAsync(Guid driverId);
 }
 
 public interface IWalletService
 {
     Task<decimal> GetBalanceAsync(Guid accountId, WalletAccountType accountType);
+    Task<WalletBalanceResponse> GetBalanceDetailsAsync(Guid accountId, WalletAccountType accountType);
     Task<WalletBalanceResponse> TopUpAsync(WalletTopUpRequest request);
     Task<bool> DeductDriverAmountAsync(Guid driverId, decimal amount, string reason, Guid swapId);
     Task<bool> CreditPartnerCommissionAsync(Guid partnerId, decimal commission, Guid swapId);

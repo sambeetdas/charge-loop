@@ -3,47 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ChargeLoop — EV Battery Swapping Network</title>
+  <title>ChargeLoop — Swap. Ride. Repeat.</title>
   <style>
     :root {
-      --bg: #0A0E17;
-      --surface: #141B2D;
-      --surface-elevated: #1E293B;
-      --border: #334155;
-      --neon-green: #00E676;
-      --bright-cyan: #00E5FF;
-      --warning-amber: #FFB300;
-      --danger-red: #FF3D00;
+      --bg-deep: #0F273B;
+      --bg-navy: #122D42;
+      --surface: #16384C;
+      --surface-elevated: #1B4258;
+      --surface-glass: rgba(22, 56, 76, 0.85);
+      --border: rgba(255, 255, 255, 0.10);
+      --border-mint: rgba(26, 209, 160, 0.35);
+      --mint: #1AD1A0;
+      --mint-hover: #10B981;
+      --mint-text: #38E4B7;
+      --mint-pill: rgba(26, 209, 160, 0.14);
+      --amber: #F59E0B;
+      --amber-glow: rgba(245, 158, 11, 0.18);
+      --danger: #EF4444;
       --text-primary: #FFFFFF;
-      --text-muted: #94A3B8;
+      --text-muted: #8FB3C9;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: #030712;
+      background: radial-gradient(circle at 15% 15%, rgba(26, 209, 160, 0.12), transparent 40%),
+                  radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.12), transparent 40%),
+                  #091A28;
       color: var(--text-primary);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px 10px;
+      padding: 16px 10px;
     }
 
     .phone-container {
       width: 100%;
-      max-width: 420px;
-      height: 890px;
-      background: var(--bg);
-      border-radius: 40px;
-      border: 8px solid #1E293B;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 230, 118, 0.15);
+      max-width: 430px;
+      height: 896px;
+      background: linear-gradient(165deg, var(--bg-navy) 0%, var(--bg-deep) 100%);
+      border-radius: 38px;
+      border: 6px solid #1B4258;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75), 0 0 36px rgba(26, 209, 160, 0.12);
       position: relative;
       overflow: hidden;
       display: flex;
@@ -51,1667 +59,1446 @@
     }
 
     .status-bar {
-      height: 38px;
-      padding: 10px 24px 0;
+      height: 36px;
+      padding: 10px 22px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       z-index: 10;
     }
 
     .status-pill {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(0, 230, 118, 0.15);
-      border: 1px solid rgba(0, 230, 118, 0.4);
-      padding: 2px 8px;
-      border-radius: 12px;
-      color: var(--neon-green);
+      background: var(--mint-pill);
+      border: 1px solid var(--border-mint);
+      padding: 3px 10px;
+      border-radius: 999px;
+      color: var(--mint-text);
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
+      letter-spacing: 0.4px;
     }
 
     .status-dot {
       width: 6px;
       height: 6px;
-      background: var(--neon-green);
+      background: var(--mint);
       border-radius: 50%;
-      box-shadow: 0 0 6px var(--neon-green);
+      box-shadow: 0 0 8px var(--mint);
     }
 
     .app-header {
-      padding: 14px 20px 12px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 39, 59, 0.7);
+      backdrop-filter: blur(8px);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing: 0.5px;
+      gap: 10px;
     }
 
-    .brand-icon {
-      width: 30px;
-      height: 30px;
-      background: rgba(0, 230, 118, 0.15);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--neon-green);
+    .brand img {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .brand-title {
       font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #FFFFFF;
     }
 
-    .user-pill {
+    .brand-title span {
+      color: var(--mint);
+    }
+
+    .brand-sub {
+      font-size: 9px;
+      letter-spacing: 1.6px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .user-chip {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: var(--surface-elevated);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 4px 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
       color: var(--text-primary);
       cursor: pointer;
     }
 
-    .screen-content {
+    .main-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 20px 90px;
-      display: none;
+      padding: 16px 18px 86px;
+      scrollbar-width: none;
     }
+    .main-scroll::-webkit-scrollbar { display: none; }
 
-    .screen-content.active {
-      display: block;
+    .grid-hero {
+      background-color: var(--surface);
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 92% 95%, rgba(245, 158, 11, 0.25), transparent 45%);
+      background-size: 24px 24px, 24px 24px, 100% 100%;
+      border: 1px solid var(--border-mint);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 16px;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card-elevated {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin: 14px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: #0F273B;
+      font-weight: 800;
+      font-size: 12px;
+      margin-right: 8px;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--amber-glow);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       margin-bottom: 12px;
     }
 
-    .card-highlight {
-      background: linear-gradient(135deg, rgba(0, 230, 118, 0.12), rgba(0, 229, 255, 0.08));
-      border: 1px solid rgba(0, 230, 118, 0.35);
+    .mint-pill {
+      background: var(--mint-pill);
+      border: 1px solid var(--border-mint);
+      color: var(--mint-text);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .amber-pill {
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #FCD34D;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: #FFFFFF;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus {
+      border-color: var(--mint);
+    }
+    .input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.1s, background 0.2s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .btn-primary {
-      width: 100%;
-      height: 48px;
-      background: var(--neon-green);
-      color: #000;
-      font-weight: 700;
-      font-size: 15px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.1s ease;
+      background: var(--mint);
+      color: #09202F;
     }
-    .btn-primary:active { transform: scale(0.98); }
-
-    .btn-outline {
-      width: 100%;
-      height: 42px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 13px;
-      border-radius: 10px;
-      cursor: pointer;
+    .btn-primary:hover:not(:disabled) {
+      background: var(--mint-hover);
     }
 
     .btn-secondary {
       background: var(--surface-elevated);
-      color: var(--bright-cyan);
-      border: 1px solid rgba(0, 229, 255, 0.3);
-    }
-
-    .input-box {
-      width: 100%;
-      padding: 12px 14px;
-      background: var(--surface);
+      color: #FFFFFF;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      margin-bottom: 10px;
     }
-    .input-box:focus { border-color: var(--neon-green); }
 
-    .role-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      background: var(--surface);
+    .btn-amber {
+      background: var(--amber);
+      color: #09202F;
+    }
+
+    .btn-sm {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 10px;
+      width: auto;
+    }
+
+    .role-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .role-tab {
+      background: var(--surface-elevated);
+      border: 1.5px solid var(--border);
       color: var(--text-muted);
+      padding: 12px;
+      border-radius: 14px;
       font-weight: 700;
       font-size: 14px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-    .role-btn.active {
-      border-color: var(--neon-green);
-      background: rgba(0, 230, 118, 0.12);
-      color: #fff;
-    }
-
-    .badge-stock {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 700;
-      background: rgba(0, 230, 118, 0.15);
-      color: var(--neon-green);
-    }
-    .badge-amber {
-      background: rgba(255, 179, 0, 0.15);
-      color: var(--warning-amber);
-    }
-    .badge-danger {
-      background: rgba(255, 61, 0, 0.15);
-      color: var(--danger-red);
-    }
-
-    /* Gauge */
-    .gauge-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 14px 0;
-    }
-    .gauge-circle {
-      width: 124px;
-      height: 124px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 4px solid var(--neon-green);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px rgba(0, 230, 118, 0.25);
-      transition: all 0.3s ease;
-    }
-    .gauge-soc { font-size: 26px; font-weight: 800; }
-    .gauge-label { font-size: 9px; letter-spacing: 1px; color: var(--text-muted); }
-
-    /* Timer */
-    .timer-box {
-      background: var(--surface);
-      border: 1px solid rgba(0, 229, 255, 0.4);
-      border-radius: 18px;
-      padding: 18px;
       text-align: center;
-      margin: 14px 0;
     }
-    .timer-digits {
-      font-size: 40px;
-      font-weight: 900;
-      color: var(--bright-cyan);
-      font-family: monospace;
-      letter-spacing: 2px;
+    .role-tab.active {
+      background: var(--mint-pill);
+      border-color: var(--mint);
+      color: #FFFFFF;
     }
 
-    /* Bottom Nav */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .quick-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .quick-btn .icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--surface-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--mint);
+    }
+
+    .pay-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pay-chip {
+      background: var(--surface-elevated);
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+    .pay-chip.active {
+      background: var(--mint-pill);
+      border-color: var(--mint);
+      color: var(--mint-text);
+    }
+
     .bottom-nav {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
       height: 68px;
-      background: rgba(20, 27, 45, 0.95);
-      backdrop-filter: blur(10px);
+      background: rgba(15, 39, 59, 0.96);
+      backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
       align-items: center;
-      padding: 0 10px 10px;
+      padding: 0 6px 6px;
+      z-index: 20;
     }
 
     .nav-item {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 3px;
+      color: var(--text-muted);
       font-size: 10px;
       font-weight: 600;
-      color: var(--text-muted);
       cursor: pointer;
-      padding: 6px 12px;
-      border-radius: 10px;
+      padding: 6px 2px;
     }
-
     .nav-item.active {
-      color: var(--neon-green);
+      color: var(--mint);
+    }
+    .nav-item .nav-icon {
+      font-size: 18px;
     }
 
-    .nav-item svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
+    .toast {
+      position: absolute;
+      top: 44px;
+      left: 16px;
+      right: 16px;
+      background: #0F273B;
+      border: 1px solid var(--mint);
+      color: #FFFFFF;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      display: none;
     }
+    .toast.error {
+      border-color: var(--danger);
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 26, 40, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 90;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px;
+    }
+    .modal-sheet {
+      width: 100%;
+      background: var(--bg-navy);
+      border: 1px solid var(--border-mint);
+      border-radius: 22px;
+      padding: 18px;
+      max-height: 85%;
+      overflow-y: auto;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .muted {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-
 <div class="phone-container">
-  <!-- Status Bar -->
   <div class="status-bar">
-    <span id="clockTime">08:30 PM</span>
-    <div class="status-pill">
-      <div class="status-dot"></div>
-      <span>Network Live</span>
-    </div>
+    <span>ChargeLoop</span>
+    <span class="status-pill"><span class="status-dot"></span> SWAP READY</span>
     <span>5G ⚡</span>
   </div>
 
-  <!-- Header (Official Logo & Tagline Branding) -->
   <div class="app-header">
     <div class="brand">
-      <div style="width: 32px; height: 32px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #00C853; box-shadow: 0 0 10px rgba(0, 200, 83, 0.4);">
-        <svg viewBox="0 0 100 100" width="30" height="30">
-          <path d="M 28 52 A 26 26 0 0 1 72 44" fill="none" stroke="#0B1E36" stroke-width="8.5" stroke-linecap="round" />
-          <polygon points="78,42 66,35 69,48" fill="#0B1E36" />
-          <path d="M 72 48 A 26 26 0 0 1 28 56" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" />
-          <polygon points="22,58 34,65 31,52" fill="#FFFFFF" />
-          <polygon points="53,24 38,49 48,49 45,76 64,45 52,45" fill="#FFA500" />
-        </svg>
-      </div>
+      <img src="/assets/logo_icon.png" alt="ChargeLoop">
       <div>
-        <div style="font-size: 18px; font-weight: 900; letter-spacing: -0.3px; line-height: 1.1;">
-          Charge<span style="color: var(--neon-green);">Loop</span>
-        </div>
-        <div style="font-size: 8px; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 700;">ENERGY SOLUTIONS</div>
+        <div class="brand-title">Charge<span>Loop</span></div>
+        <div class="brand-sub">Energy Solutions</div>
       </div>
     </div>
-    <div class="user-pill" id="headerUserPill" onclick="showAuthScreen()">
-      <span id="headerRoleBadge" style="color: var(--neon-green); font-size: 11px;">Sign In</span>
-      <span id="headerUserName">👤</span>
+    <div id="headerUserChip" class="user-chip" onclick="handleHeaderAction()">
+      <span id="headerUserText">Sign In</span> 👤
     </div>
   </div>
 
-  <!-- ======================== SCREEN: AUTH & SIGN UP (DRIVER / VENDOR) ======================== -->
-  <div id="screen-auth" class="screen-content active">
-    <!-- Sleek Native Brand Hero Card -->
-    <div style="background: linear-gradient(145deg, rgba(20, 27, 45, 0.95), rgba(10, 14, 23, 0.9)); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 20px; padding: 22px 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
-      <!-- Glowing Circular Brand Mark -->
-      <div style="display: flex; justify-content: center; margin-bottom: 12px;">
-        <div style="width: 72px; height: 72px; border-radius: 18px; background: #00C853; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 24px rgba(0, 200, 83, 0.45); border: 1.5px solid rgba(255,255,255,0.2);">
-          <svg viewBox="0 0 100 100" width="66" height="66">
-            <!-- Dark Navy Upper Arc Arrow -->
-            <path d="M 28 52 A 26 26 0 0 1 72 44" fill="none" stroke="#0B1E36" stroke-width="8.5" stroke-linecap="round" />
-            <polygon points="78,42 66,35 69,48" fill="#0B1E36" />
-            <!-- White Lower Arc Arrow -->
-            <path d="M 72 48 A 26 26 0 0 1 28 56" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" />
-            <polygon points="22,58 34,65 31,52" fill="#FFFFFF" />
-            <!-- Golden Center Lightning Bolt -->
-            <polygon points="53,24 38,49 48,49 45,76 64,45 52,45" fill="#FFA500" />
-          </svg>
+  <div id="toast" class="toast"></div>
+
+  <div id="mainScroll" class="main-scroll">
+    <!-- AUTH VIEW -->
+    <div id="view-auth">
+      <div class="grid-hero">
+        <div class="pill-row">
+          <span class="mint-pill">⚡ Quick swaps</span>
+          <span class="mint-pill">🔋 Charged &amp; tested</span>
+          <span class="amber-pill">📋 Weekly plans</span>
         </div>
-      </div>
-
-      <!-- Tagline -->
-      <div style="font-size: 26px; font-weight: 900; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 4px;">
-        Swap. Ride. <span style="color: var(--neon-green);">Repeat.</span>
-      </div>
-      <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 14px;">
-        SMART EV BATTERY SWAPPING NETWORK
-      </div>
-
-      <!-- Value Assurance Chips -->
-      <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
-        <span style="background: rgba(0, 230, 118, 0.1); color: var(--neon-green); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 230, 118, 0.25);">⚡ Quick swaps</span>
-        <span style="background: rgba(0, 229, 255, 0.1); color: var(--bright-cyan); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 229, 255, 0.25);">🔋 Tested batteries</span>
-        <span style="background: rgba(255, 179, 0, 0.1); color: var(--warning-amber); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255, 179, 0, 0.25);">📋 Fleet plans</span>
-      </div>
-    </div>
-
-    <div style="margin-top: 10px;">
-      <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Sign In / Sign Up</h2>
-      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Choose your account type to access the platform.</p>
-
-      <!-- Role Selection Field -->
-      <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px; color: var(--text-muted);">ACCOUNT TYPE</div>
-      <div style="display: flex; gap: 10px; margin-bottom: 18px;">
-        <button type="button" class="role-btn active" id="btnRoleDriver" onclick="setAuthRole('driver')">
-          🚗 <span>Driver</span>
-        </button>
-        <button type="button" class="role-btn" id="btnRoleVendor" onclick="setAuthRole('vendor')">
-          🏪 <span>Vendor</span>
-        </button>
-      </div>
-
-      <!-- Input Form -->
-      <div id="driverAuthFields">
-        <input type="tel" id="authDriverPhone" class="input-box" placeholder="10-digit Mobile Number" />
-        <input type="text" id="authDriverName" class="input-box" placeholder="Driver Full Name (optional for existing)" />
-        <button class="btn-primary" onclick="submitDriverAuth()">Sign In as Driver</button>
-
-        <div style="margin-top: 24px;">
-          <span style="color: var(--text-muted); font-size: 12px;">Quick Select Active Driver:</span>
-          <div id="dbDriversList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="color: var(--text-muted); font-size: 12px;">Loading drivers...</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="vendorAuthFields" style="display: none;">
-        <input type="tel" id="authVendorPhone" class="input-box" placeholder="Vendor Mobile Number (e.g. 9811223344)" />
-        <input type="text" id="authVendorName" class="input-box" placeholder="Contact Person Name" />
-        <input type="text" id="authVendorBusiness" class="input-box" placeholder="Vendor / Enterprise Name (e.g. Verma Mobility)" />
-
-        <div style="font-size: 11px; color: var(--bright-cyan); line-height: 1.4; margin-bottom: 12px; background: rgba(0, 229, 255, 0.08); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0, 229, 255, 0.2);">
-          ℹ️ <strong>Multi-Station Support:</strong> One vendor can operate multiple stations/hubs. You can register and manage your stations after sign in.
-        </div>
-
-        <button class="btn-primary" onclick="submitVendorAuth()">Sign In / Register as Vendor</button>
-
-        <div style="margin-top: 24px;">
-          <span style="color: var(--text-muted); font-size: 12px;">Quick Select Active Vendor:</span>
-          <div id="dbVendorsList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="color: var(--text-muted); font-size: 12px;">Loading vendors...</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
-        <a href="https://www.chargeloopsln.in" target="_blank" style="color: var(--bright-cyan); font-size: 12px; font-weight: 700; text-decoration: none;">www.chargeloopsln.in</a>
-        <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">ChargeLoop Energy Solutions Network</div>
-        <div style="color: var(--text-muted); font-size: 10px; margin-top: 4px; opacity: 0.7;">Open Source • Licensed under MIT License</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================== DRIVER SCREENS ======================== -->
-
-  <!-- DRIVER SCREEN 1: STATIONS DISCOVERY -->
-  <div id="screen-driver-stations" class="screen-content">
-    <!-- Tagline Banner -->
-    <div style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(0, 230, 118, 0.14), rgba(0, 229, 255, 0.08)); border: 1px solid rgba(0, 230, 118, 0.35); border-radius: 16px; padding: 12px 16px; margin-bottom: 12px;">
-      <div>
-        <div style="font-size: 15px; font-weight: 900; letter-spacing: -0.2px;">
-          Swap. Ride. <span style="color: var(--neon-green);">Repeat.</span>
-        </div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-          Quick swaps • Tested & charged batteries
-        </div>
-      </div>
-      <div style="width: 36px; height: 36px; border-radius: 9px; background: #00C853; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0, 200, 83, 0.4);">
-        <svg viewBox="0 0 100 100" width="32" height="32">
-          <path d="M 28 52 A 26 26 0 0 1 72 44" fill="none" stroke="#0B1E36" stroke-width="8.5" stroke-linecap="round" />
-          <polygon points="78,42 66,35 69,48" fill="#0B1E36" />
-          <path d="M 72 48 A 26 26 0 0 1 28 56" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" />
-          <polygon points="22,58 34,65 31,52" fill="#FFFFFF" />
-          <polygon points="53,24 38,49 48,49 45,76 64,45 52,45" fill="#FFA500" />
-        </svg>
-      </div>
-    </div>
-
-    <div class="card card-highlight">
-      <div style="font-weight: 700; font-size: 15px;">Nearby Swapping Stations</div>
-      <div style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="driverStationsSummary">Loading stations...</div>
-    </div>
-    <div id="driverStationsList">
-      <div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading nearby stations...</div>
-    </div>
-  </div>
-
-  <!-- DRIVER SCREEN 2: 2-MINUTE SWAP -->
-  <div id="screen-driver-swap" class="screen-content">
-    <div id="swap-step-init">
-      <div class="gauge-wrapper">
-        <div class="gauge-circle" id="socCircle">
-          <div style="color: var(--neon-green); font-size: 20px;">⚡</div>
-          <div class="gauge-soc" id="socVal">--%</div>
-          <div class="gauge-label">SOC LEVEL</div>
-        </div>
-        <div style="color: var(--neon-green); font-weight: 700; margin-top: 12px;" id="txt-battery-status">Loading Mounted Battery...</div>
-        <div style="color: var(--text-muted); font-size: 13px;" id="txt-battery-range">Estimated Range: -- km</div>
-      </div>
-
-      <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">SELECTED STATION</div>
-      <select id="swapStationSelect" class="input-box" onchange="onStationChanged()"></select>
-
-      <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">RETURNED BATTERY SERIAL</div>
-      <input type="text" id="swapDepletedSerialInput" class="input-box" placeholder="Enter or scan returned battery serial" />
-
-      <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text-muted);">READY CHARGED BATTERY AT STATION</div>
-      <select id="swapIssuedBatterySelect" class="input-box"></select>
-
-      <button class="btn-primary" onclick="startSwapHandshake()">
-        <span>⚡ Scan & Initiate 2-Min Swap</span>
-      </button>
-    </div>
-
-    <!-- Active Swap Timer -->
-    <div id="swap-step-timer" style="display: none;">
-      <div class="timer-box">
-        <div style="color: var(--text-muted); font-size: 12px; letter-spacing: 1px;">SWAP TIMER (TARGET: &lt; 2:00)</div>
-        <div class="timer-digits" id="timerDisplay">00:00</div>
+        <h1 style="font-size:26px;font-weight:900;line-height:1.15;margin-bottom:8px;">
+          Swap. Ride. <span style="color:var(--mint);">Repeat.</span>
+        </h1>
+        <p class="muted" style="line-height:1.45;">
+          Swap in 60 seconds. No waiting, no charging cables — just seamless electric mobility.
+        </p>
       </div>
 
       <div class="card">
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
-          <span style="color: var(--text-muted);">Returned Battery:</span>
-          <span style="font-weight: 700; color: var(--warning-amber);" id="timerReturnedSerial">-</span>
-        </div>
-        <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
-          <span style="color: var(--text-muted);">Issued Ready Battery:</span>
-          <span style="font-weight: 700; color: var(--neon-green);" id="timerIssuedSerial">-</span>
-        </div>
-      </div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Sign In / Sign Up</div>
+        <div class="muted" style="margin-bottom:12px;">Choose your account type to continue.</div>
 
-      <button class="btn-primary" style="margin-top: 14px;" onclick="completeSwapTransaction()">
-        Confirm Physical Swap Completed
-      </button>
-    </div>
+        <div class="role-tabs">
+          <button id="roleTabDriver" class="role-tab active" onclick="selectAuthRole('driver')">🚗 Driver</button>
+          <button id="roleTabVendor" class="role-tab" onclick="selectAuthRole('vendor')">🏪 Partner / Vendor</button>
+        </div>
 
-    <!-- Swap Completed Receipt -->
-    <div id="swap-step-receipt" style="display: none;">
-      <div style="text-align: center; padding: 16px 0;">
-        <div style="font-size: 48px; color: var(--neon-green);">✓</div>
-        <h3 style="font-size: 20px; font-weight: 800; margin-top: 8px;">Swap Recorded Successfully!</h3>
-        <p style="color: var(--neon-green); font-size: 13px; font-weight: 600; margin-top: 4px;" id="receipt-duration">Duration: 48s (&lt; 2 min)</p>
-      </div>
+        <!-- Driver OTP Auth -->
+        <div id="authDriverBox">
+          <input id="authDriverPhone" class="input-field" type="tel" placeholder="Mobile Number (e.g. +919811223344)">
+          <div id="driverOtpStep1">
+            <button class="btn btn-primary" onclick="sendDriverOtp()">Send OTP to Phone</button>
+          </div>
+          <div id="driverOtpStep2" class="hidden">
+            <div id="demoOtpBanner" class="mint-pill" style="display:block;margin-bottom:10px;text-align:center;"></div>
+            <input id="authDriverOtp" class="input-field" type="text" placeholder="Enter 6-digit OTP">
+            <input id="authDriverName" class="input-field" type="text" placeholder="Full Name (for new signup)">
+            <input id="authDriverEmail" class="input-field" type="email" placeholder="Email for Invoices (optional)">
+            <input id="authDriverRef" class="input-field" type="text" placeholder="Referral Code (optional, get ₹50)">
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="verifyDriverOtp()">Verify &amp; Sign In</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendDriverOtp()">Resend</button>
+            </div>
+          </div>
 
-      <div class="card">
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
-          <span style="color: var(--text-muted);">Base Swap Fee:</span>
-          <span>₹100.00</span>
+          <div class="section-title"><span>Quick Select Active Driver</span></div>
+          <div id="quickDriversList"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px;">
-          <span style="color: var(--text-muted);">GST (18%):</span>
-          <span>₹18.00</span>
-        </div>
-        <div style="height: 1px; background: var(--border); margin: 8px 0;"></div>
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; font-weight: 700;">
-          <span>Total Deducted:</span>
-          <span style="color: var(--neon-green);">₹118.00</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: var(--text-muted); margin-top: 6px;">
-          <span>Station Vendor Commission:</span>
-          <span style="color: var(--bright-cyan);">₹25.00 Credited</span>
+
+        <!-- Vendor Auth -->
+        <div id="authVendorBox" class="hidden">
+          <input id="authVendorPhone" class="input-field" type="tel" placeholder="Partner Mobile Number (e.g. +919900112233)">
+          <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)">
+          <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)">
+          <button class="btn btn-primary" onclick="signInVendor()">Sign In as Partner</button>
+
+          <div class="section-title"><span>Quick Select Active Partner</span></div>
+          <div id="quickVendorsList"></div>
         </div>
       </div>
-
-      <button class="btn-primary" onclick="resetSwap()">Back to Stations</button>
-    </div>
-  </div>
-
-  <!-- DRIVER SCREEN 3: WALLET & PLANS -->
-  <div id="screen-driver-wallet" class="screen-content">
-    <div class="card card-highlight">
-      <div style="color: var(--text-muted); font-size: 12px;">DRIVER DIGITAL WALLET</div>
-      <div style="font-size: 32px; font-weight: 900; color: var(--neon-green); margin: 6px 0;" id="driverWalletBalance">₹0.00</div>
-      <div style="color: var(--text-muted); font-size: 12px;" id="driverWalletStatusText">Loading balance...</div>
     </div>
 
-    <!-- Quick Top-Up -->
-    <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Instant Top-Up (UPI AutoPay)</div>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
-      <button class="btn-outline btn-secondary" onclick="topUpDriverWallet(200)">+₹200</button>
-      <button class="btn-outline btn-secondary" onclick="topUpDriverWallet(500)">+₹500</button>
-      <button class="btn-outline btn-secondary" onclick="topUpDriverWallet(1000)">+₹1,000</button>
-    </div>
-
-    <!-- Active Subscription Plans -->
-    <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">Subscription Plans</div>
-    <div id="subscriptionPlansList">
-      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading plans...</div>
-    </div>
-
-    <!-- Swap History -->
-    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Recent Swaps</div>
-    <div id="driverSwapHistory">
-      <div class="card" style="color: var(--text-muted); font-size: 13px;">No transactions yet.</div>
-    </div>
-  </div>
-
-  <!-- DRIVER SCREEN 4: DRIVER PROFILE -->
-  <div id="screen-driver-profile" class="screen-content">
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="width: 64px; height: 64px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 28px; color: var(--neon-green);">👤</div>
-      <div style="font-size: 18px; font-weight: 800;" id="profDriverName">Loading...</div>
-      <div style="color: var(--text-muted); font-size: 13px;" id="profDriverPhone">-</div>
-      <div class="badge-stock" style="margin-top: 6px;">✓ Verified Driver</div>
-    </div>
-
-    <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">LINKED EV VEHICLES</div>
-    <div id="profVehiclesList">
-      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading vehicles...</div>
-    </div>
-
-    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">MOUNTED BATTERY TELEMETRY</div>
-    <div id="profBatteryDetails" class="card">
-      <div style="color: var(--text-muted); font-size: 12px;">Loading battery state...</div>
-    </div>
-
-    <div style="font-weight: 700; margin-bottom: 8px; margin-top: 14px; font-size: 13px;">SUPPORT & GRIEVANCE</div>
-    <div class="card">
-      <input type="text" id="driverTicketSubject" class="input-box" placeholder="Subject (e.g. Battery Issue / Billing)" />
-      <textarea id="driverTicketDesc" class="input-box" rows="2" style="resize: none;" placeholder="Issue details..."></textarea>
-      <button class="btn-outline btn-secondary" onclick="submitDriverTicket()">Submit Support Ticket</button>
-      <div id="driverTicketsList" style="margin-top: 10px; font-size: 12px;"></div>
-    </div>
-
-    <button class="btn-outline" style="margin-top: 16px; border-color: var(--border); color: var(--text-muted);" onclick="showAuthScreen()">Sign Out / Switch Account</button>
-
-    <!-- Official Brand Card -->
-    <div style="margin-top: 24px; text-align: center; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);">
-      <div style="font-size: 16px; font-weight: 900; letter-spacing: -0.2px;">
-        Swap. Ride. <span style="color: var(--neon-green);">Repeat.</span>
-      </div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-        Quick swaps • Charged & tested batteries • Fleet plans
-      </div>
-      <div style="font-size: 12px; margin-top: 8px;">
-        <a href="https://www.chargeloopsln.in" target="_blank" style="color: var(--bright-cyan); text-decoration: none; font-weight: 700;">www.chargeloopsln.in</a>
-      </div>
-      <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; opacity: 0.7;">Licensed under MIT License • © 2026 ChargeLoop</div>
-    </div>
-  </div>
-
-  <!-- ======================== VENDOR SCREENS ======================== -->
-
-  <!-- VENDOR SCREEN 1: OPERATIONS / STATIONS -->
-  <div id="screen-vendor-stations" class="screen-content">
-    <!-- Header with Station Switcher & Add Hub Button -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-      <div style="font-weight: 700; font-size: 12px; color: var(--text-muted);">MANAGED STATION / HUB</div>
-      <button class="btn-outline" style="width: auto; height: 30px; padding: 2px 10px; font-size: 11px; font-weight: 700; color: var(--neon-green); border-color: rgba(0, 230, 118, 0.4); display: flex; align-items: center; gap: 4px;" onclick="toggleAddStationForm()">
-        <span>+ Add Station / Hub</span>
-      </button>
-    </div>
-    <select id="vendorStationSelect" class="input-box" onchange="onVendorStationSelectChanged()"></select>
-
-    <!-- Inline Add Station Card -->
-    <div id="addStationCard" class="card" style="display: none; border-color: rgba(0, 230, 118, 0.4); background: rgba(0, 230, 118, 0.04); margin-bottom: 14px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <div style="font-weight: 800; font-size: 14px; color: var(--neon-green);">➕ Register New Station / Hub</div>
-        <button class="btn-outline" style="width: auto; height: 26px; padding: 0 8px; font-size: 11px; border: none; color: var(--text-muted);" onclick="toggleAddStationForm()">✕ Close</button>
-      </div>
-      <input type="text" id="newStationName" class="input-box" placeholder="Station / Hub Name (e.g. Metro Swapping Hub - Janakpuri)" />
-      <input type="text" id="newStationAddress" class="input-box" placeholder="Street Address / Metro Pillar / Landmark" />
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <input type="text" id="newStationCity" class="input-box" placeholder="City (e.g. New Delhi)" value="New Delhi" />
-        <input type="number" id="newStationBays" class="input-box" placeholder="Total Bays" value="12" />
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <input type="number" id="newStationCharged" class="input-box" placeholder="Initial Ready" value="6" />
-        <input type="number" id="newStationCharging" class="input-box" placeholder="Initial Charging" value="4" />
-      </div>
-      <button class="btn-primary" style="height: 42px; font-size: 13px; margin-top: 4px;" onclick="submitNewStation()">
-        Confirm & Link Station to Vendor
-      </button>
-    </div>
-
-    <!-- Empty State when Vendor has no stations -->
-    <div id="vendorNoStationsMsg" class="card" style="display: none; text-align: center; padding: 24px 16px;">
-      <div style="font-size: 32px; margin-bottom: 8px;">🏪</div>
-      <div style="font-weight: 800; font-size: 16px; margin-bottom: 4px;">No Stations Registered Yet</div>
-      <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">One vendor can operate multiple stations. Register your first swapping hub to start managing inventory and earning commissions.</div>
-      <button class="btn-primary" style="height: 40px; font-size: 13px;" onclick="toggleAddStationForm(true)">+ Add Swapping Station / Hub</button>
-    </div>
-
-    <!-- Operational State Card -->
-    <div id="vendorStationCard">
-      <div class="card card-highlight">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+    <!-- DRIVER HOME -->
+    <div id="view-driver-home" class="hidden">
+      <div class="grid-hero">
+        <div class="row-between" style="margin-bottom:10px;">
+          <span class="mint-pill">● SWAP READY</span>
+          <span class="amber-pill" id="homePlanBadge">Pay-Per-Swap</span>
+        </div>
+        <div class="row-between">
           <div>
-            <div style="font-weight: 800; font-size: 16px;" id="vendorStationTitle">Station Hub</div>
-            <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="vendorStationAddress">Address</div>
+            <div class="muted">Wallet Balance</div>
+            <div id="homeWalletBalance" style="font-size:28px;font-weight:900;color:var(--mint);">₹0.00</div>
           </div>
-          <div class="badge-stock" id="vendorStationStatusBadge">Open</div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
-          <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
-            <div style="font-size: 22px; font-weight: 900; color: var(--neon-green);" id="vendorReadyCount">0</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Ready Batteries</div>
-          </div>
-          <div style="background: var(--surface); padding: 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center;">
-            <div style="font-size: 22px; font-weight: 900; color: var(--warning-amber);" id="vendorChargingCount">0</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Charging Bays</div>
+          <div style="text-align:right;">
+            <div class="muted">Active Battery</div>
+            <div id="homeActiveBattery" style="font-size:15px;font-weight:800;">None linked</div>
           </div>
         </div>
       </div>
 
-      <!-- Station Controls -->
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="switchDriverTab('scan')">
+          <span class="icon-box">📷</span>
+          <span>Scan &amp; Pay</span>
+        </button>
+        <button class="quick-btn" onclick="switchDriverTab('wallet')">
+          <span class="icon-box">💳</span>
+          <span>Add Money</span>
+        </button>
+        <button class="quick-btn" onclick="switchDriverTab('history')">
+          <span class="icon-box">🧾</span>
+          <span>Bills</span>
+        </button>
+        <button class="quick-btn" onclick="openReferralModal()">
+          <span class="icon-box" style="color:var(--amber);">🎁</span>
+          <span>Refer</span>
+        </button>
+      </div>
+
+      <div class="section-title">
+        <span>Nearby Swap Stations</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadStations()">Refresh</button>
+      </div>
+      <div id="driverStationsList"></div>
+    </div>
+
+    <!-- DRIVER SCAN & PAY -->
+    <div id="view-driver-scan" class="hidden">
       <div class="card">
-        <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Update Operational State</div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--neon-green); border-color: var(--neon-green);" onclick="setStationStatus(0)">Set Open</button>
-          <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--warning-amber); border-color: var(--warning-amber);" onclick="setStationStatus(2)">Maintenance</button>
-          <button class="btn-outline" style="font-size: 12px; height: 38px; color: var(--danger-red); border-color: var(--danger-red);" onclick="setStationStatus(1)">Set Closed</button>
+        <div class="step-header"><span class="step-badge">1</span> Scan Station &amp; Battery QR</div>
+        <select id="scanStationSelect" class="input-field" onchange="loadStationChargedBatteries()"></select>
+        <input id="scanDepletedSerial" class="input-field" placeholder="Your Depleted Battery QR / Serial (e.g. BAT-LFP-1001)">
+        <select id="scanIssuedSelect" class="input-field"></select>
+      </div>
+
+      <div class="card">
+        <div class="step-header"><span class="step-badge">2</span> Choose Payment Method</div>
+        <div class="pay-options">
+          <div class="pay-chip active" data-pm="4" onclick="selectDriverPayMethod(4, this)">💳 Credit / Debit Card</div>
+          <div class="pay-chip" data-pm="2" onclick="selectDriverPayMethod(2, this)">📱 UPI Intent</div>
+          <div class="pay-chip" data-pm="1" onclick="selectDriverPayMethod(1, this)">👛 ChargeLoop Wallet</div>
+          <div class="pay-chip" data-pm="0" onclick="selectDriverPayMethod(0, this)">📋 Weekly Pass</div>
+        </div>
+
+        <div id="driverCardFields" class="card-elevated" style="margin-bottom:12px;">
+          <div class="muted" style="margin-bottom:6px;">Card Details (Visa / Mastercard / RuPay)</div>
+          <input id="driverCardNum" class="input-field" placeholder="Card Number (e.g. 4532 •••• •••• 8891)" value="4532 8810 2234 8891">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input id="driverCardExp" class="input-field" placeholder="MM/YY" value="08/28" style="margin-bottom:0;">
+            <input id="driverCardCvv" class="input-field" type="password" placeholder="CVV" value="742" style="margin-bottom:0;">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="executeDriverScanAndPay()">Confirm Swap &amp; Pay (₹118)</button>
+      </div>
+
+      <div id="driverSwapReceipt" class="card hidden"></div>
+    </div>
+
+    <!-- DRIVER WALLET & REFER -->
+    <div id="view-driver-wallet" class="hidden">
+      <div class="grid-hero">
+        <div class="muted">Available Wallet Balance</div>
+        <div id="walletBalanceBig" style="font-size:32px;font-weight:900;color:var(--mint);margin:4px 0 12px;">₹0.00</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(100)">+₹100</button>
+          <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(200)">+₹200</button>
+          <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(500)">+₹500</button>
+        </div>
+        <input id="walletTopupAmount" class="input-field" type="number" value="200" placeholder="Enter amount (₹)">
+        <div class="pay-options" style="margin-bottom:10px;">
+          <div class="pay-chip active" onclick="selectTopupMode('CARD', this)">💳 Credit / Debit Card</div>
+          <div class="pay-chip" onclick="selectTopupMode('UPI', this)">📱 UPI Instant</div>
+        </div>
+        <button class="btn btn-primary" onclick="topUpDriverWallet()">Add Money to Wallet</button>
+      </div>
+
+      <div class="card">
+        <div class="row-between" style="margin-bottom:8px;">
+          <div style="font-weight:800;">🎁 Refer Your Friend</div>
+          <span class="amber-pill">Earn ₹50 each</span>
+        </div>
+        <div class="muted" style="margin-bottom:8px;">Share your code with fellow EV drivers. Both get ₹50 wallet credit!</div>
+        <div class="card-elevated row-between" style="margin-bottom:10px;">
+          <div>
+            <div class="muted" style="font-size:10px;">YOUR REFERRAL CODE</div>
+            <div id="myReferralCode" style="font-size:18px;font-weight:900;color:var(--mint);letter-spacing:1px;">CL-XXXX</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="copyReferralCode()">Copy</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input id="claimReferralInput" class="input-field" placeholder="Have a friend's code?" style="margin-bottom:0;">
+          <button class="btn btn-amber btn-sm" onclick="claimReferralCode()">Claim</button>
         </div>
       </div>
 
-      <!-- Ready Batteries List at this station -->
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px; margin-top: 14px;">Charged Batteries in Stock</div>
-      <div id="vendorStationBatteriesList">
-        <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading battery inventory...</div>
+      <div class="section-title"><span>Recent Wallet Transactions</span></div>
+      <div id="driverWalletTxList"></div>
+    </div>
+
+    <!-- DRIVER BILLING & SWAP HISTORY -->
+    <div id="view-driver-history" class="hidden">
+      <div class="section-title">
+        <span>Swap &amp; Billing History</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadDriverHistory()">Refresh</button>
       </div>
+      <div id="driverHistoryList"></div>
+    </div>
+
+    <!-- DRIVER PROFILE & WEEKLY PLANS -->
+    <div id="view-driver-profile" class="hidden">
+      <div class="card">
+        <div class="row-between">
+          <div>
+            <div id="profDriverName" style="font-size:18px;font-weight:800;">Driver</div>
+            <div id="profDriverPhone" class="muted"></div>
+            <div id="profDriverEmail" class="muted"></div>
+          </div>
+          <span id="profKycBadge" class="mint-pill">KYC</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;">📋 Weekly Subscription Plans</div>
+        <div id="subscriptionPlansList"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;">🪪 Complete KYC</div>
+        <input id="kycDlInput" class="input-field" placeholder="Driving License Number">
+        <input id="kycAadhaarInput" class="input-field" placeholder="Aadhaar Number (12 digits)">
+        <button class="btn btn-primary" onclick="submitDriverKyc()">Verify KYC</button>
+      </div>
+
+      <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+    </div>
+
+    <!-- VENDOR SWAP DESK -->
+    <div id="view-vendor-desk" class="hidden">
+      <div class="grid-hero">
+        <div class="row-between">
+          <div>
+            <div class="muted">Partner Swap Desk</div>
+            <div id="vendorHeroBiz" style="font-size:18px;font-weight:900;">ChargeLoop Hub</div>
+          </div>
+          <span class="mint-pill">● ONLINE</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: VALIDATE DRIVER -->
+      <div class="card">
+        <div class="step-header"><span class="step-badge">1</span> Validate Driver Before Swap</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="vendorValidateQuery" class="input-field" placeholder="Phone, Name, or Driver ID" style="margin-bottom:0;">
+          <button class="btn btn-primary btn-sm" onclick="validateDriverForPartner()">Validate</button>
+        </div>
+        <div id="validatedDriverBox" class="card-elevated hidden"></div>
+      </div>
+
+      <!-- STEP 2: QR SCAN DISCONNECT & ASSIGN -->
+      <div class="card">
+        <div class="step-header"><span class="step-badge">2</span> Scan Battery QRs (Disconnect &amp; Assign)</div>
+        <select id="vendorDeskStationSelect" class="input-field" onchange="loadVendorDeskBatteries()"></select>
+        <input id="vendorDepletedQr" class="input-field" placeholder="Scan Driver's Battery QR to Disconnect">
+        <select id="vendorIssuedQrSelect" class="input-field"></select>
+      </div>
+
+      <!-- STEP 3: PAYMENT & SWAP -->
+      <div class="card">
+        <div class="step-header"><span class="step-badge">3</span> Collect Payment &amp; Execute Swap</div>
+        <div class="pay-options">
+          <div class="pay-chip active" data-vpm="4" onclick="selectVendorPayMethod(4, this)">💳 Card</div>
+          <div class="pay-chip" data-vpm="2" onclick="selectVendorPayMethod(2, this)">📱 UPI</div>
+          <div class="pay-chip" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash</div>
+          <div class="pay-chip" data-vpm="0" onclick="selectVendorPayMethod(0, this)">📋 Weekly Pass</div>
+        </div>
+        <button id="vendorSwapBtn" class="btn btn-primary" disabled onclick="executePartnerSwap()">
+          🔒 Validate Driver First to Unlock Swap
+        </button>
+      </div>
+
+      <!-- STEP 4: PUBLISH BILL -->
+      <div id="vendorBillCard" class="card hidden">
+        <div class="step-header"><span class="step-badge">4</span> Publish Bill to Driver</div>
+        <div id="vendorBillSummary" class="muted" style="margin-bottom:10px;"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          <label class="mint-pill"><input type="checkbox" id="chkWhatsApp" checked> WhatsApp</label>
+          <label class="mint-pill"><input type="checkbox" id="chkSms" checked> SMS</label>
+          <label class="mint-pill"><input type="checkbox" id="chkEmail" checked> Email</label>
+        </div>
+        <button class="btn btn-amber" onclick="publishPartnerBill()">Send Invoice Now</button>
+      </div>
+    </div>
+
+    <!-- VENDOR STORES & BATTERIES -->
+    <div id="view-vendor-stores" class="hidden">
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:10px;">🔋 Register Battery with Store Details</div>
+        <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
+        <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input id="regBatModel" class="input-field" value="LFP-48V-30Ah" placeholder="Model Type">
+          <input id="regBatSoc" class="input-field" type="number" value="100" placeholder="SOC % (0-100)">
+        </div>
+        <button class="btn btn-primary" onclick="registerBatteryForStore()">Register Battery at Store</button>
+      </div>
+
+      <div class="section-title">
+        <span>Your Stores &amp; Charged Inventory</span>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAddStoreForm()">+ Add Store</button>
+      </div>
+
+      <div id="addStoreForm" class="card hidden">
+        <input id="newStoreName" class="input-field" placeholder="Store / Hub Name">
+        <input id="newStoreAddress" class="input-field" placeholder="Full Street Address">
+        <input id="newStoreCity" class="input-field" value="Bengaluru" placeholder="City">
+        <button class="btn btn-primary" onclick="createVendorStore()">Save Store / Hub</button>
+      </div>
+
+      <div id="vendorStoresList"></div>
+      <div class="section-title"><span>Available Charged Batteries in Selected Store</span></div>
+      <div id="vendorStoreBatteriesList"></div>
+    </div>
+
+    <!-- VENDOR EARNINGS -->
+    <div id="view-vendor-earnings" class="hidden">
+      <div class="grid-hero">
+        <div class="muted">Partner Commission Wallet</div>
+        <div id="vendorWalletBig" style="font-size:32px;font-weight:900;color:var(--mint);margin-top:4px;">₹0.00</div>
+      </div>
+      <div class="section-title"><span>Commission Payout Ledger</span></div>
+      <div id="vendorTxList"></div>
+    </div>
+
+    <!-- VENDOR PROFILE -->
+    <div id="view-vendor-profile" class="hidden">
+      <div class="card">
+        <div id="profVendorName" style="font-size:18px;font-weight:800;">Partner</div>
+        <div id="profVendorBiz" class="mint-text" style="font-size:13px;font-weight:700;margin:2px 0;"></div>
+        <div id="profVendorPhone" class="muted"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
     </div>
   </div>
 
-  <!-- VENDOR SCREEN 2: EARNINGS & SETTLEMENT -->
-  <div id="screen-vendor-earnings" class="screen-content">
-    <div class="card card-highlight">
-      <div style="color: var(--text-muted); font-size: 12px;">VENDOR COMMISSION BALANCE</div>
-      <div style="font-size: 32px; font-weight: 900; color: var(--bright-cyan); margin: 6px 0;" id="vendorWalletBalance">₹0.00</div>
-      <div style="color: var(--neon-green); font-size: 12px; font-weight: 600;">₹25.00 Instant Payout per Swap</div>
-    </div>
-
-    <!-- Settlement Details Card -->
-    <div class="card">
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Settlement Payout Route</div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
-        <span style="color: var(--text-muted);">Payout UPI ID:</span>
-        <span style="font-weight: 600;" id="vendorUpiDisplay">-</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
-        <span style="color: var(--text-muted);">Bank Account:</span>
-        <span style="font-weight: 600;" id="vendorBankDisplay">-</span>
-      </div>
-      <button class="btn-primary" style="margin-top: 12px; height: 42px; font-size: 14px;" onclick="requestVendorPayout()">
-        Request 1-Click Bank/UPI Payout
-      </button>
-    </div>
-
-    <!-- Recent Swaps Credited to this Vendor -->
-    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Recent Commission Credits</div>
-    <div id="vendorCommissionHistory">
-      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading payout activity...</div>
-    </div>
+  <!-- DRIVER BOTTOM NAV -->
+  <div id="navDriver" class="bottom-nav hidden">
+    <div class="nav-item active" data-tab="home" onclick="switchDriverTab('home')"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item" data-tab="scan" onclick="switchDriverTab('scan')"><span class="nav-icon">📷</span>Scan &amp; Pay</div>
+    <div class="nav-item" data-tab="wallet" onclick="switchDriverTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
+    <div class="nav-item" data-tab="history" onclick="switchDriverTab('history')"><span class="nav-icon">🧾</span>Bills</div>
+    <div class="nav-item" data-tab="profile" onclick="switchDriverTab('profile')"><span class="nav-icon">👤</span>Profile</div>
   </div>
 
-  <!-- VENDOR SCREEN 3: HARDWARE SUPPORT -->
-  <div id="screen-vendor-support" class="screen-content">
-    <div class="card card-highlight">
-      <div style="font-weight: 700; font-size: 15px;">Charger & Station Support</div>
-      <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Report hardware malfunctions, connector wear, or power outage directly to operations.</p>
-    </div>
-
-    <div class="card">
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Report Hardware Defect</div>
-      <input type="text" id="vendorTicketSubject" class="input-box" placeholder="Subject (e.g. Bay 2 Lock Jammed)" />
-      <textarea id="vendorTicketDesc" class="input-box" rows="3" style="resize: none;" placeholder="Details of the charger or station issue..."></textarea>
-      <button class="btn-primary" onclick="submitVendorTicket()">Submit Hardware Defect Ticket</button>
-    </div>
-
-    <div style="font-weight: 700; margin: 16px 0 8px; font-size: 14px;">Reported Station Tickets</div>
-    <div id="vendorTicketsList">
-      <div class="card" style="color: var(--text-muted); font-size: 12px;">No active tickets.</div>
-    </div>
+  <!-- VENDOR BOTTOM NAV -->
+  <div id="navVendor" class="bottom-nav hidden">
+    <div class="nav-item active" data-tab="desk" onclick="switchVendorTab('desk')"><span class="nav-icon">⚡</span>Swap Desk</div>
+    <div class="nav-item" data-tab="stores" onclick="switchVendorTab('stores')"><span class="nav-icon">🔋</span>Stores</div>
+    <div class="nav-item" data-tab="earnings" onclick="switchVendorTab('earnings')"><span class="nav-icon">💰</span>Earnings</div>
+    <div class="nav-item" data-tab="profile" onclick="switchVendorTab('profile')"><span class="nav-icon">👤</span>Profile</div>
   </div>
 
-  <!-- VENDOR SCREEN 4: VENDOR PROFILE -->
-  <div id="screen-vendor-profile" class="screen-content">
-    <div style="text-align: center; margin-bottom: 20px;">
-      <div style="width: 64px; height: 64px; background: var(--surface-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 28px; color: var(--bright-cyan);">🏪</div>
-      <div style="font-size: 18px; font-weight: 800;" id="profVendorBusiness">Loading...</div>
-      <div style="color: var(--text-muted); font-size: 13px;" id="profVendorName">-</div>
-      <div class="badge-stock" style="margin-top: 6px; background: rgba(0,229,255,0.15); color: var(--bright-cyan);">✓ Authorized Vendor Partner</div>
-    </div>
-
-    <!-- Business Details -->
-    <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">VENDOR BUSINESS DETAILS</div>
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
-        <span style="color: var(--text-muted);">Contact Phone:</span>
-        <span style="font-weight: 600;" id="profVendorPhone">-</span>
+  <!-- BILL MODAL -->
+  <div id="billModal" class="modal-backdrop" onclick="if(event.target===this) closeBillModal()">
+    <div class="modal-sheet">
+      <div class="row-between" style="margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:800;">🧾 Tax Invoice</div>
+        <button class="btn btn-secondary btn-sm" onclick="closeBillModal()">Close</button>
       </div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
-        <span style="color: var(--text-muted);">Partner ID:</span>
-        <span style="font-weight: 600; font-family: monospace; font-size: 11px;" id="profVendorId">-</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
-        <span style="color: var(--text-muted);">Payout UPI:</span>
-        <span style="font-weight: 600;" id="profVendorUpi">-</span>
-      </div>
-    </div>
-
-    <!-- Operated Stations List -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 14px;">
-      <div style="font-weight: 700; font-size: 13px;">OPERATED STATIONS (<span id="profVendorStationCount">0</span>)</div>
-      <button class="btn-outline" style="width: auto; height: 28px; padding: 2px 8px; font-size: 11px; color: var(--bright-cyan); border-color: rgba(0, 229, 255, 0.4);" onclick="switchVendorTab('stations'); toggleAddStationForm(true);">+ Add Hub</button>
-    </div>
-    <div id="profVendorStationsList">
-      <div class="card" style="color: var(--text-muted); font-size: 12px;">Loading stations...</div>
-    </div>
-
-    <button class="btn-outline" style="margin-top: 16px; border-color: var(--border); color: var(--text-muted);" onclick="showAuthScreen()">Sign Out / Switch Account</button>
-
-    <!-- Official Brand Card -->
-    <div style="margin-top: 24px; text-align: center; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);">
-      <div style="font-size: 16px; font-weight: 900; letter-spacing: -0.2px;">
-        Swap. Ride. <span style="color: var(--neon-green);">Repeat.</span>
-      </div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-        Quick swaps • Charged & tested batteries • Fleet plans
-      </div>
-      <div style="font-size: 12px; margin-top: 8px;">
-        <a href="https://www.chargeloopsln.in" target="_blank" style="color: var(--bright-cyan); text-decoration: none; font-weight: 700;">www.chargeloopsln.in</a>
-      </div>
-      <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; opacity: 0.7;">Licensed under MIT License • © 2026 ChargeLoop</div>
-    </div>
-  </div>
-
-  <!-- ======================== BOTTOM NAVIGATION BARS ======================== -->
-
-  <!-- Driver Bottom Nav -->
-  <div class="bottom-nav" id="driverBottomNav" style="display: none;">
-    <div class="nav-item active" onclick="switchDriverTab('stations')">
-      <svg viewBox="0 0 24 24"><path d="M19 12h-2V7h-4v2h2v5H9V5h6V3H7v11H5v2h2v5h10v-5h2v-4zm-4 7H9v-3h6v3z"/></svg>
-      <span>Stations</span>
-    </div>
-    <div class="nav-item" onclick="switchDriverTab('swap')">
-      <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
-      <span>Swap</span>
-    </div>
-    <div class="nav-item" onclick="switchDriverTab('wallet')">
-      <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-      <span>Wallet</span>
-    </div>
-    <div class="nav-item" onclick="switchDriverTab('profile')">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <span>Profile</span>
-    </div>
-  </div>
-
-  <!-- Vendor Bottom Nav -->
-  <div class="bottom-nav" id="vendorBottomNav" style="display: none;">
-    <div class="nav-item active" onclick="switchVendorTab('stations')">
-      <svg viewBox="0 0 24 24"><path d="M19 12h-2V7h-4v2h2v5H9V5h6V3H7v11H5v2h2v5h10v-5h2v-4zm-4 7H9v-3h6v3z"/></svg>
-      <span>Operations</span>
-    </div>
-    <div class="nav-item" onclick="switchVendorTab('earnings')">
-      <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-      <span>Earnings</span>
-    </div>
-    <div class="nav-item" onclick="switchVendorTab('support')">
-      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-      <span>Support</span>
-    </div>
-    <div class="nav-item" onclick="switchVendorTab('profile')">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <span>Profile</span>
+      <div id="billModalBody"></div>
     </div>
   </div>
 </div>
 
 <script>
-  let activeRole = null; // 'driver' or 'vendor'
-  let activeUser = null; // Driver or Vendor object
-  let loadedStations = [];
-  let timerInterval = null;
-  let timerSeconds = 0;
-  let activeSwapId = null;
+const API = '/api/v1';
+let state = {
+  role: null,
+  driver: null,
+  vendor: null,
+  stations: [],
+  vendorStations: [],
+  driverPayMethod: 4,
+  topupMode: 'CARD',
+  vendorPayMethod: 4,
+  validatedDriver: null,
+  lastVendorSwap: null
+};
 
-  // 1. Role Selection in Auth Screen
-  function setAuthRole(role) {
-    document.getElementById('btnRoleDriver').classList.toggle('active', role === 'driver');
-    document.getElementById('btnRoleVendor').classList.toggle('active', role === 'vendor');
-    document.getElementById('driverAuthFields').style.display = role === 'driver' ? 'block' : 'none';
-    document.getElementById('vendorAuthFields').style.display = role === 'vendor' ? 'block' : 'none';
+function showToast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = isError ? 'toast error' : 'toast';
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { message: text }; }
+  if (!res.ok) {
+    throw new Error(data?.error || data?.Error || data?.message || data?.title || 'Request failed');
   }
+  return data;
+}
 
-  function showAuthScreen() {
-    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-    document.getElementById('driverBottomNav').style.display = 'none';
-    document.getElementById('vendorBottomNav').style.display = 'none';
-    document.getElementById('screen-auth').classList.add('active');
-    document.getElementById('headerRoleBadge').innerText = 'Sign In';
-    loadDbDriversList();
-    loadDbVendorsList();
-  }
+function selectAuthRole(role) {
+  document.getElementById('roleTabDriver').classList.toggle('active', role === 'driver');
+  document.getElementById('roleTabVendor').classList.toggle('active', role === 'vendor');
+  document.getElementById('authDriverBox').classList.toggle('hidden', role !== 'driver');
+  document.getElementById('authVendorBox').classList.toggle('hidden', role !== 'vendor');
+}
 
-  // 2. Navigation Tab Switching
-  function switchDriverTab(tab) {
-    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-    const navItems = document.querySelectorAll('#driverBottomNav .nav-item');
-    navItems.forEach(el => el.classList.remove('active'));
-
-    document.getElementById(`screen-driver-${tab}`).classList.add('active');
-    if (tab === 'stations') navItems[0].classList.add('active');
-    if (tab === 'swap') navItems[1].classList.add('active');
-    if (tab === 'wallet') navItems[2].classList.add('active');
-    if (tab === 'profile') navItems[3].classList.add('active');
-  }
-
-  function switchVendorTab(tab) {
-    document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-    const navItems = document.querySelectorAll('#vendorBottomNav .nav-item');
-    navItems.forEach(el => el.classList.remove('active'));
-
-    document.getElementById(`screen-vendor-${tab}`).classList.add('active');
-    if (tab === 'stations') navItems[0].classList.add('active');
-    if (tab === 'earnings') navItems[1].classList.add('active');
-    if (tab === 'support') navItems[2].classList.add('active');
-    if (tab === 'profile') navItems[3].classList.add('active');
-  }
-
-  // 3. Driver Authentication
-  async function submitDriverAuth() {
-    const phone = document.getElementById('authDriverPhone').value.trim();
-    const name = document.getElementById('authDriverName').value.trim();
-    if (!phone || phone.length < 10) { alert('Please enter a valid 10-digit phone number'); return; }
-
-    try {
-      const res = await fetch('/api/v1/auth/phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phone, fullName: name || null, languageCode: 'en' })
-      });
-      if (res.ok) {
-        const authRes = await res.json();
-        await enterAsDriver(authRes.driverId);
-      } else {
-        alert('Authentication failed: ' + (await res.text()));
-      }
-    } catch (e) {
-      alert('Error: ' + e);
-    }
-  }
-
-  async function enterAsDriver(driverId) {
-    try {
-      const res = await fetch(`/api/v1/auth/profile/${driverId}`);
-      if (res.ok) {
-        activeUser = await res.json();
-        activeRole = 'driver';
-
-        document.getElementById('headerRoleBadge').innerText = 'Driver';
-        document.getElementById('headerUserName').innerText = activeUser.fullName.split(' ')[0];
-        document.getElementById('driverBottomNav').style.display = 'flex';
-        document.getElementById('vendorBottomNav').style.display = 'none';
-
-        updateDriverUI(activeUser);
-        switchDriverTab('stations');
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  // 4. Vendor Authentication
-  async function submitVendorAuth() {
-    const phone = document.getElementById('authVendorPhone').value.trim();
-    const name = document.getElementById('authVendorName').value.trim();
-    const business = document.getElementById('authVendorBusiness').value.trim();
-    if (!phone || phone.length < 10) { alert('Please enter a valid vendor mobile number'); return; }
-
-    try {
-      const res = await fetch('/api/v1/auth/vendor/phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phone, fullName: name || null, businessName: business || null })
-      });
-      if (res.ok) {
-        const authRes = await res.json();
-        await enterAsVendor(authRes.vendorId);
-      } else {
-        alert('Vendor sign in failed: ' + (await res.text()));
-      }
-    } catch (e) {
-      alert('Error: ' + e);
-    }
-  }
-
-  async function enterAsVendor(vendorId) {
-    try {
-      const res = await fetch(`/api/v1/auth/vendor/profile/${vendorId}`);
-      if (res.ok) {
-        activeUser = await res.json();
-        activeRole = 'vendor';
-
-        document.getElementById('headerRoleBadge').innerText = 'Vendor';
-        document.getElementById('headerUserName').innerText = activeUser.fullName.split(' ')[0];
-        document.getElementById('driverBottomNav').style.display = 'none';
-        document.getElementById('vendorBottomNav').style.display = 'flex';
-
-        updateVendorUI(activeUser);
-        switchVendorTab('stations');
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  // 5. Driver UI Updates
-  function updateDriverUI(detail) {
-    document.getElementById('profDriverName').innerText = detail.fullName || 'Driver';
-    document.getElementById('profDriverPhone').innerText = detail.phoneNumber || '';
-    document.getElementById('driverWalletBalance').innerText = `₹${(detail.walletBalance || 0).toFixed(2)}`;
-    document.getElementById('driverWalletStatusText').innerText = detail.walletBalance >= 118 
-      ? '✓ Sufficient balance for battery swaps' 
-      : '⚠ Low balance. Top up to continue swapping.';
-
-    if (detail.activeBattery) {
-      const b = detail.activeBattery;
-      const soc = b.stateOfChargePercent;
-      document.getElementById('socVal').innerText = `${soc}%`;
-      document.getElementById('swapDepletedSerialInput').value = b.serialNumber;
-
-      const circle = document.getElementById('socCircle');
-      const statusText = document.getElementById('txt-battery-status');
-      if (soc < 20) {
-        circle.style.borderColor = 'var(--danger-red)';
-        circle.style.boxShadow = '0 0 20px rgba(255, 61, 0, 0.3)';
-        statusText.innerText = `Low Battery (${soc}% SOC) - Swap Needed`;
-        statusText.style.color = 'var(--danger-red)';
-      } else if (soc < 50) {
-        circle.style.borderColor = 'var(--warning-amber)';
-        circle.style.boxShadow = '0 0 20px rgba(255, 179, 0, 0.3)';
-        statusText.innerText = `Active Battery (${soc}% SOC)`;
-        statusText.style.color = 'var(--warning-amber)';
-      } else {
-        circle.style.borderColor = 'var(--neon-green)';
-        circle.style.boxShadow = '0 0 20px rgba(0, 230, 118, 0.3)';
-        statusText.innerText = `Healthy Battery (${soc}% SOC)`;
-        statusText.style.color = 'var(--neon-green)';
-      }
-      document.getElementById('txt-battery-range').innerText = `Estimated Range: ~${Math.round(soc * 0.75)} km`;
-
-      document.getElementById('profBatteryDetails').innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-weight:700;">${b.serialNumber} (${b.modelType})</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Health: ${b.stateOfHealthPercent}% SOH | Temp: ${b.cellTemperatureCelsius}°C</div>
-          </div>
-          <div class="badge-stock ${soc < 20 ? 'badge-danger' : (soc < 50 ? 'badge-amber' : '')}">⚡ ${soc}% SOC</div>
+async function initAuthLists() {
+  try {
+    const [drivers, vendors] = await Promise.all([
+      apiFetch('/auth/drivers'),
+      apiFetch('/auth/vendors')
+    ]);
+    const dBox = document.getElementById('quickDriversList');
+    dBox.innerHTML = (drivers || []).slice(0, 4).map(d => `
+      <div class="card-elevated row-between" style="margin-bottom:8px;cursor:pointer;" onclick="quickSignInDriver('${d.phoneNumber}', '${(d.fullName || '').replace(/'/g, '')}')">
+        <div>
+          <div style="font-weight:700;font-size:13px;">${d.fullName}</div>
+          <div class="muted">${d.phoneNumber}</div>
         </div>
-      `;
-    } else {
-      document.getElementById('socVal').innerText = '0%';
-      document.getElementById('swapDepletedSerialInput').value = '';
-      document.getElementById('txt-battery-status').innerText = 'No Battery Mounted';
-      document.getElementById('txt-battery-range').innerText = 'Range: 0 km';
-      document.getElementById('profBatteryDetails').innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No active battery currently assigned.</div>`;
-    }
-
-    const vList = document.getElementById('profVehiclesList');
-    if (detail.vehicles && detail.vehicles.length > 0) {
-      vList.innerHTML = detail.vehicles.map(v => `
-        <div class="card">
-          <div style="font-weight:700; font-size:14px;">${v.registrationNumber}</div>
-          <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${v.oem} — ${v.model}</div>
-          <div style="color:var(--bright-cyan); font-size:11px; font-weight:600;">Spec: ${v.batteryCompatibilityType}</div>
-        </div>
-      `).join('');
-    } else {
-      vList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No linked vehicle.</div>`;
-    }
-
-    loadDriverSwapHistory(detail.id);
-    loadDriverTickets(detail.id);
-  }
-
-  // 6. Vendor UI Updates (With Profile, without Live Bay Grid)
-  function updateVendorUI(vendor) {
-    // Populate Profile Screen
-    document.getElementById('profVendorBusiness').innerText = vendor.businessName || 'ChargeLoop Hub';
-    document.getElementById('profVendorName').innerText = `Owner: ${vendor.fullName}`;
-    document.getElementById('profVendorPhone').innerText = vendor.phoneNumber;
-    document.getElementById('profVendorId').innerText = vendor.id;
-    document.getElementById('profVendorUpi').innerText = vendor.upiId || 'Not set';
-
-    // Populate Earnings Screen
-    document.getElementById('vendorWalletBalance').innerText = `₹${(vendor.walletBalance || 0).toFixed(2)}`;
-    document.getElementById('vendorUpiDisplay').innerText = vendor.upiId || 'partner@upi';
-    document.getElementById('vendorBankDisplay').innerText = vendor.bankAccountNumber || 'HDFC Bank ••••4321';
-
-    // Populate Stations Dropdown & Stations in Profile
-    const stSelect = document.getElementById('vendorStationSelect');
-    const pStList = document.getElementById('profVendorStationsList');
-    const stationCountEl = document.getElementById('profVendorStationCount');
-    const noStationsMsg = document.getElementById('vendorNoStationsMsg');
-    const stationCard = document.getElementById('vendorStationCard');
-
-    const stations = vendor.stations || [];
-    if (stationCountEl) stationCountEl.innerText = stations.length;
-
-    if (stations.length > 0) {
-      if (noStationsMsg) noStationsMsg.style.display = 'none';
-      if (stationCard) stationCard.style.display = 'block';
-      stSelect.style.display = 'block';
-
-      stSelect.innerHTML = stations.map(s => `
-        <option value="${s.id}">${s.name} (${s.city})</option>
-      `).join('');
-
-      pStList.innerHTML = stations.map(s => `
-        <div class="card">
-          <div style="font-weight:700; font-size:14px;">${s.name}</div>
-          <div style="color:var(--text-muted); font-size:11px; margin:2px 0;">${s.address} • ${s.city}</div>
-          <div style="display:flex; justify-content:space-between; margin-top:8px;">
-            <span class="badge-stock">⚡ ${s.availableChargedBatteries} Ready to Swap</span>
-            <span style="font-size:11px; color:var(--text-muted);">${s.status === 0 ? '🟢 Open' : '🟡 Maintenance'}</span>
-          </div>
-        </div>
-      `).join('');
-
-      onVendorStationSelectChanged();
-    } else {
-      if (noStationsMsg) noStationsMsg.style.display = 'block';
-      if (stationCard) stationCard.style.display = 'none';
-      stSelect.style.display = 'none';
-      stSelect.innerHTML = `<option value="">No stations registered</option>`;
-      pStList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No stations registered under this vendor yet. Click "+ Add Hub" above to link your first station.</div>`;
-    }
-
-    loadVendorTickets(vendor.id);
-    loadVendorCommissions(vendor.id);
-  }
-
-  function toggleAddStationForm(forceOpen = false) {
-    const card = document.getElementById('addStationCard');
-    if (!card) return;
-    if (forceOpen === true) {
-      card.style.display = 'block';
-    } else {
-      card.style.display = card.style.display === 'none' ? 'block' : 'none';
-    }
-  }
-
-  async function submitNewStation() {
-    if (!activeUser || !activeUser.id) {
-      alert('Please sign in as a vendor first.');
-      return;
-    }
-    const name = document.getElementById('newStationName').value.trim();
-    const address = document.getElementById('newStationAddress').value.trim();
-    const city = document.getElementById('newStationCity').value.trim() || 'New Delhi';
-    const bays = parseInt(document.getElementById('newStationBays').value) || 12;
-    const charged = parseInt(document.getElementById('newStationCharged').value) || 6;
-    const charging = parseInt(document.getElementById('newStationCharging').value) || 4;
-
-    if (!name || !address) {
-      alert('Please enter Station Name and Address');
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/v1/stations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          partnerId: activeUser.id,
-          name: name,
-          address: address,
-          city: city,
-          latitude: 28.6289 + (Math.random() - 0.5) * 0.04,
-          longitude: 77.0818 + (Math.random() - 0.5) * 0.04,
-          totalBays: bays,
-          initialChargedBatteries: charged,
-          initialChargingBatteries: charging
-        })
-      });
-
-      if (res.ok) {
-        const created = await res.json();
-        alert(`✓ Station "${created.name}" registered and linked to your vendor account!`);
-        document.getElementById('newStationName').value = '';
-        document.getElementById('newStationAddress').value = '';
-        document.getElementById('addStationCard').style.display = 'none';
-
-        // Reload vendor profile and update UI
-        await enterAsVendor(activeUser.id);
-        // Refresh driver stations list
-        await loadStations();
-      } else {
-        alert('Failed to register station: ' + (await res.text()));
-      }
-    } catch (e) {
-      alert('Error registering station: ' + e);
-    }
-  }
-
-  async function onVendorStationSelectChanged() {
-    const stSelect = document.getElementById('vendorStationSelect');
-    const stationId = stSelect.value;
-    if (!stationId) return;
-
-    try {
-      const res = await fetch(`/api/v1/stations/${stationId}`);
-      if (res.ok) {
-        const station = await res.json();
-        document.getElementById('vendorStationTitle').innerText = station.name;
-        document.getElementById('vendorStationAddress').innerText = station.address;
-        document.getElementById('vendorReadyCount').innerText = station.availableChargedBatteries;
-        document.getElementById('vendorChargingCount').innerText = station.chargingBatteries;
-
-        const badge = document.getElementById('vendorStationStatusBadge');
-        if (station.status === 0) {
-          badge.className = 'badge-stock';
-          badge.innerText = 'Open 06:00 - 23:00';
-        } else if (station.status === 2) {
-          badge.className = 'badge-stock badge-amber';
-          badge.innerText = 'Maintenance Mode';
-        } else {
-          badge.className = 'badge-stock badge-danger';
-          badge.innerText = 'Closed';
-        }
-      }
-
-      // Load charged batteries list for vendor
-      const bRes = await fetch(`/api/v1/stations/${stationId}/batteries`);
-      if (bRes.ok) {
-        const batteries = await bRes.json();
-        const bList = document.getElementById('vendorStationBatteriesList');
-        if (batteries && batteries.length > 0) {
-          bList.innerHTML = batteries.map(b => `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-weight:700; font-size:13px;">${b.serialNumber}</div>
-                <div style="font-size:11px; color:var(--text-muted);">${b.modelType} • ${b.cellTemperatureCelsius}°C</div>
-              </div>
-              <div class="badge-stock">⚡ ${b.stateOfChargePercent}% Full</div>
-            </div>
-          `).join('');
-        } else {
-          bList.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No charged batteries currently available.</div>`;
-        }
-      }
-    } catch (_) {}
-  }
-
-  async function setStationStatus(statusInt) {
-    const stationId = document.getElementById('vendorStationSelect').value;
-    if (!stationId) return;
-
-    try {
-      const res = await fetch(`/api/v1/stations/${stationId}/availability?availableCharged=8&charging=6&waitMinutes=2`, { method: 'POST' });
-      if (res.ok) {
-        alert('Station status updated successfully!');
-        onVendorStationSelectChanged();
-      }
-    } catch (e) {
-      alert('Error updating status: ' + e);
-    }
-  }
-
-  function requestVendorPayout() {
-    alert('Instant withdrawal request submitted! Commission will be deposited to your configured UPI ID within 15 minutes.');
-  }
-
-  // 7. Load Data Helpers
-  async function loadDbDriversList() {
-    const listEl = document.getElementById('dbDriversList');
-    try {
-      const res = await fetch('/api/v1/auth/drivers');
-      if (res.ok) {
-        const drivers = await res.json();
-        if (drivers && drivers.length > 0) {
-          listEl.innerHTML = drivers.map(d => `
-            <button class="btn-outline" style="text-align:left; padding:8px 12px; height:auto; display:flex; justify-content:space-between; align-items:center;" onclick="enterAsDriver('${d.id}')">
-              <div>
-                <div style="font-weight:700;">${d.fullName}</div>
-                <div style="font-size:11px; color:var(--text-muted);">${d.phoneNumber}</div>
-              </div>
-              <div style="font-weight:700; color:var(--neon-green);">₹${(d.walletBalance || 0).toFixed(2)}</div>
-            </button>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    listEl.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No drivers found.</div>`;
-  }
-
-  async function loadDbVendorsList() {
-    const listEl = document.getElementById('dbVendorsList');
-    try {
-      const res = await fetch('/api/v1/auth/vendors');
-      if (res.ok) {
-        const vendors = await res.json();
-        if (vendors && vendors.length > 0) {
-          listEl.innerHTML = vendors.map(v => `
-            <button class="btn-outline" style="text-align:left; padding:8px 12px; height:auto; display:flex; justify-content:space-between; align-items:center;" onclick="enterAsVendor('${v.id}')">
-              <div>
-                <div style="font-weight:700;">${v.businessName}</div>
-                <div style="font-size:11px; color:var(--text-muted);">${v.fullName} (${v.phoneNumber})</div>
-              </div>
-              <div style="font-weight:700; color:var(--bright-cyan);">₹${(v.walletBalance || 0).toFixed(2)}</div>
-            </button>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    listEl.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">No vendors found.</div>`;
-  }
-
-  async function loadStations() {
-    const listEl = document.getElementById('driverStationsList');
-    try {
-      const res = await fetch('/api/v1/stations/nearby', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latitude: 28.6289, longitude: 77.0818, radiusKm: 30 })
-      });
-      if (res.ok) {
-        loadedStations = await res.json();
-        document.getElementById('driverStationsSummary').innerText = `● ${loadedStations.length} Hubs Connected across NCR`;
-
-        listEl.innerHTML = loadedStations.map(s => `
-          <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div>
-                <div style="font-weight:700; font-size:15px;">${s.name}</div>
-                <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">${s.address}</div>
-              </div>
-              <div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:3px 8px; font-size:11px; font-weight:700; color:var(--bright-cyan);">
-                🧭 ${s.distanceKm || 0} km
-              </div>
-            </div>
-            <div style="height:1px; background:var(--border); margin:10px 0;"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="badge-stock">⚡ ${s.availableChargedBatteries} Ready to Swap</div>
-              <div style="color:var(--text-muted); font-size:11px;">${s.estimatedWaitMinutes === 0 ? 'No wait' : '~' + s.estimatedWaitMinutes + ' min wait'}</div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
-              <button class="btn-outline" onclick="holdReservation('${s.id}')">Hold Battery (15m)</button>
-              <button class="btn-primary" style="height:40px; font-size:13px;" onclick="selectStationForSwap('${s.id}')">Swap Here</button>
-            </div>
-          </div>
-        `).join('');
-
-        populateSwapDropdown();
-      }
-    } catch (_) {}
-  }
-
-  function populateSwapDropdown() {
-    const select = document.getElementById('swapStationSelect');
-    select.innerHTML = loadedStations.map(s => `
-      <option value="${s.id}" data-partner="${s.partnerId}">${s.name} (${s.availableChargedBatteries} Ready)</option>
+        <span style="color:var(--mint);font-weight:800;">₹${Number(d.walletBalance || 0).toFixed(2)}</span>
+      </div>
     `).join('');
-    onStationChanged();
+
+    const vBox = document.getElementById('quickVendorsList');
+    vBox.innerHTML = (vendors || []).slice(0, 4).map(v => `
+      <div class="card-elevated row-between" style="margin-bottom:8px;cursor:pointer;" onclick="quickSignInVendor('${v.phoneNumber}', '${(v.fullName || '').replace(/'/g, '')}')">
+        <div>
+          <div style="font-weight:700;font-size:13px;">${v.businessName || v.fullName}</div>
+          <div class="muted">${v.phoneNumber}</div>
+        </div>
+        <span style="color:var(--mint);font-weight:800;">₹${Number(v.walletBalance || 0).toFixed(2)}</span>
+      </div>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function sendDriverOtp() {
+  const phone = document.getElementById('authDriverPhone').value.trim();
+  if (!phone) return showToast('Enter your mobile number first', true);
+  try {
+    const res = await apiFetch('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber: phone })
+    });
+    document.getElementById('driverOtpStep1').classList.add('hidden');
+    document.getElementById('driverOtpStep2').classList.remove('hidden');
+    document.getElementById('demoOtpBanner').textContent = `Demo OTP sent: ${res.demoOtp} (valid 5m)`;
+    document.getElementById('authDriverOtp').value = res.demoOtp;
+    showToast('OTP sent to ' + phone);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function verifyDriverOtp() {
+  const phoneNumber = document.getElementById('authDriverPhone').value.trim();
+  const otpCode = document.getElementById('authDriverOtp').value.trim();
+  const fullName = document.getElementById('authDriverName').value.trim() || null;
+  const email = document.getElementById('authDriverEmail').value.trim() || null;
+  const referralCode = document.getElementById('authDriverRef').value.trim() || null;
+  try {
+    const auth = await apiFetch('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, otpCode, fullName, email, referralCode })
+    });
+    await enterDriverApp(auth.driverId);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function quickSignInDriver(phoneNumber, fullName) {
+  try {
+    const auth = await apiFetch('/auth/phone', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, fullName, languageCode: 'en' })
+    });
+    await enterDriverApp(auth.driverId);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function enterDriverApp(driverId) {
+  state.role = 'driver';
+  state.driver = await apiFetch(`/auth/profile/${driverId}`);
+  document.getElementById('view-auth').classList.add('hidden');
+  document.getElementById('navDriver').classList.remove('hidden');
+  document.getElementById('headerUserText').textContent = state.driver.fullName.split(' ')[0];
+  await refreshDriverViews();
+  switchDriverTab('home');
+  showToast('Welcome back, ' + state.driver.fullName);
+}
+
+async function refreshDriverViews() {
+  state.driver = await apiFetch(`/auth/profile/${state.driver.id}`);
+  document.getElementById('homeWalletBalance').textContent = `₹${Number(state.driver.walletBalance).toFixed(2)}`;
+  document.getElementById('walletBalanceBig').textContent = `₹${Number(state.driver.walletBalance).toFixed(2)}`;
+  document.getElementById('homeActiveBattery').textContent = state.driver.activeBattery
+    ? `${state.driver.activeBattery.serialNumber} (${state.driver.activeBattery.stateOfChargePercent}%)`
+    : 'None linked';
+  document.getElementById('myReferralCode').textContent = state.driver.referralCode || 'CL-READY';
+  document.getElementById('profDriverName').textContent = state.driver.fullName;
+  document.getElementById('profDriverPhone').textContent = state.driver.phoneNumber;
+  document.getElementById('profDriverEmail').textContent = state.driver.email || 'No email set';
+  document.getElementById('profKycBadge').textContent = state.driver.kycStatus === 1 ? 'KYC Verified' : 'KYC Pending';
+
+  await Promise.all([loadStations(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
+}
+
+function switchDriverTab(tab) {
+  ['home', 'scan', 'wallet', 'history', 'profile'].forEach(t => {
+    document.getElementById(`view-driver-${t}`).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('#navDriver .nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+}
+
+async function loadStations() {
+  try {
+    state.stations = await apiFetch('/stations/nearby', {
+      method: 'POST',
+      body: JSON.stringify({ latitude: 12.9716, longitude: 77.5946, radiusKm: 50 })
+    });
+    const list = document.getElementById('driverStationsList');
+    list.innerHTML = state.stations.map(s => `
+      <div class="card">
+        <div class="row-between" style="margin-bottom:6px;">
+          <div style="font-weight:800;font-size:15px;">${s.name}</div>
+          <span class="mint-pill">${s.availableChargedBatteries} Charged</span>
+        </div>
+        <div class="muted" style="margin-bottom:10px;">📍 ${s.address}, ${s.city} • ${s.distanceKm ?? '—'} km</div>
+        <div class="row-between">
+          <span class="amber-pill">⚡ ${s.chargingBatteries} Charging • ${s.estimatedWaitMinutes}m wait</span>
+          <button class="btn btn-primary btn-sm" onclick="reserveAtStation('${s.id}')">Reserve</button>
+        </div>
+      </div>
+    `).join('') || '<div class="muted">No stations found nearby.</div>';
+
+    const sel = document.getElementById('scanStationSelect');
+    sel.innerHTML = state.stations.map(s => `<option value="${s.id}" data-partner="${s.partnerId}">${s.name} (${s.availableChargedBatteries} ready)</option>`).join('');
+    if (state.stations.length) await loadStationChargedBatteries();
+  } catch (e) { console.error(e); }
+}
+
+async function loadStationChargedBatteries() {
+  const stationId = document.getElementById('scanStationSelect').value;
+  if (!stationId) return;
+  const bats = await apiFetch(`/stations/${stationId}/batteries`);
+  const sel = document.getElementById('scanIssuedSelect');
+  sel.innerHTML = bats.length
+    ? bats.map(b => `<option value="${b.serialNumber}">${b.serialNumber} — ${b.stateOfChargePercent}% SOC (${b.modelType})</option>`).join('')
+    : '<option value="BAT-LFP-DEMO99">BAT-LFP-DEMO99 — 100% SOC</option>';
+}
+
+async function reserveAtStation(stationId) {
+  try {
+    await apiFetch('/reservations', {
+      method: 'POST',
+      body: JSON.stringify({ driverId: state.driver.id, stationId })
+    });
+    showToast('Battery reserved for 15 minutes!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+function selectDriverPayMethod(pm, el) {
+  state.driverPayMethod = pm;
+  document.querySelectorAll('#view-driver-scan .pay-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('driverCardFields').classList.toggle('hidden', pm !== 4);
+}
+
+async function executeDriverScanAndPay() {
+  const sel = document.getElementById('scanStationSelect');
+  const stationId = sel.value;
+  const partnerId = sel.options[sel.selectedIndex]?.dataset.partner;
+  const depletedBatterySerial = document.getElementById('scanDepletedSerial').value.trim() || state.driver.activeBattery?.serialNumber || 'BAT-LFP-1001';
+  const issuedBatterySerial = document.getElementById('scanIssuedSelect').value;
+
+  try {
+    const init = await apiFetch('/swaps/initiate', {
+      method: 'POST',
+      body: JSON.stringify({
+        driverId: state.driver.id,
+        stationId,
+        partnerId,
+        depletedBatterySerial,
+        issuedBatterySerial
+      })
+    });
+    const done = await apiFetch('/swaps/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ swapId: init.swapId, paymentMethod: state.driverPayMethod })
+    });
+    const box = document.getElementById('driverSwapReceipt');
+    box.classList.remove('hidden');
+    box.innerHTML = `
+      <div class="mint-pill" style="margin-bottom:8px;">✓ Swap Completed • ${done.invoiceNumber || ''}</div>
+      <div style="font-weight:800;">Issued: ${done.issuedBatterySerial} (${done.issuedBatterySoc}%)</div>
+      <div class="muted">Total Paid: ₹${Number(done.totalAmount).toFixed(2)}</div>
+    `;
+    await refreshDriverViews();
+    showToast('Swap & payment successful!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+function setTopupAmount(amt) {
+  document.getElementById('walletTopupAmount').value = amt;
+}
+
+function selectTopupMode(mode, el) {
+  state.topupMode = mode;
+  document.querySelectorAll('#view-driver-wallet .pay-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function topUpDriverWallet() {
+  const amount = Number(document.getElementById('walletTopupAmount').value);
+  if (!amount || amount <= 0) return showToast('Enter a valid amount', true);
+  try {
+    await apiFetch('/wallet/topup', {
+      method: 'POST',
+      body: JSON.stringify({
+        accountId: state.driver.id,
+        accountType: 0,
+        amount,
+        paymentReference: `${state.topupMode}-${Date.now()}`
+      })
+    });
+    await refreshDriverViews();
+    showToast(`₹${amount} added via ${state.topupMode}!`);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function loadDriverWalletTx() {
+  try {
+    const res = await apiFetch(`/wallet/balance/${state.driver.id}?accountType=0`);
+    const list = document.getElementById('driverWalletTxList');
+    list.innerHTML = (res.recentTransactions || []).map(t => `
+      <div class="card row-between">
+        <div>
+          <div style="font-weight:700;font-size:13px;">${t.reason}</div>
+          <div class="muted">${new Date(t.timestamp).toLocaleString()}</div>
+        </div>
+        <span style="font-weight:800;color:${t.type === 0 ? 'var(--mint)' : '#FCA5A5'};">
+          ${t.type === 0 ? '+' : '-'}₹${Number(t.amount).toFixed(2)}
+        </span>
+      </div>
+    `).join('') || '<div class="muted">No transactions yet.</div>';
+  } catch (e) { console.error(e); }
+}
+
+function openReferralModal() {
+  switchDriverTab('wallet');
+  document.getElementById('claimReferralInput').focus();
+}
+
+function copyReferralCode() {
+  navigator.clipboard?.writeText(state.driver.referralCode || '');
+  showToast('Referral code copied!');
+}
+
+async function claimReferralCode() {
+  const code = document.getElementById('claimReferralInput').value.trim();
+  if (!code) return showToast('Enter a referral code', true);
+  try {
+    const res = await apiFetch('/auth/referral/claim', {
+      method: 'POST',
+      body: JSON.stringify({ driverId: state.driver.id, referralCode: code })
+    });
+    await refreshDriverViews();
+    showToast(res.message);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function loadDriverHistory() {
+  try {
+    const items = await apiFetch(`/swaps/history/${state.driver.id}`);
+    const list = document.getElementById('driverHistoryList');
+    const pmNames = { 0: 'Weekly Pass', 1: 'Wallet', 2: 'UPI', 3: 'Cash', 4: 'Card' };
+    list.innerHTML = (items || []).map(s => `
+      <div class="card">
+        <div class="row-between" style="margin-bottom:6px;">
+          <div style="font-weight:800;">${s.invoiceNumber || 'Swap #' + s.swapId.slice(0, 6)}</div>
+          <span class="mint-pill">₹${Number(s.totalAmount).toFixed(2)}</span>
+        </div>
+        <div class="muted">${s.depletedBatterySerial} ➔ ${s.issuedBatterySerial}</div>
+        <div class="row-between" style="margin-top:8px;">
+          <span class="amber-pill">${pmNames[s.paymentMethod] || 'Paid'}</span>
+          <button class="btn btn-secondary btn-sm" onclick='openBillModal(${JSON.stringify(s)})'>View Bill</button>
+        </div>
+      </div>
+    `).join('') || '<div class="muted">No swap history yet.</div>';
+  } catch (e) { console.error(e); }
+}
+
+function openBillModal(s) {
+  document.getElementById('billModalBody').innerHTML = `
+    <div class="card-elevated" style="margin-bottom:10px;">
+      <div class="muted">Invoice Number</div>
+      <div style="font-weight:800;font-size:15px;">${s.invoiceNumber || s.swapId}</div>
+    </div>
+    <div class="card-elevated" style="margin-bottom:10px;">
+      <div class="row-between"><span>Base Swap Fee</span><span>₹${Number(s.baseFee).toFixed(2)}</span></div>
+      <div class="row-between" style="margin:6px 0;"><span>GST (18%)</span><span>₹${Number(s.taxAmount).toFixed(2)}</span></div>
+      <div class="row-between" style="font-weight:900;color:var(--mint);border-top:1px solid var(--border);padding-top:6px;">
+        <span>Total Paid</span><span>₹${Number(s.totalAmount).toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="muted">Published Channels: ${s.billSentChannels || 'In-App'}</div>
+  `;
+  document.getElementById('billModal').style.display = 'flex';
+}
+function closeBillModal() { document.getElementById('billModal').style.display = 'none'; }
+
+async function loadSubscriptionPlans() {
+  try {
+    const [plans, active] = await Promise.all([
+      apiFetch('/subscriptions/plans'),
+      apiFetch(`/subscriptions/active/${state.driver.id}`).catch(() => null)
+    ]);
+    document.getElementById('homePlanBadge').textContent = active
+      ? `${active.planName} (${active.swapsTotalAllowed - active.swapsUsed} left)`
+      : 'Pay-Per-Swap';
+    document.getElementById('subscriptionPlansList').innerHTML = (plans || []).map(p => `
+      <div class="card-elevated row-between" style="margin-bottom:8px;">
+        <div>
+          <div style="font-weight:800;font-size:13px;">${p.name}</div>
+          <div class="muted">${p.maxSwapsAllowed} swaps / ${p.validityDays} days • ₹${p.price}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="subscribePlan('${p.id}')">Activate</button>
+      </div>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function subscribePlan(planId) {
+  try {
+    await apiFetch('/subscriptions/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ driverId: state.driver.id, planId })
+    });
+    await refreshDriverViews();
+    showToast('Weekly subscription activated!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function submitDriverKyc() {
+  try {
+    await apiFetch('/auth/kyc', {
+      method: 'POST',
+      body: JSON.stringify({
+        driverId: state.driver.id,
+        drivingLicenseNumber: document.getElementById('kycDlInput').value.trim(),
+        aadhaarNumber: document.getElementById('kycAadhaarInput').value.trim()
+      })
+    });
+    await refreshDriverViews();
+    showToast('KYC verified!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+// VENDOR FLOWS
+async function signInVendor() {
+  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
+  const fullName = document.getElementById('authVendorName').value.trim() || null;
+  const businessName = document.getElementById('authVendorBiz').value.trim() || null;
+  if (!phoneNumber) return showToast('Enter partner phone number', true);
+  await quickSignInVendor(phoneNumber, fullName, businessName);
+}
+
+async function quickSignInVendor(phoneNumber, fullName = null, businessName = null) {
+  try {
+    const auth = await apiFetch('/auth/vendor/phone', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, fullName, businessName })
+    });
+    state.role = 'vendor';
+    state.vendor = await apiFetch(`/auth/vendor/profile/${auth.vendorId}`);
+    document.getElementById('view-auth').classList.add('hidden');
+    document.getElementById('navVendor').classList.remove('hidden');
+    document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
+    await refreshVendorViews();
+    switchVendorTab('desk');
+    showToast('Partner Desk Ready');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function refreshVendorViews() {
+  state.vendor = await apiFetch(`/auth/vendor/profile/${state.vendor.id}`);
+  state.vendorStations = state.vendor.stations || [];
+  document.getElementById('vendorHeroBiz').textContent = state.vendor.businessName || state.vendor.fullName;
+  document.getElementById('profVendorName').textContent = state.vendor.fullName;
+  document.getElementById('profVendorBiz').textContent = state.vendor.businessName;
+  document.getElementById('profVendorPhone').textContent = state.vendor.phoneNumber;
+
+  const opts = state.vendorStations.map(s => `<option value="${s.id}">${s.name} (${s.availableChargedBatteries} charged)</option>`).join('')
+    || '<option value="">No stores yet — add one in Stores tab</option>';
+  document.getElementById('vendorDeskStationSelect').innerHTML = opts;
+  document.getElementById('regBatStationSelect').innerHTML = opts;
+
+  document.getElementById('vendorStoresList').innerHTML = state.vendorStations.map(s => `
+    <div class="card row-between">
+      <div>
+        <div style="font-weight:800;">${s.name}</div>
+        <div class="muted">${s.address}, ${s.city}</div>
+      </div>
+      <span class="mint-pill">${s.availableChargedBatteries} Charged</span>
+    </div>
+  `).join('') || '<div class="muted">No stores added yet.</div>';
+
+  await Promise.all([loadVendorDeskBatteries(), loadSelectedStoreBatteries(), loadVendorEarnings()]);
+}
+
+function switchVendorTab(tab) {
+  ['desk', 'stores', 'earnings', 'profile'].forEach(t => {
+    document.getElementById(`view-vendor-${t}`).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('#navVendor .nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+}
+
+async function validateDriverForPartner() {
+  const q = document.getElementById('vendorValidateQuery').value.trim();
+  if (!q) return showToast('Enter driver phone or name', true);
+  try {
+    const d = await apiFetch(`/swaps/validate-driver?query=${encodeURIComponent(q)}`);
+    state.validatedDriver = d;
+    const box = document.getElementById('validatedDriverBox');
+    box.classList.remove('hidden');
+    box.innerHTML = `
+      <div class="row-between">
+        <div style="font-weight:800;">${d.fullName}</div>
+        <span class="mint-pill">${d.kycStatus === 1 ? 'KYC Verified' : 'KYC Pending'}</span>
+      </div>
+      <div class="muted">${d.phoneNumber} • Wallet: ₹${Number(d.walletBalance).toFixed(2)}</div>
+      <div class="muted">${d.activePlanName ? `Pass: ${d.activePlanName} (${d.remainingPlanSwaps} left)` : 'Pay-Per-Swap'}</div>
+      <div style="color:var(--mint-text);font-size:12px;margin-top:4px;">✓ ${d.validationMessage}</div>
+    `;
+    if (d.activeBatterySerial) document.getElementById('vendorDepletedQr').value = d.activeBatterySerial;
+    const btn = document.getElementById('vendorSwapBtn');
+    btn.disabled = !d.isEligibleForSwap;
+    btn.textContent = '⚡ Unlock & Execute Battery Swap';
+    showToast('Driver validated!');
+  } catch (e) {
+    state.validatedDriver = null;
+    document.getElementById('vendorSwapBtn').disabled = true;
+    showToast(e.message, true);
   }
+}
 
-  async function onStationChanged() {
-    const select = document.getElementById('swapStationSelect');
-    const stationId = select.value;
-    const issuedSelect = document.getElementById('swapIssuedBatterySelect');
-    if (!stationId) return;
+async function loadVendorDeskBatteries() {
+  const sid = document.getElementById('vendorDeskStationSelect').value;
+  if (!sid) return;
+  const bats = await apiFetch(`/stations/${sid}/batteries`);
+  document.getElementById('vendorIssuedQrSelect').innerHTML = bats.length
+    ? bats.map(b => `<option value="${b.serialNumber}">${b.serialNumber} (${b.stateOfChargePercent}% SOC)</option>`).join('')
+    : '<option value="BAT-LFP-NEW01">BAT-LFP-NEW01 (100% SOC)</option>';
+}
 
-    issuedSelect.innerHTML = `<option>Loading batteries...</option>`;
-    try {
-      const res = await fetch(`/api/v1/stations/${stationId}/batteries`);
-      if (res.ok) {
-        const batteries = await res.json();
-        if (batteries && batteries.length > 0) {
-          issuedSelect.innerHTML = batteries.map(b => `
-            <option value="${b.serialNumber}">${b.serialNumber} (${b.stateOfChargePercent}% Full, ${b.modelType})</option>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    issuedSelect.innerHTML = `<option value="">No charged batteries available</option>`;
-  }
+function selectVendorPayMethod(pm, el) {
+  state.vendorPayMethod = pm;
+  document.querySelectorAll('#view-vendor-desk .pay-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
 
-  function selectStationForSwap(stationId) {
-    switchDriverTab('swap');
-    document.getElementById('swapStationSelect').value = stationId;
-    onStationChanged();
-  }
+async function executePartnerSwap() {
+  if (!state.validatedDriver) return showToast('Validate driver first', true);
+  const stationId = document.getElementById('vendorDeskStationSelect').value;
+  if (!stationId) return showToast('Add a store first in Stores tab', true);
+  const depletedBatterySerial = document.getElementById('vendorDepletedQr').value.trim() || 'BAT-LFP-1001';
+  const issuedBatterySerial = document.getElementById('vendorIssuedQrSelect').value;
 
-  // Pre-Reservation
-  async function holdReservation(stationId) {
-    if (!activeUser) { alert('Please sign in first'); return; }
-    try {
-      const res = await fetch('/api/v1/reservations/hold', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ driverId: activeUser.id, stationId: stationId })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        alert(`Battery ${data.batterySerial || ''} reserved at ${data.stationName}! 15-minute hold active.`);
-      } else {
-        alert('Could not place reservation');
-      }
-    } catch (e) {
-      alert('Error: ' + e);
-    }
-  }
+  try {
+    const init = await apiFetch('/swaps/initiate', {
+      method: 'POST',
+      body: JSON.stringify({
+        driverId: state.validatedDriver.driverId,
+        stationId,
+        partnerId: state.vendor.id,
+        depletedBatterySerial,
+        issuedBatterySerial
+      })
+    });
+    const done = await apiFetch('/swaps/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ swapId: init.swapId, paymentMethod: state.vendorPayMethod })
+    });
+    state.lastVendorSwap = done;
+    document.getElementById('vendorBillCard').classList.remove('hidden');
+    document.getElementById('vendorBillSummary').textContent =
+      `Invoice ${done.invoiceNumber} • Issued ${done.issuedBatterySerial} • Paid ₹${Number(done.totalAmount).toFixed(2)}`;
+    await refreshVendorViews();
+    showToast('Swap completed! Ready to publish bill.');
+  } catch (e) { showToast(e.message, true); }
+}
 
-  // Swap Handshake & Confirm
-  async function startSwapHandshake() {
-    if (!activeUser) { alert('Please sign in first'); return; }
+async function publishPartnerBill() {
+  if (!state.lastVendorSwap) return;
+  const channels = [];
+  if (document.getElementById('chkWhatsApp').checked) channels.push('WhatsApp');
+  if (document.getElementById('chkSms').checked) channels.push('SMS');
+  if (document.getElementById('chkEmail').checked) channels.push('Email');
+  try {
+    const res = await apiFetch(`/swaps/${state.lastVendorSwap.swapId}/publish-bill`, {
+      method: 'POST',
+      body: JSON.stringify({
+        channels,
+        recipientEmail: state.validatedDriver?.email,
+        recipientPhone: state.validatedDriver?.phoneNumber
+      })
+    });
+    showToast(res.message);
+  } catch (e) { showToast(e.message, true); }
+}
 
-    const stationSelect = document.getElementById('swapStationSelect');
-    const selectedOpt = stationSelect.options[stationSelect.selectedIndex];
-    const stationId = stationSelect.value;
-    const partnerId = selectedOpt ? selectedOpt.getAttribute('data-partner') : null;
-    const depletedSerial = document.getElementById('swapDepletedSerialInput').value.trim();
-    const issuedSerial = document.getElementById('swapIssuedBatterySelect').value;
+async function registerBatteryForStore() {
+  const stationId = document.getElementById('regBatStationSelect').value;
+  const serialNumber = document.getElementById('regBatSerial').value.trim();
+  const modelType = document.getElementById('regBatModel').value.trim();
+  const stateOfChargePercent = Number(document.getElementById('regBatSoc').value || 100);
+  if (!stationId || !serialNumber) return showToast('Select a store and enter battery serial', true);
+  try {
+    await apiFetch(`/stations/${stationId}/batteries`, {
+      method: 'POST',
+      body: JSON.stringify({ stationId, serialNumber, modelType, stateOfChargePercent })
+    });
+    document.getElementById('regBatSerial').value = '';
+    await refreshVendorViews();
+    showToast(`Battery ${serialNumber} registered at store!`);
+  } catch (e) { showToast(e.message, true); }
+}
 
-    if (!depletedSerial) { alert('Please enter returned battery serial'); return; }
-    if (!issuedSerial) { alert('No ready battery selected'); return; }
+async function loadSelectedStoreBatteries() {
+  const sid = document.getElementById('regBatStationSelect').value;
+  if (!sid) return;
+  const bats = await apiFetch(`/stations/${sid}/batteries`);
+  document.getElementById('vendorStoreBatteriesList').innerHTML = bats.map(b => `
+    <div class="card row-between">
+      <div>
+        <div style="font-weight:800;">${b.serialNumber}</div>
+        <div class="muted">${b.modelType} • SOH ${b.stateOfHealthPercent}%</div>
+      </div>
+      <span class="mint-pill">${b.stateOfChargePercent}% SOC</span>
+    </div>
+  `).join('') || '<div class="muted">No charged batteries in this store yet.</div>';
+}
 
-    document.getElementById('timerReturnedSerial').innerText = depletedSerial;
-    document.getElementById('timerIssuedSerial').innerText = `${issuedSerial} (100% Full)`;
-    document.getElementById('swap-step-init').style.display = 'none';
-    document.getElementById('swap-step-timer').style.display = 'block';
+function toggleAddStoreForm() {
+  document.getElementById('addStoreForm').classList.toggle('hidden');
+}
 
-    timerSeconds = 0;
-    updateTimerText();
-    timerInterval = setInterval(() => {
-      timerSeconds++;
-      updateTimerText();
-    }, 1000);
+async function createVendorStore() {
+  const name = document.getElementById('newStoreName').value.trim();
+  const address = document.getElementById('newStoreAddress').value.trim();
+  const city = document.getElementById('newStoreCity').value.trim() || 'Bengaluru';
+  if (!name || !address) return showToast('Name and address are required', true);
+  try {
+    await apiFetch('/stations', {
+      method: 'POST',
+      body: JSON.stringify({
+        partnerId: state.vendor.id,
+        name,
+        address,
+        city,
+        latitude: 12.9716,
+        longitude: 77.5946
+      })
+    });
+    document.getElementById('addStoreForm').classList.add('hidden');
+    await refreshVendorViews();
+    showToast('Store / Hub created!');
+  } catch (e) { showToast(e.message, true); }
+}
 
-    try {
-      const res = await fetch('/api/v1/swaps/initiate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          driverId: activeUser.id,
-          stationId: stationId,
-          partnerId: partnerId,
-          depletedBatterySerial: depletedSerial,
-          issuedBatterySerial: issuedSerial
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        activeSwapId = data.swapId;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
+async function loadVendorEarnings() {
+  try {
+    const res = await apiFetch(`/wallet/balance/${state.vendor.id}?accountType=1`);
+    document.getElementById('vendorWalletBig').textContent = `₹${Number(res.balance).toFixed(2)}`;
+    document.getElementById('vendorTxList').innerHTML = (res.recentTransactions || []).map(t => `
+      <div class="card row-between">
+        <div>
+          <div style="font-weight:700;font-size:13px;">${t.reason}</div>
+          <div class="muted">${new Date(t.timestamp).toLocaleString()}</div>
+        </div>
+        <span style="font-weight:800;color:var(--mint);">+₹${Number(t.amount).toFixed(2)}</span>
+      </div>
+    `).join('') || '<div class="muted">No commissions yet.</div>';
+  } catch (e) { console.error(e); }
+}
 
-  function updateTimerText() {
-    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-    const s = String(timerSeconds % 60).padStart(2, '0');
-    document.getElementById('timerDisplay').innerText = `${m}:${s}`;
-  }
+function handleHeaderAction() {
+  if (state.role === 'driver') switchDriverTab('profile');
+  else if (state.role === 'vendor') switchVendorTab('profile');
+}
 
-  async function completeSwapTransaction() {
-    clearInterval(timerInterval);
-    document.getElementById('swap-step-timer').style.display = 'none';
-    document.getElementById('swap-step-receipt').style.display = 'block';
-    document.getElementById('receipt-duration').innerText = `Duration: ${timerSeconds}s (Target: < 2 min)`;
+function signOut() {
+  state = { ...state, role: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null };
+  document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('view-auth').classList.remove('hidden');
+  document.getElementById('navDriver').classList.add('hidden');
+  document.getElementById('navVendor').classList.add('hidden');
+  document.getElementById('headerUserText').textContent = 'Sign In';
+}
 
-    if (activeSwapId) {
-      try {
-        await fetch('/api/v1/swaps/confirm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ swapId: activeSwapId, paymentMethod: 1 })
-        });
-        await enterAsDriver(activeUser.id);
-        await loadStations();
-      } catch (_) {}
-    }
-  }
-
-  function resetSwap() {
-    document.getElementById('swap-step-receipt').style.display = 'none';
-    document.getElementById('swap-step-init').style.display = 'block';
-    switchDriverTab('stations');
-  }
-
-  // Driver Top-Up & Subscriptions
-  async function topUpDriverWallet(amt) {
-    if (!activeUser) return;
-    try {
-      const res = await fetch('/api/v1/wallet/topup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountId: activeUser.id,
-          accountType: 0,
-          amount: amt,
-          paymentReference: 'UPI-' + Date.now()
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        document.getElementById('driverWalletBalance').innerText = `₹${data.balance.toFixed(2)}`;
-        alert(`₹${amt} added to your wallet!`);
-        await enterAsDriver(activeUser.id);
-      }
-    } catch (e) {
-      alert('Error updating wallet: ' + e);
-    }
-  }
-
-  async function loadSubscriptionPlans() {
-    const el = document.getElementById('subscriptionPlansList');
-    try {
-      const res = await fetch('/api/v1/subscriptions/plans');
-      if (res.ok) {
-        const plans = await res.json();
-        el.innerHTML = plans.map(p => `
-          <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-weight:700; font-size:14px;">${p.name}</div>
-              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${p.description}</div>
-              <div style="font-size:11px; color:var(--bright-cyan); margin-top:2px;">Validity: ${p.validityDays} Days (${p.maxSwapsAllowed} Swaps)</div>
-            </div>
-            <button class="btn-outline" style="width:auto; padding:6px 12px; height:auto; font-size:12px; font-weight:700; color:var(--neon-green); border-color:var(--neon-green);" onclick="subscribePlan('${p.id}', '${p.name}', ${p.price})">₹${p.price.toFixed(0)}</button>
-          </div>
-        `).join('');
-      }
-    } catch (_) {}
-  }
-
-  async function subscribePlan(planId, name, price) {
-    if (!activeUser) return;
-    if (activeUser.walletBalance < price) {
-      alert(`Insufficient balance. Please top up ₹${price} first.`);
-      return;
-    }
-    try {
-      const res = await fetch('/api/v1/subscriptions/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ driverId: activeUser.id, planId: planId })
-      });
-      if (res.ok) {
-        alert(`Successfully subscribed to ${name}!`);
-        await enterAsDriver(activeUser.id);
-      } else {
-        const err = await res.json();
-        alert('Subscription failed: ' + (err.error || 'Unknown error'));
-      }
-    } catch (e) {
-      alert('Error: ' + e);
-    }
-  }
-
-  // Swap History & Tickets
-  async function loadDriverSwapHistory(driverId) {
-    const el = document.getElementById('driverSwapHistory');
-    try {
-      const res = await fetch(`/api/v1/swaps/history/${driverId}`);
-      if (res.ok) {
-        const swaps = await res.json();
-        if (swaps.length > 0) {
-          el.innerHTML = swaps.slice(0, 5).map(s => `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-weight:600; font-size:13px;">Swap (${s.issuedBatterySerial})</div>
-                <div style="color:var(--text-muted); font-size:11px;">${new Date(s.initiatedAt).toLocaleDateString()} • Base ₹100 + GST ₹18</div>
-              </div>
-              <div style="font-weight:700; color:#fff;">-₹${s.totalAmount.toFixed(2)}</div>
-            </div>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No previous swap transactions.</div>`;
-  }
-
-  async function submitDriverTicket() {
-    if (!activeUser) return;
-    const subject = document.getElementById('driverTicketSubject').value.trim();
-    const desc = document.getElementById('driverTicketDesc').value.trim();
-    if (!subject || !desc) { alert('Please enter ticket subject and description'); return; }
-
-    try {
-      const res = await fetch('/api/v1/support/ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userType: 0,
-          userId: activeUser.id,
-          category: 'Driver Grievance',
-          subject: subject,
-          description: desc
-        })
-      });
-      if (res.ok) {
-        alert('Support ticket submitted successfully!');
-        document.getElementById('driverTicketSubject').value = '';
-        document.getElementById('driverTicketDesc').value = '';
-        loadDriverTickets(activeUser.id);
-      }
-    } catch (e) {
-      alert('Error submitting ticket: ' + e);
-    }
-  }
-
-  async function loadDriverTickets(driverId) {
-    const el = document.getElementById('driverTicketsList');
-    try {
-      const res = await fetch(`/api/v1/support/tickets/${driverId}`);
-      if (res.ok) {
-        const tickets = await res.json();
-        if (tickets.length > 0) {
-          el.innerHTML = tickets.slice(0, 3).map(t => `
-            <div style="padding:6px 0; border-top:1px solid var(--border); display:flex; justify-content:space-between;">
-              <span><strong>#${t.id.slice(0, 6)}</strong> ${t.subject}</span>
-              <span class="badge-stock badge-amber">Open</span>
-            </div>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    el.innerHTML = '';
-  }
-
-  // Vendor Support & History
-  async function submitVendorTicket() {
-    if (!activeUser) return;
-    const subject = document.getElementById('vendorTicketSubject').value.trim();
-    const desc = document.getElementById('vendorTicketDesc').value.trim();
-    if (!subject) { alert('Please enter issue subject'); return; }
-
-    try {
-      const res = await fetch('/api/v1/support/ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userType: 1,
-          userId: activeUser.id,
-          category: 'Hardware Defect',
-          subject: subject,
-          description: desc || 'Reported by vendor'
-        })
-      });
-      if (res.ok) {
-        alert('Hardware defect ticket logged successfully!');
-        document.getElementById('vendorTicketSubject').value = '';
-        document.getElementById('vendorTicketDesc').value = '';
-        loadVendorTickets(activeUser.id);
-      }
-    } catch (e) {
-      alert('Error submitting ticket: ' + e);
-    }
-  }
-
-  async function loadVendorTickets(vendorId) {
-    const el = document.getElementById('vendorTicketsList');
-    try {
-      const res = await fetch(`/api/v1/support/tickets/${vendorId}`);
-      if (res.ok) {
-        const tickets = await res.json();
-        if (tickets.length > 0) {
-          el.innerHTML = tickets.slice(0, 5).map(t => `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-weight:700; font-size:13px;">${t.subject}</div>
-                <div style="color:var(--text-muted); font-size:11px;">#${t.id.slice(0, 8)} • ${new Date(t.createdAt).toLocaleDateString()}</div>
-              </div>
-              <span class="badge-stock badge-amber">Open</span>
-            </div>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">No active tickets reported.</div>`;
-  }
-
-  async function loadVendorCommissions(vendorId) {
-    const el = document.getElementById('vendorCommissionHistory');
-    try {
-      const res = await fetch(`/api/v1/wallet/balance/${vendorId}?accountType=1`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.recentTransactions && data.recentTransactions.length > 0) {
-          el.innerHTML = data.recentTransactions.slice(0, 5).map(tx => `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-weight:600; font-size:13px;">${tx.reason}</div>
-                <div style="color:var(--text-muted); font-size:11px;">${new Date(tx.timestamp).toLocaleDateString()}</div>
-              </div>
-              <div style="font-weight:700; color:var(--bright-cyan);">+₹${tx.amount.toFixed(2)}</div>
-            </div>
-          `).join('');
-          return;
-        }
-      }
-    } catch (_) {}
-    el.innerHTML = `<div class="card" style="color:var(--text-muted); font-size:12px;">Recent commission transactions will appear here.</div>`;
-  }
-
-  // Initialize
-  async function init() {
-    await loadStations();
-    await loadSubscriptionPlans();
-    await loadDbDriversList();
-    await loadDbVendorsList();
-  }
-
-  init();
+initAuthLists();
 </script>
 </body>
 </html>
