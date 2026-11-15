@@ -152,6 +152,31 @@ class ApiClient {
     }
   }
 
+  Future<VendorProfile> verifyVendorOtp({
+    required String phone,
+    required String otpCode,
+    String? fullName,
+    String? businessName,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/vendor/verify-otp'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'otpCode': otpCode.trim(),
+        'fullName': fullName?.trim(),
+        'businessName': businessName?.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) {
+      final vendor = VendorProfile.fromJson(jsonDecode(response.body));
+      authToken = vendor.token;
+      return vendor;
+    } else {
+      throw Exception('Vendor OTP verification failed: ${response.body}');
+    }
+  }
+
   // 2. Fetch Driver Details (Vehicles, active battery, balance directly from PostgreSQL)
   Future<DriverDetailModel> getDriverDetails(String driverId) async {
     final response = await http.get(

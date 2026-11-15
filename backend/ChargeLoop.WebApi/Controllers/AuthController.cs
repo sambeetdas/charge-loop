@@ -123,6 +123,23 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("vendor/verify-otp")]
+    public async Task<ActionResult<VendorAuthResponse>> VerifyVendorOtp([FromBody] VerifyVendorOtpRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.OtpCode))
+            return BadRequest(new { Error = "Phone number and OTP code are required" });
+
+        try
+        {
+            var response = await _vendorService.VerifyOtpAndAuthenticateAsync(request);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [Authorize]
     [HttpGet("vendor/profile/{vendorId:guid}")]
     public async Task<ActionResult<VendorProfileDto>> GetVendorProfile(Guid vendorId)

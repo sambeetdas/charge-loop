@@ -85,6 +85,29 @@ public class VendorService : IVendorService
         );
     }
 
+    public async Task<VendorAuthResponse> VerifyOtpAndAuthenticateAsync(VerifyVendorOtpRequest request)
+    {
+        var phone = NormalizePhone(request.PhoneNumber);
+        var otpEntry = await _context.OtpVerifications
+            .Where(o => o.PhoneNumber == phone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otpEntry == null || otpEntry.OtpCode != request.OtpCode.Trim())
+        {
+            throw new InvalidOperationException("Invalid or expired OTP code.");
+        }
+
+        otpEntry.IsUsed = true;
+        await _context.SaveChangesAsync();
+
+        return await AuthenticateWithPhoneAsync(new VendorAuthRequest(
+            phone,
+            request.FullName,
+            request.BusinessName
+        ));
+    }
+
     public async Task<VendorProfileDto?> GetProfileAsync(Guid vendorId)
     {
         var partner = await _context.Partners

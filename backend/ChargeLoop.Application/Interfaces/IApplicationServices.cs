@@ -69,6 +69,7 @@ public interface ISupportService
 public interface IVendorService
 {
     Task<VendorAuthResponse> AuthenticateWithPhoneAsync(VendorAuthRequest request);
+    Task<VendorAuthResponse> VerifyOtpAndAuthenticateAsync(VerifyVendorOtpRequest request);
     Task<VendorProfileDto?> GetProfileAsync(Guid vendorId);
     Task<IReadOnlyList<Partner>> GetAllVendorsAsync();
 }

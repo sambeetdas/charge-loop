@@ -14,6 +14,7 @@ public record ClaimReferralRequest(Guid DriverId, string ReferralCode);
 public record ReferralResponse(bool Success, decimal BonusAmount, decimal NewWalletBalance, string Message);
 
 public record VendorAuthRequest(string PhoneNumber, string? FullName, string? BusinessName);
+public record VerifyVendorOtpRequest(string PhoneNumber, string OtpCode, string? FullName = null, string? BusinessName = null);
 public record VendorAuthResponse(Guid VendorId, string PhoneNumber, string FullName, string BusinessName, string Token, decimal WalletBalance);
 public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, string BusinessName, string? UpiId, string? BankAccountNumber, decimal WalletBalance, List<StationDto> Stations);
 

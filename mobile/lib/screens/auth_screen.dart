@@ -55,7 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final name = _nameController.text.trim();
     final business = _businessController.text.trim();
 
-    if (_selectedRole == 'driver' && !_otpSent) {
+    if (!_otpSent) {
       _sendOtp();
       return;
     }
@@ -86,9 +86,10 @@ class _AuthScreenState extends State<AuthScreen> {
           );
         }
       } else {
-        final vendor = await client.authenticateVendor(
-          phone,
-          name: name.isEmpty ? null : name,
+        final vendor = await client.verifyVendorOtp(
+          phone: phone,
+          otpCode: _otpController.text.trim(),
+          fullName: name.isEmpty ? null : name,
           businessName: business.isEmpty ? null : business,
         );
         setState(() => _isLoading = false);
@@ -398,8 +399,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ],
 
-              // OTP Input for Driver
-              if (_selectedRole == 'driver' && _otpSent) ...[
+              // OTP Input for Driver & Partner
+              if (_otpSent) ...[
                 const SizedBox(height: 12),
                 if (_demoOtp != null)
                   Container(

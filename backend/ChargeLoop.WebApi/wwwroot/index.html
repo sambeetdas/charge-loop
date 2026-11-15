@@ -561,9 +561,19 @@
         <!-- Vendor Auth -->
         <div id="authVendorBox" class="hidden">
           <input id="authVendorPhone" class="input-field" type="tel" placeholder="Partner Mobile Number (e.g. +919900112233)">
-          <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)">
-          <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)">
-          <button class="btn btn-primary" onclick="signInVendor()">Sign In as Partner</button>
+          <div id="vendorOtpStep1">
+            <button class="btn btn-primary" onclick="sendVendorOtp()">Send OTP to Phone</button>
+          </div>
+          <div id="vendorOtpStep2" class="hidden">
+            <div id="demoVendorOtpBanner" class="mint-pill" style="display:block;margin-bottom:10px;text-align:center;"></div>
+            <input id="authVendorOtp" class="input-field" type="text" placeholder="Enter 6-digit OTP">
+            <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)">
+            <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)">
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="verifyVendorOtp()">Verify &amp; Sign In</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendVendorOtp()">Resend</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1251,30 +1261,47 @@ async function submitDriverKyc() {
 }
 
 // VENDOR FLOWS
-async function signInVendor() {
-  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
-  const fullName = document.getElementById('authVendorName').value.trim() || null;
-  const businessName = document.getElementById('authVendorBiz').value.trim() || null;
-  if (!phoneNumber) return showToast('Enter partner phone number', true);
-  await quickSignInVendor(phoneNumber, fullName, businessName);
+async function sendVendorOtp() {
+  const phone = document.getElementById('authVendorPhone').value.trim();
+  if (!phone) return showToast('Enter partner phone number first', true);
+  try {
+    const res = await apiFetch('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber: phone })
+    });
+    document.getElementById('vendorOtpStep1').classList.add('hidden');
+    document.getElementById('vendorOtpStep2').classList.remove('hidden');
+    document.getElementById('demoVendorOtpBanner').textContent = `Demo OTP sent: ${res.demoOtp} (valid 5m)`;
+    document.getElementById('authVendorOtp').value = res.demoOtp;
+    showToast('OTP sent to ' + phone);
+  } catch (e) { showToast(e.message, true); }
 }
 
-async function quickSignInVendor(phoneNumber, fullName = null, businessName = null) {
+async function verifyVendorOtp() {
+  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
+  const otpCode = document.getElementById('authVendorOtp').value.trim();
+  const fullName = document.getElementById('authVendorName').value.trim() || null;
+  const businessName = document.getElementById('authVendorBiz').value.trim() || null;
+  if (!phoneNumber || !otpCode) return showToast('Enter phone number and OTP', true);
   try {
-    const auth = await apiFetch('/auth/vendor/phone', {
+    const auth = await apiFetch('/auth/vendor/verify-otp', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, fullName, businessName })
+      body: JSON.stringify({ phoneNumber, otpCode, fullName, businessName })
     });
-    state.token = auth.token;
-    state.role = 'vendor';
-    state.vendor = await apiFetch(`/auth/vendor/profile/${auth.vendorId}`);
-    document.getElementById('view-auth').classList.add('hidden');
-    document.getElementById('navVendor').classList.remove('hidden');
-    document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
-    await refreshVendorViews();
-    switchVendorTab('desk');
-    showToast('Partner Desk Ready');
+    await enterVendorApp(auth);
   } catch (e) { showToast(e.message, true); }
+}
+
+async function enterVendorApp(auth) {
+  state.token = auth.token;
+  state.role = 'vendor';
+  state.vendor = await apiFetch(`/auth/vendor/profile/${auth.vendorId}`);
+  document.getElementById('view-auth').classList.add('hidden');
+  document.getElementById('navVendor').classList.remove('hidden');
+  document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
+  await refreshVendorViews();
+  switchVendorTab('desk');
+  showToast('Partner Desk Ready');
 }
 
 async function refreshVendorViews() {
@@ -1502,6 +1529,9 @@ function signOut() {
   document.getElementById('driverOtpStep1').classList.remove('hidden');
   document.getElementById('driverOtpStep2').classList.add('hidden');
   document.getElementById('authDriverOtp').value = '';
+  document.getElementById('vendorOtpStep1').classList.remove('hidden');
+  document.getElementById('vendorOtpStep2').classList.add('hidden');
+  document.getElementById('authVendorOtp').value = '';
   document.getElementById('validatedDriverBox').classList.add('hidden');
   document.getElementById('vendorBillCard').classList.add('hidden');
   document.getElementById('driverSwapReceipt').classList.add('hidden');
