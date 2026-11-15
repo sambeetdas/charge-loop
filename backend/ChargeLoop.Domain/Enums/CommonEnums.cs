@@ -16,10 +16,11 @@ public enum StationStatus
 
 public enum BatteryStatus
 {
-    AvailableCharged = 0,
-    ChargingInStation = 1,
+    AvailableCharged = 0,   // Active
+    ChargingInStation = 1,  // Charging
     InUseByDriver = 2,
-    MaintenanceFaulty = 3
+    MaintenanceFaulty = 3,  // Out of Order
+    Inactive = 4            // Inactive
 }
 
 public enum SwapStatus

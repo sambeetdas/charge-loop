@@ -777,6 +777,7 @@
           <input id="vendorValidateQuery" class="input-field" placeholder="Phone, Name, or Driver ID" style="margin-bottom:0;">
           <button class="btn btn-primary btn-sm" onclick="validateDriverForPartner()">Validate</button>
         </div>
+        <input id="vendorValidateReserveOtp" class="input-field" placeholder="Driver's Reserve OTP (required if driver reserved)" style="margin-bottom:8px;">
         <div id="validatedDriverBox" class="card-elevated hidden"></div>
       </div>
 
@@ -1588,9 +1589,11 @@ function switchVendorTab(tab) {
 
 async function validateDriverForPartner() {
   const q = document.getElementById('vendorValidateQuery').value.trim();
+  const reserveOtp = document.getElementById('vendorValidateReserveOtp').value.trim();
   if (!q) return showToast('Enter driver phone or name', true);
   try {
-    const d = await apiFetch(`/swaps/validate-driver?query=${encodeURIComponent(q)}`);
+    const url = `/swaps/validate-driver?query=${encodeURIComponent(q)}${reserveOtp ? `&reserveOtp=${encodeURIComponent(reserveOtp)}` : ''}`;
+    const d = await apiFetch(url);
     state.validatedDriver = d;
     const box = document.getElementById('validatedDriverBox');
     box.classList.remove('hidden');
@@ -1601,13 +1604,15 @@ async function validateDriverForPartner() {
       </div>
       <div class="muted">${d.phoneNumber} • Wallet: ₹${Number(d.walletBalance).toFixed(2)}</div>
       <div class="muted">${d.activePlanName ? `Pass: ${d.activePlanName} (${d.remainingPlanSwaps} left)` : 'Pay-Per-Swap'}</div>
-      <div style="color:var(--mint-text);font-size:12px;margin-top:4px;">✓ ${d.validationMessage}</div>
+      ${d.hasActiveReservation ? `<div class="muted">Reservation: <b>${d.reservedStationName || 'Active'}</b> • ${d.reserveOtpVerified ? '✅ OTP Verified' : '⏳ OTP Required'}</div>` : ''}
+      <div style="color:${d.isEligibleForSwap ? 'var(--mint-text)' : '#FCA5A5'};font-size:12px;margin-top:4px;">${d.isEligibleForSwap ? '✓' : '✕'} ${d.validationMessage}</div>
     `;
     if (d.activeBatterySerial) document.getElementById('vendorDepletedQr').value = d.activeBatterySerial;
+    else document.getElementById('vendorDepletedQr').value = '';
     const btn = document.getElementById('vendorSwapBtn');
     btn.disabled = !d.isEligibleForSwap;
-    btn.textContent = '⚡ Unlock & Execute Battery Swap';
-    showToast('Driver validated!');
+    btn.textContent = d.isEligibleForSwap ? '⚡ Unlock & Execute Battery Swap' : '🔒 Verify Reserve OTP to Unlock Swap';
+    showToast(d.isEligibleForSwap ? 'Driver validated!' : d.validationMessage, !d.isEligibleForSwap);
   } catch (e) {
     state.validatedDriver = null;
     document.getElementById('vendorSwapBtn').disabled = true;
@@ -1708,27 +1713,51 @@ async function loadSelectedStoreBatteries() {
   const sid = document.getElementById('regBatStationSelect').value;
   if (!sid) return;
   const bats = await apiFetch(`/stations/${sid}/batteries?includeAll=true`);
+  const statusMap = {
+    0: { label: 'Active', cls: 'mint-pill' },
+    1: { label: 'Charging', cls: 'amber-pill' },
+    3: { label: 'Out of Order', cls: 'amber-pill' },
+    4: { label: 'Inactive', cls: 'amber-pill' }
+  };
+  const statuses = [
+    { code: 0, label: 'Active' },
+    { code: 4, label: 'Inactive' },
+    { code: 1, label: 'Charging' },
+    { code: 3, label: 'Out of Order' }
+  ];
   document.getElementById('vendorStoreBatteriesList').innerHTML = bats.map(b => {
-    const isCharged = b.status === 0;
-    const toggleBtn = isCharged
-      ? `<button class="btn btn-sm ${b.isVisibleToDriver ? 'btn-primary' : 'btn-secondary'}" onclick="toggleBatteryVisibility('${sid}', '${b.id}', ${!b.isVisibleToDriver})">${b.isVisibleToDriver ? '👁️ Shown to Driver' : '🙈 Hidden from Driver'}</button>`
-      : `<div style="display:flex;gap:6px;align-items:center;"><span class="amber-pill">⚡ Undercharging — Hidden</span><button class="btn btn-primary btn-sm" onclick="markBatteryCharged('${sid}', '${b.id}', 100)">Mark Charged (100%)</button></div>`;
+    const st = statusMap[b.status] || { label: 'Unknown', cls: 'amber-pill' };
+    const buttons = statuses.map(s => `
+      <button class="btn btn-sm ${b.status === s.code ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 8px;font-size:11px;" onclick="setBatteryStatus('${sid}', '${b.id}', ${s.code})">${s.label}</button>
+    `).join('');
     return `
       <div class="card">
         <div class="row-between" style="margin-bottom:8px;">
           <div>
             <div style="font-weight:800;">${b.serialNumber}</div>
-            <div class="muted">${b.modelType} • SOH ${b.stateOfHealthPercent}%</div>
+            <div class="muted">${b.modelType} • SOH ${b.stateOfHealthPercent}% • ${b.stateOfChargePercent}% SOC</div>
           </div>
-          <span class="${isCharged ? 'mint-pill' : 'amber-pill'}">${b.stateOfChargePercent}% SOC (${isCharged ? 'Charged' : 'Charging'})</span>
+          <span class="${st.cls}">${st.label}</span>
         </div>
-        <div class="row-between">
-          <span class="muted" style="font-size:11px;">Driver Visibility</span>
-          ${toggleBtn}
+        <div class="muted" style="font-size:11px;margin-bottom:6px;">${b.status === 0 ? '👁️ Visible & assignable to drivers' : '🙈 Hidden from drivers'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${buttons}
         </div>
       </div>
     `;
   }).join('') || '<div class="muted">No batteries in this store yet.</div>';
+}
+
+async function setBatteryStatus(stationId, batteryId, status) {
+  try {
+    await apiFetch(`/stations/${stationId}/batteries/${batteryId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+    await refreshVendorViews();
+    const names = { 0: 'Active', 1: 'Charging', 3: 'Out of Order', 4: 'Inactive' };
+    showToast(`Battery status set to ${names[status] || status}`);
+  } catch (e) { showToast(e.message, true); }
 }
 
 async function toggleBatteryVisibility(stationId, batteryId, isVisibleToDriver) {

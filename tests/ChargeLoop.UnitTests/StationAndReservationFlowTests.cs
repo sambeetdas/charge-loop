@@ -59,6 +59,18 @@ public class StationAndReservationFlowTests
         // Vendor cannot toggle undercharging battery ON for driver
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             stationService.ToggleBatteryVisibilityAsync(station.Id, charging.Id, true));
+
+        // 4-status toggle: Inactive / Out of Order / Charging / Active
+        await stationService.UpdateBatteryStatusAsync(station.Id, charged.Id, BatteryStatus.Inactive);
+        Assert.Empty(await stationService.GetStationBatteriesAsync(station.Id, includeAll: false));
+
+        await stationService.UpdateBatteryStatusAsync(station.Id, charged.Id, BatteryStatus.MaintenanceFaulty);
+        Assert.Empty(await stationService.GetStationBatteriesAsync(station.Id, includeAll: false));
+
+        await stationService.UpdateBatteryStatusAsync(station.Id, charging.Id, BatteryStatus.AvailableCharged);
+        var driverNowSees = await stationService.GetStationBatteriesAsync(station.Id, includeAll: false);
+        Assert.Single(driverNowSees);
+        Assert.Equal("BAT-UNDER-2", driverNowSees[0].SerialNumber);
     }
 
     [Fact]

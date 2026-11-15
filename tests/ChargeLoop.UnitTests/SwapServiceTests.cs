@@ -208,4 +208,60 @@ public class SwapServiceTests
         Assert.Equal(ReservationStatus.Fulfilled, updatedReservation!.Status);
         Assert.Null(await reservationService.GetActiveReservationAsync(driver.Id));
     }
+
+    [Fact]
+    public async Task ValidateDriverForSwapAsync_RequiresMatchingReserveOtp_AndBlocksInactiveBatteryAssignment()
+    {
+        var context = CreateInMemoryDbContext();
+        var walletService = new WalletService(context);
+        var swapService = new SwapService(context, walletService, new MockNotificationService());
+        var reservationService = new ReservationService(context);
+
+        var driver = new Driver { FullName = "Reserved Driver", PhoneNumber = "+919000000020", WalletBalance = 0.00m };
+        var partner = new Partner { FullName = "Partner", BusinessName = "XYZ Mall", PhoneNumber = "+919000000021" };
+        var station = new Station { PartnerId = partner.Id, Name = "XYZ Mall", AvailableChargedBatteriesCount = 1 };
+        var inactiveBattery = new Battery
+        {
+            SerialNumber = "BAT-INACTIVE-1",
+            StateOfChargePercent = 100,
+            Status = BatteryStatus.Inactive,
+            IsVisibleToDriver = false,
+            CurrentStationId = station.Id
+        };
+        var activeBattery = new Battery
+        {
+            SerialNumber = "BAT-ACTIVE-1",
+            StateOfChargePercent = 100,
+            Status = BatteryStatus.AvailableCharged,
+            IsVisibleToDriver = true,
+            CurrentStationId = station.Id
+        };
+
+        await context.Drivers.AddAsync(driver);
+        await context.Partners.AddAsync(partner);
+        await context.Stations.AddAsync(station);
+        await context.Batteries.AddRangeAsync(inactiveBattery, activeBattery);
+        await context.SaveChangesAsync();
+
+        var reservation = await reservationService.CreateReservationAsync(new ReservationRequest(driver.Id, station.Id));
+
+        // Missing or wrong OTP -> locked
+        var missingOtp = await swapService.ValidateDriverForSwapAsync(driver.PhoneNumber);
+        Assert.False(missingOtp!.IsEligibleForSwap);
+        Assert.True(missingOtp.HasActiveReservation);
+        Assert.False(missingOtp.ReserveOtpVerified);
+
+        var wrongOtp = await swapService.ValidateDriverForSwapAsync(driver.PhoneNumber, "000000");
+        Assert.False(wrongOtp!.IsEligibleForSwap);
+        Assert.False(wrongOtp.ReserveOtpVerified);
+
+        // Matching OTP -> unlocked
+        var validOtp = await swapService.ValidateDriverForSwapAsync(driver.PhoneNumber, reservation.OtpCode);
+        Assert.True(validOtp!.IsEligibleForSwap);
+        Assert.True(validOtp.ReserveOtpVerified);
+
+        // Assigning Inactive battery throws
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            swapService.InitiateSwapAsync(new InitiateSwapRequest(driver.Id, station.Id, partner.Id, "", inactiveBattery.SerialNumber)));
+    }
 }

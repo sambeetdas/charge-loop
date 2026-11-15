@@ -78,7 +78,7 @@ public class StationService : IStationService
 
         if (includeAll)
         {
-            query = query.Where(b => b.Status == BatteryStatus.AvailableCharged || b.Status == BatteryStatus.ChargingInStation);
+            query = query.Where(b => b.Status != BatteryStatus.InUseByDriver);
         }
         else
         {
@@ -171,6 +171,50 @@ public class StationService : IStationService
         }
 
         battery.IsVisibleToDriver = isVisibleToDriver;
+        await _context.SaveChangesAsync();
+
+        station.AvailableChargedBatteriesCount = await _context.Batteries
+            .CountAsync(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.AvailableCharged && b.IsVisibleToDriver);
+        station.ChargingBatteriesCount = await _context.Batteries
+            .CountAsync(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.ChargingInStation);
+        station.LastStatusUpdate = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        await _notificationService.NotifyStationUpdatedAsync(new StationDto(
+            station.Id, station.PartnerId, station.Name, station.Address, station.City,
+            station.Latitude, station.Longitude, station.AvailableChargedBatteriesCount,
+            station.ChargingBatteriesCount, station.EstimatedWaitTimeMinutes, station.Status, null));
+
+        return new BatteryDto(
+            battery.Id,
+            battery.SerialNumber,
+            battery.ModelType,
+            battery.StateOfChargePercent,
+            battery.StateOfHealthPercent,
+            battery.CellTemperatureCelsius,
+            battery.Status,
+            battery.IsVisibleToDriver
+        );
+    }
+
+    public async Task<BatteryDto> UpdateBatteryStatusAsync(Guid stationId, Guid batteryId, BatteryStatus status)
+    {
+        if (status == BatteryStatus.InUseByDriver)
+            throw new InvalidOperationException("Cannot manually set store battery status to InUseByDriver.");
+
+        var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId)
+            ?? throw new KeyNotFoundException("Station/store not found.");
+
+        var battery = await _context.Batteries.FirstOrDefaultAsync(b => b.Id == batteryId && b.CurrentStationId == stationId)
+            ?? throw new KeyNotFoundException("Battery not found in this store.");
+
+        battery.Status = status;
+        battery.IsVisibleToDriver = status == BatteryStatus.AvailableCharged;
+        if (status == BatteryStatus.AvailableCharged && battery.StateOfChargePercent < 80)
+        {
+            battery.StateOfChargePercent = 100;
+        }
+        battery.LastTelemetryTimestamp = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         station.AvailableChargedBatteriesCount = await _context.Batteries

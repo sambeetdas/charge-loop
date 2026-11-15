@@ -18,12 +18,12 @@ public class SwapsController : ControllerBase
     }
 
     [HttpGet("validate-driver")]
-    public async Task<ActionResult<DriverValidationDto>> ValidateDriver([FromQuery] string query)
+    public async Task<ActionResult<DriverValidationDto>> ValidateDriver([FromQuery] string query, [FromQuery] string? reserveOtp = null)
     {
         if (string.IsNullOrWhiteSpace(query))
             return BadRequest(new { Error = "Driver phone, name, or ID is required." });
 
-        var validation = await _swapService.ValidateDriverForSwapAsync(query);
+        var validation = await _swapService.ValidateDriverForSwapAsync(query, reserveOtp);
         if (validation == null)
             return NotFound(new { Error = "No matching driver found." });
 

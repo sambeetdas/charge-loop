@@ -27,6 +27,7 @@ public interface IStationService
     Task<BatteryDto> RegisterBatteryAtStationAsync(RegisterBatteryRequest request);
     Task<BatteryDto> ToggleBatteryVisibilityAsync(Guid stationId, Guid batteryId, bool isVisibleToDriver);
     Task<BatteryDto> UpdateBatteryChargeAsync(Guid stationId, Guid batteryId, int stateOfChargePercent);
+    Task<BatteryDto> UpdateBatteryStatusAsync(Guid stationId, Guid batteryId, BatteryStatus status);
     Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes);
     Task<StationDto> CreateStationAsync(CreateStationRequest request);
     Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId);
@@ -34,7 +35,7 @@ public interface IStationService
 
 public interface ISwapService
 {
-    Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query);
+    Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query, string? reserveOtp = null);
     Task<SwapResponse> InitiateSwapAsync(InitiateSwapRequest request);
     Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request);
     Task<PublishBillResponse> PublishSwapBillAsync(Guid swapId, PublishBillRequest request);

@@ -23,6 +23,7 @@ public record UpdateVendorProfileRequest(string? FullName, string? BusinessName,
 public record ChangePhoneRequest(string NewPhoneNumber, string OtpCode);
 public record ToggleBatteryVisibilityRequest(bool IsVisibleToDriver);
 public record UpdateBatteryChargeRequest(int StateOfChargePercent);
+public record UpdateBatteryStatusRequest(BatteryStatus Status);
 
 public record KycSubmissionRequest(Guid DriverId, string DrivingLicenseNumber, string AadhaarNumber);
 public record VehicleLinkRequest(Guid DriverId, string RegistrationNumber, string Oem, string Model, string BatteryType);
@@ -95,7 +96,10 @@ public record DriverValidationDto(
     string? ActivePlanName,
     int? RemainingPlanSwaps,
     bool IsEligibleForSwap,
-    string ValidationMessage
+    string ValidationMessage,
+    bool HasActiveReservation = false,
+    string? ReservedStationName = null,
+    bool ReserveOtpVerified = false
 );
 
 public record RegisterBatteryRequest(

@@ -23,7 +23,7 @@ public class SwapService : ISwapService
         _notificationService = notificationService;
     }
 
-    public async Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query)
+    public async Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query, string? reserveOtp = null)
     {
         if (string.IsNullOrWhiteSpace(query)) return null;
         var q = query.Trim();
@@ -63,10 +63,46 @@ public class SwapService : ISwapService
             remainingSwaps = activeSub.SwapsTotalAllowed - activeSub.SwapsUsed;
         }
 
+        var activeReservation = await _context.Reservations
+            .AsNoTracking()
+            .Where(r => r.DriverId == driver.Id && r.Status == ReservationStatus.Active && r.ExpiresAt > DateTime.UtcNow)
+            .OrderByDescending(r => r.ReservedAt)
+            .FirstOrDefaultAsync();
+
+        string? reservedStationName = null;
+        bool hasActiveReservation = activeReservation != null;
+        bool reserveOtpVerified = false;
         var eligible = driver.KycStatus == KycStatus.Verified || remainingSwaps > 0 || driver.WalletBalance >= 0;
         var msg = driver.KycStatus == KycStatus.Verified
             ? "Driver verified & cleared for battery swap."
-            : "Driver found (KYC Pending — cash/UPI/card swap allowed).";
+            : "Driver found (KYC Pending — cash swap allowed).";
+
+        if (activeReservation != null)
+        {
+            var resStation = await _context.Stations.AsNoTracking().FirstOrDefaultAsync(s => s.Id == activeReservation.StationId);
+            reservedStationName = resStation?.Name ?? "Reserved Station";
+
+            if (string.IsNullOrWhiteSpace(reserveOtp))
+            {
+                eligible = false;
+                msg = $"Driver has an active reservation at {reservedStationName}. Enter Reserve OTP to unlock swap.";
+            }
+            else if (string.Equals(activeReservation.OtpCode, reserveOtp.Trim(), StringComparison.Ordinal))
+            {
+                reserveOtpVerified = true;
+                msg = $"Driver & Reserve OTP verified for {reservedStationName}!";
+            }
+            else
+            {
+                eligible = false;
+                msg = $"Invalid Reserve OTP for {reservedStationName}.";
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(reserveOtp))
+        {
+            eligible = false;
+            msg = "Driver has no active reservation matching this Reserve OTP.";
+        }
 
         return new DriverValidationDto(
             driver.Id,
@@ -80,7 +116,10 @@ public class SwapService : ISwapService
             planName,
             remainingSwaps,
             eligible,
-            msg
+            msg,
+            hasActiveReservation,
+            reservedStationName,
+            reserveOtpVerified
         );
     }
 
@@ -125,6 +164,11 @@ public class SwapService : ISwapService
             };
             await _context.Batteries.AddAsync(issued);
             await _context.SaveChangesAsync();
+        }
+
+        if (issued.Status != BatteryStatus.AvailableCharged || !issued.IsVisibleToDriver)
+        {
+            throw new InvalidOperationException("Only Active batteries can be assigned to a driver.");
         }
 
         if (issued.StateOfChargePercent < 90)
