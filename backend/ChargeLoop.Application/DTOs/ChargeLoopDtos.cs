@@ -43,8 +43,8 @@ public record CreateStationRequest(
     double Latitude,
     double Longitude,
     int TotalBays = 12,
-    int InitialChargedBatteries = 6,
-    int InitialChargingBatteries = 4
+    int InitialChargedBatteries = 0,
+    int InitialChargingBatteries = 0
 );
 
 public record NearbyStationsRequest(double Latitude, double Longitude, double RadiusKm = 10.0);
