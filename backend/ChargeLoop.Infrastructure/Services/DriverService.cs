@@ -47,7 +47,7 @@ public class DriverService : IDriverService
                 FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Driver " + suffix : request.FullName,
                 Email = request.Email,
                 LanguageCode = request.LanguageCode ?? "en",
-                WalletBalance = 200.00m, // Welcome promotional balance
+                WalletBalance = 0.00m,
                 ReferralCode = $"CL-{suffix}{Random.Shared.Next(10, 99)}"
             };
             await _context.Drivers.AddAsync(existing);
