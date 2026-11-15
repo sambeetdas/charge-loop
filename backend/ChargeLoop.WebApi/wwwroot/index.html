@@ -790,7 +790,6 @@
           <input id="vendorValidateQuery" class="input-field" placeholder="Phone, Name, or Driver ID" style="margin-bottom:0;">
           <button class="btn btn-primary btn-sm" onclick="validateDriverForPartner()">Validate</button>
         </div>
-        <input id="vendorValidateReserveOtp" class="input-field" placeholder="Driver's Reserve OTP (required if driver reserved)" style="margin-bottom:8px;">
         <div id="validatedDriverBox" class="card-elevated hidden"></div>
       </div>
 
@@ -798,31 +797,55 @@
       <div class="card">
         <div class="step-header"><span class="step-badge">2</span> Scan Battery QRs (Disconnect &amp; Assign)</div>
         <select id="vendorDeskStationSelect" class="input-field" onchange="loadVendorDeskBatteries()"></select>
-        <input id="vendorDepletedQr" class="input-field" placeholder="Scan Driver's Battery QR to Disconnect">
+        <input id="vendorDepletedQr" class="input-field" placeholder="Scan Driver's Battery QR to Disconnect (empty if 1st pickup)">
         <select id="vendorIssuedQrSelect" class="input-field"></select>
       </div>
 
-      <!-- STEP 3: PAYMENT & SWAP -->
+      <!-- STEP 3: VERIFY DRIVER SWAP OTP -->
       <div class="card">
-        <div class="step-header"><span class="step-badge">3</span> Collect Payment &amp; Execute Swap</div>
+        <div class="step-header"><span class="step-badge">3</span> Verify Driver's Swap OTP</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="vendorSwapOtpInput" class="input-field" placeholder="Enter Driver's 6-digit Swap OTP" style="margin-bottom:0;">
+          <button class="btn btn-primary btn-sm" onclick="verifyVendorSwapOtp()">Verify OTP</button>
+        </div>
+        <div id="vendorSwapOtpBox" class="card-elevated hidden"></div>
+      </div>
+
+      <!-- STEP 4: COLLECT PAYMENT & EXECUTE SWAP -->
+      <div class="card">
+        <div class="step-header"><span class="step-badge">4</span> Collect Payment &amp; Execute Swap</div>
         <div class="pay-options">
           <div class="pay-chip active" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash Only</div>
           <div class="pay-chip" onclick="showOnlinePaymentWip()">👛 Wallet (WIP)</div>
           <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card (WIP)</div>
           <div class="pay-chip" onclick="showOnlinePaymentWip()">📱 UPI (WIP)</div>
         </div>
-        <div id="vendorCashFields" class="card-elevated" style="margin-bottom:10px;">
-          <div class="muted" style="margin-bottom:4px;">Cash Collected (₹)</div>
-          <input id="vendorCashAmount" class="input-field" type="number" value="118" placeholder="Enter Cash Amount (₹)" style="margin-bottom:0;">
+        <div id="vendorCashFields" class="card-elevated hidden" style="margin-bottom:10px;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:6px;">🧾 Fare Breakup &amp; Payment Details</div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Base Swap &amp; Energy Fee</span>
+            <span id="vendorBreakupBase">₹100.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
+            <span>GST (18%)</span>
+            <span id="vendorBreakupTax">₹18.00</span>
+          </div>
+          <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
+            <span>Cash Collected (₹)</span>
+            <span id="vendorBreakupTotal" style="color:var(--mint);">₹118.00</span>
+          </div>
+          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Collected (₹) — Read-Only (Online tx details will appear here in future)</div>
+          <input id="vendorCashAmount" class="input-field" type="number" value="118.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
         </div>
+        <div id="vendorPaymentWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;">Verify Driver's Swap OTP in Step 3 to view Cash Collected &amp; breakup.</div>
         <button id="vendorSwapBtn" class="btn btn-primary" disabled onclick="executePartnerSwap()">
-          🔒 Validate Driver First to Unlock Swap
+          🔒 Verify Swap OTP in Step 3 to Unlock
         </button>
       </div>
 
-      <!-- STEP 4: PUBLISH BILL -->
+      <!-- STEP 5: PUBLISH BILL -->
       <div id="vendorBillCard" class="card hidden">
-        <div class="step-header"><span class="step-badge">4</span> Publish Bill to Driver</div>
+        <div class="step-header"><span class="step-badge">5</span> Publish Bill to Driver</div>
         <div id="vendorBillSummary" class="muted" style="margin-bottom:10px;"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
           <label class="mint-pill"><input type="checkbox" id="chkWhatsApp" checked> WhatsApp</label>
@@ -953,6 +976,8 @@ let state = {
   topupMode: 'CASH',
   vendorPayMethod: 3,
   validatedDriver: null,
+  vendorVerifiedSwap: null,
+  pendingDriverSwap: null,
   lastVendorSwap: null,
   activeReservation: null,
   reservationTimer: null
@@ -1082,7 +1107,7 @@ async function refreshDriverViews() {
   }
 
   await loadActiveReservation();
-  await Promise.all([loadStations(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
+  await Promise.all([loadStations(), loadPendingDriverSwap(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
 }
 
 function switchDriverTab(tab) {
@@ -1139,19 +1164,15 @@ function renderActiveReservation() {
     box.innerHTML = `
       <div class="grid-hero" style="margin-bottom:14px;">
         <div class="row-between" style="margin-bottom:6px;">
-          <span class="mint-pill">🔒 ACTIVE RESERVATION</span>
+          <span class="mint-pill">🔒 RESERVED (2H HOLD)</span>
           <span class="amber-pill">⏳ ${countdown}</span>
         </div>
         <div style="font-weight:800;font-size:16px;">${res.stationName}</div>
-        ${res.batterySerial ? `<div class="muted">Held Battery: <b>${res.batterySerial}</b></div>` : ''}
-        <div class="card-elevated row-between" style="margin:10px 0;">
-          <div>
-            <div class="muted" style="font-size:10px;">RESERVATION OTP (VALID 2 HOURS)</div>
-            <div style="font-size:24px;font-weight:900;color:var(--mint);letter-spacing:3px;">${res.otpCode || '------'}</div>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="switchDriverTab('scan')">Go to Scan &amp; Pay</button>
+        ${res.batterySerial ? `<div class="muted" style="margin-bottom:8px;">Held Battery: <b>${res.batterySerial}</b></div>` : '<div style="margin-bottom:8px;"></div>'}
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" style="flex:1;" onclick="switchDriverTab('scan')">Go to Scan &amp; Pay</button>
+          <button class="btn btn-secondary btn-sm" style="flex:1;border-color:rgba(239,68,68,0.4);color:#FCA5A5;" onclick="cancelActiveReservation('${res.id}')">Reverse Reserve</button>
         </div>
-        <button class="btn btn-secondary btn-sm" style="width:100%;border-color:rgba(239,68,68,0.4);color:#FCA5A5;" onclick="cancelActiveReservation('${res.id}')">Reverse / Cancel Reserve</button>
       </div>
     `;
   };
@@ -1258,7 +1279,7 @@ async function reserveAtStation(stationId) {
     state.activeReservation = res;
     renderActiveReservation();
     await loadStations();
-    showToast(`Reserved! OTP: ${res.otpCode} (valid 2 hours)`);
+    showToast('Station reserved for 2 hours! Proceed to Scan & Pay.');
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -1269,6 +1290,51 @@ function selectDriverPayMethod(pm, el) {
   document.getElementById('driverCashFields').classList.toggle('hidden', pm !== 3);
 }
 
+async function loadPendingDriverSwap() {
+  try {
+    const pending = await apiFetch(`/swaps/pending/${state.driver.id}`);
+    state.pendingDriverSwap = pending;
+    renderDriverSwapRequest(pending);
+  } catch (e) {
+    state.pendingDriverSwap = null;
+    document.getElementById('driverSwapReceipt').classList.add('hidden');
+  }
+}
+
+function renderDriverSwapRequest(swap) {
+  const box = document.getElementById('driverSwapReceipt');
+  if (!swap) {
+    box.classList.add('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  const pmNames = { 0: 'Weekly Pass', 1: 'Wallet', 2: 'UPI', 3: 'Cash', 4: 'Card' };
+  box.innerHTML = `
+    <div class="row-between" style="margin-bottom:8px;">
+      <span class="amber-pill">⏳ Pending Vendor Confirmation</span>
+      <span class="mint-pill">${pmNames[swap.paymentMethod] || 'Cash'}</span>
+    </div>
+    <div style="font-weight:800;">Battery: ${swap.issuedBatterySerial} (${swap.issuedBatterySoc}%)</div>
+    <div class="muted" style="margin-bottom:8px;">Total: ₹${Number(swap.totalAmount).toFixed(2)} (Base ₹${Number(swap.baseFee).toFixed(2)} + GST ₹${Number(swap.taxAmount).toFixed(2)})</div>
+    <div class="card-elevated row-between">
+      <div>
+        <div class="muted" style="font-size:10px;">SHARE SWAP OTP WITH VENDOR</div>
+        <div style="font-size:24px;font-weight:900;color:var(--mint);letter-spacing:3px;">${swap.swapOtp || '------'}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="regenerateDriverSwapOtp('${swap.swapId}')">🔄 Regenerate OTP</button>
+    </div>
+  `;
+}
+
+async function regenerateDriverSwapOtp(swapId) {
+  try {
+    const updated = await apiFetch(`/swaps/${swapId}/regenerate-otp`, { method: 'POST' });
+    state.pendingDriverSwap = updated;
+    renderDriverSwapRequest(updated);
+    showToast(`New Swap OTP: ${updated.swapOtp}`);
+  } catch (e) { showToast(e.message, true); }
+}
+
 async function executeDriverScanAndPay() {
   const sel = document.getElementById('scanStationSelect');
   const stationId = sel.value;
@@ -1277,7 +1343,6 @@ async function executeDriverScanAndPay() {
   const depletedBatterySerial = document.getElementById('scanDepletedSerial').value.trim();
   const issuedBatterySerial = document.getElementById('scanIssuedSelect').value;
   if (!issuedBatterySerial) return showToast('Select an available battery to swap.', true);
-  const cashAmount = state.driverPayMethod === 3 ? Number(document.getElementById('driverCashAmount').value || 118) : null;
 
   try {
     const init = await apiFetch('/swaps/initiate', {
@@ -1287,27 +1352,13 @@ async function executeDriverScanAndPay() {
         stationId,
         partnerId,
         depletedBatterySerial,
-        issuedBatterySerial
+        issuedBatterySerial,
+        paymentMethod: state.driverPayMethod
       })
     });
-    const done = await apiFetch('/swaps/confirm', {
-      method: 'POST',
-      body: JSON.stringify({
-        swapId: init.swapId,
-        paymentMethod: state.driverPayMethod,
-        cashAmount,
-        correlationId: crypto.randomUUID()
-      })
-    });
-    const box = document.getElementById('driverSwapReceipt');
-    box.classList.remove('hidden');
-    box.innerHTML = `
-      <div class="mint-pill" style="margin-bottom:8px;">✓ Swap Completed • ${done.invoiceNumber || ''}</div>
-      <div style="font-weight:800;">Issued: ${done.issuedBatterySerial} (${done.issuedBatterySoc}%)</div>
-      <div class="muted">Total Paid: ₹${Number(done.totalAmount).toFixed(2)}</div>
-    `;
-    await refreshDriverViews();
-    showToast('Swap & payment successful!');
+    state.pendingDriverSwap = init;
+    renderDriverSwapRequest(init);
+    showToast(`Swap request submitted! Share OTP ${init.swapOtp} with Vendor.`);
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -1602,12 +1653,17 @@ function switchVendorTab(tab) {
 
 async function validateDriverForPartner() {
   const q = document.getElementById('vendorValidateQuery').value.trim();
-  const reserveOtp = document.getElementById('vendorValidateReserveOtp').value.trim();
   if (!q) return showToast('Enter driver phone or name', true);
   try {
-    const url = `/swaps/validate-driver?query=${encodeURIComponent(q)}${reserveOtp ? `&reserveOtp=${encodeURIComponent(reserveOtp)}` : ''}`;
-    const d = await apiFetch(url);
+    const d = await apiFetch(`/swaps/validate-driver?query=${encodeURIComponent(q)}`);
     state.validatedDriver = d;
+    state.vendorVerifiedSwap = null;
+    document.getElementById('vendorSwapOtpBox').classList.add('hidden');
+    document.getElementById('vendorCashFields').classList.add('hidden');
+    document.getElementById('vendorPaymentWaitingMsg').classList.remove('hidden');
+    document.getElementById('vendorSwapBtn').disabled = true;
+    document.getElementById('vendorSwapBtn').textContent = '🔒 Verify Swap OTP in Step 3 to Unlock';
+
     const box = document.getElementById('validatedDriverBox');
     box.classList.remove('hidden');
     box.innerHTML = `
@@ -1617,17 +1673,57 @@ async function validateDriverForPartner() {
       </div>
       <div class="muted">${d.phoneNumber} • Wallet: ₹${Number(d.walletBalance).toFixed(2)}</div>
       <div class="muted">${d.activePlanName ? `Pass: ${d.activePlanName} (${d.remainingPlanSwaps} left)` : 'Pay-Per-Swap'}</div>
-      ${d.hasActiveReservation ? `<div class="muted">Reservation: <b>${d.reservedStationName || 'Active'}</b> • ${d.reserveOtpVerified ? '✅ OTP Verified' : '⏳ OTP Required'}</div>` : ''}
-      <div style="color:${d.isEligibleForSwap ? 'var(--mint-text)' : '#FCA5A5'};font-size:12px;margin-top:4px;">${d.isEligibleForSwap ? '✓' : '✕'} ${d.validationMessage}</div>
+      ${d.hasActiveReservation ? `<div class="muted">Reservation: <b>${d.reservedStationName || 'Active'}</b></div>` : ''}
+      <div style="color:var(--mint-text);font-size:12px;margin-top:4px;">✓ ${d.validationMessage}</div>
     `;
     if (d.activeBatterySerial) document.getElementById('vendorDepletedQr').value = d.activeBatterySerial;
     else document.getElementById('vendorDepletedQr').value = '';
-    const btn = document.getElementById('vendorSwapBtn');
-    btn.disabled = !d.isEligibleForSwap;
-    btn.textContent = d.isEligibleForSwap ? '⚡ Unlock & Execute Battery Swap' : '🔒 Verify Reserve OTP to Unlock Swap';
-    showToast(d.isEligibleForSwap ? 'Driver validated!' : d.validationMessage, !d.isEligibleForSwap);
+    showToast('Driver validated! Now verify Swap OTP in Step 3.');
   } catch (e) {
     state.validatedDriver = null;
+    state.vendorVerifiedSwap = null;
+    document.getElementById('vendorSwapBtn').disabled = true;
+    showToast(e.message, true);
+  }
+}
+
+async function verifyVendorSwapOtp() {
+  const otpCode = document.getElementById('vendorSwapOtpInput').value.trim();
+  if (!otpCode) return showToast('Enter driver Swap OTP', true);
+  try {
+    const driverParam = state.validatedDriver ? `&driverId=${encodeURIComponent(state.validatedDriver.driverId)}` : '';
+    const swap = await apiFetch(`/swaps/validate-otp?otpCode=${encodeURIComponent(otpCode)}${driverParam}`);
+    state.vendorVerifiedSwap = swap;
+
+    const otpBox = document.getElementById('vendorSwapOtpBox');
+    otpBox.classList.remove('hidden');
+    otpBox.innerHTML = `
+      <div class="mint-pill" style="margin-bottom:6px;">✓ Swap OTP Verified</div>
+      <div class="muted">Issued Battery: <b>${swap.issuedBatterySerial}</b> • Depleted: <b>${swap.depletedBatterySerial}</b></div>
+    `;
+
+    if (swap.depletedBatterySerial && swap.depletedBatterySerial !== 'FIRST-PICKUP') {
+      document.getElementById('vendorDepletedQr').value = swap.depletedBatterySerial;
+    }
+    if (swap.issuedBatterySerial) {
+      document.getElementById('vendorIssuedQrSelect').value = swap.issuedBatterySerial;
+    }
+
+    document.getElementById('vendorBreakupBase').textContent = `₹${Number(swap.baseFee).toFixed(2)}`;
+    document.getElementById('vendorBreakupTax').textContent = `₹${Number(swap.taxAmount).toFixed(2)}`;
+    document.getElementById('vendorBreakupTotal').textContent = `₹${Number(swap.totalAmount).toFixed(2)}`;
+    document.getElementById('vendorCashAmount').value = Number(swap.totalAmount).toFixed(2);
+    document.getElementById('vendorCashFields').classList.remove('hidden');
+    document.getElementById('vendorPaymentWaitingMsg').classList.add('hidden');
+
+    const btn = document.getElementById('vendorSwapBtn');
+    btn.disabled = false;
+    btn.textContent = '⚡ Confirm Swap & Collect Payment';
+    showToast('Swap OTP verified! Amount breakup unlocked.');
+  } catch (e) {
+    state.vendorVerifiedSwap = null;
+    document.getElementById('vendorCashFields').classList.add('hidden');
+    document.getElementById('vendorPaymentWaitingMsg').classList.remove('hidden');
     document.getElementById('vendorSwapBtn').disabled = true;
     showToast(e.message, true);
   }
@@ -1650,39 +1746,33 @@ function selectVendorPayMethod(pm, el) {
 }
 
 async function executePartnerSwap() {
-  if (!state.validatedDriver) return showToast('Validate driver first', true);
-  const stationId = document.getElementById('vendorDeskStationSelect').value;
-  if (!stationId) return showToast('Add a store first in Stores tab', true);
-  const depletedBatterySerial = document.getElementById('vendorDepletedQr').value.trim() || 'BAT-LFP-1001';
-  const issuedBatterySerial = document.getElementById('vendorIssuedQrSelect').value;
-  const cashAmount = state.vendorPayMethod === 3 ? Number(document.getElementById('vendorCashAmount').value || 118) : null;
+  if (!state.vendorVerifiedSwap) return showToast('Verify Driver Swap OTP in Step 3 first', true);
+  const cashAmount = state.vendorPayMethod === 3 ? Number(document.getElementById('vendorCashAmount').value || state.vendorVerifiedSwap.totalAmount) : null;
 
   try {
-    const init = await apiFetch('/swaps/initiate', {
-      method: 'POST',
-      body: JSON.stringify({
-        driverId: state.validatedDriver.driverId,
-        stationId,
-        partnerId: state.vendor.id,
-        depletedBatterySerial,
-        issuedBatterySerial
-      })
-    });
     const done = await apiFetch('/swaps/confirm', {
       method: 'POST',
       body: JSON.stringify({
-        swapId: init.swapId,
+        swapId: state.vendorVerifiedSwap.swapId,
         paymentMethod: state.vendorPayMethod,
         cashAmount,
         correlationId: crypto.randomUUID()
       })
     });
     state.lastVendorSwap = done;
+    state.vendorVerifiedSwap = null;
+    document.getElementById('vendorSwapOtpInput').value = '';
+    document.getElementById('vendorSwapOtpBox').classList.add('hidden');
+    document.getElementById('vendorCashFields').classList.add('hidden');
+    document.getElementById('vendorPaymentWaitingMsg').classList.remove('hidden');
+    document.getElementById('vendorSwapBtn').disabled = true;
+    document.getElementById('vendorSwapBtn').textContent = '🔒 Verify Swap OTP in Step 3 to Unlock';
+
     document.getElementById('vendorBillCard').classList.remove('hidden');
     document.getElementById('vendorBillSummary').textContent =
       `Invoice ${done.invoiceNumber} • Issued ${done.issuedBatterySerial} • Paid ₹${Number(done.totalAmount).toFixed(2)}`;
     await refreshVendorViews();
-    showToast('Swap completed! Ready to publish bill.');
+    showToast('Swap confirmed! Driver request completed.');
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -1895,7 +1985,7 @@ function signOut() {
   if (state.reservationTimer) {
     clearInterval(state.reservationTimer);
   }
-  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null, activeReservation: null, reservationTimer: null, driverPayMethod: 3, vendorPayMethod: 3 };
+  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, vendorVerifiedSwap: null, pendingDriverSwap: null, lastVendorSwap: null, activeReservation: null, reservationTimer: null, driverPayMethod: 3, vendorPayMethod: 3 };
   document.getElementById('driverActiveReservationBox').classList.add('hidden');
   document.getElementById('driverActiveReservationBox').innerHTML = '';
   document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));

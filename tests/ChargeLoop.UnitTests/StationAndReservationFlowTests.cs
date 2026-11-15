@@ -90,15 +90,14 @@ public class StationAndReservationFlowTests
             partner.Id, "XYZ Mall", "6th Block", "Bengaluru", 12.97, 77.59));
         await stationService.RegisterBatteryAtStationAsync(new RegisterBatteryRequest(station.Id, "BAT-RES-1", "LFP-48V", 100));
 
-        // Reserve -> 6-digit OTP & ~2 hour expiry
+        // Reserve -> ~2 hour expiry (no OTP generated on reserve)
         var res = await reservationService.CreateReservationAsync(new ReservationRequest(driver.Id, station.Id));
-        Assert.Equal(6, res.OtpCode.Length);
+        Assert.Equal(string.Empty, res.OtpCode);
         Assert.True(res.ExpiresAt > DateTime.UtcNow.AddMinutes(115));
         Assert.True(res.ExpiresAt <= DateTime.UtcNow.AddMinutes(121));
 
         var active = await reservationService.GetActiveReservationAsync(driver.Id);
         Assert.NotNull(active);
-        Assert.Equal(res.OtpCode, active!.OtpCode);
 
         // Reverse / cancel reserve -> no longer active
         var cancelled = await reservationService.CancelReservationAsync(res.Id);

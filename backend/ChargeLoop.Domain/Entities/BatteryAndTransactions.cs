@@ -45,6 +45,7 @@ public class SwapTransaction
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.SubscriptionQuota;
     public string? InvoiceNumber { get; set; }
     public string? BillSentChannels { get; set; }
+    public string? SwapOtp { get; set; }
     public string? Notes { get; set; }
 }
 

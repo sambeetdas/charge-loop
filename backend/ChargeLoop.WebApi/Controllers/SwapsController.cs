@@ -18,16 +18,56 @@ public class SwapsController : ControllerBase
     }
 
     [HttpGet("validate-driver")]
-    public async Task<ActionResult<DriverValidationDto>> ValidateDriver([FromQuery] string query, [FromQuery] string? reserveOtp = null)
+    public async Task<ActionResult<DriverValidationDto>> ValidateDriver([FromQuery] string query)
     {
         if (string.IsNullOrWhiteSpace(query))
             return BadRequest(new { Error = "Driver phone, name, or ID is required." });
 
-        var validation = await _swapService.ValidateDriverForSwapAsync(query, reserveOtp);
+        var validation = await _swapService.ValidateDriverForSwapAsync(query);
         if (validation == null)
             return NotFound(new { Error = "No matching driver found." });
 
         return Ok(validation);
+    }
+
+    [HttpGet("validate-otp")]
+    public async Task<ActionResult<SwapResponse>> ValidateSwapOtp([FromQuery] string otpCode, [FromQuery] Guid? driverId = null)
+    {
+        try
+        {
+            var result = await _swapService.ValidateSwapOtpAsync(driverId, otpCode);
+            return Ok(result);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("{swapId:guid}/regenerate-otp")]
+    public async Task<ActionResult<SwapResponse>> RegenerateSwapOtp(Guid swapId)
+    {
+        try
+        {
+            var result = await _swapService.RegenerateSwapOtpAsync(swapId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpGet("pending/{driverId:guid}")]
+    public async Task<ActionResult<SwapResponse>> GetPendingSwap(Guid driverId)
+    {
+        var pending = await _swapService.GetPendingSwapForDriverAsync(driverId);
+        if (pending == null) return NotFound(new { Message = "No pending swap request" });
+        return Ok(pending);
     }
 
     [HttpPost("initiate")]

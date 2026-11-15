@@ -116,7 +116,8 @@ public record InitiateSwapRequest(
     Guid StationId,
     Guid PartnerId,
     string DepletedBatterySerial,
-    string IssuedBatterySerial
+    string IssuedBatterySerial,
+    PaymentMethod PaymentMethod = PaymentMethod.Cash
 );
 
 public record ConfirmSwapRequest(Guid SwapId, PaymentMethod PaymentMethod, decimal? CashAmount = null, Guid? CorrelationId = null);
@@ -138,7 +139,8 @@ public record SwapResponse(
     string Message,
     string? InvoiceNumber = null,
     string? BillSentChannels = null,
-    PaymentMethod? PaymentMethod = null
+    PaymentMethod? PaymentMethod = null,
+    string? SwapOtp = null
 );
 
 public record PublishBillRequest(List<string> Channels, string? RecipientEmail = null, string? RecipientPhone = null);

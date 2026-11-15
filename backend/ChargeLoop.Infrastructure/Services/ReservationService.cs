@@ -44,14 +44,12 @@ public class ReservationService : IReservationService
             throw new InvalidOperationException("No charged batteries available at this station right now.");
         }
 
-        var otpCode = Random.Shared.Next(100000, 999999).ToString();
-
         var reservation = new Reservation
         {
             DriverId = request.DriverId,
             StationId = request.StationId,
             ReservedBatteryId = battery?.Id,
-            OtpCode = otpCode,
+            OtpCode = string.Empty,
             ReservedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddHours(2),
             Status = ReservationStatus.Active

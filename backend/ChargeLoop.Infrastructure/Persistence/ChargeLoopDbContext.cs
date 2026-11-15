@@ -156,6 +156,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.PaymentMethod).HasColumnName("payment_method");
             b.Property(x => x.InvoiceNumber).HasColumnName("invoice_number");
             b.Property(x => x.BillSentChannels).HasColumnName("bill_sent_channels");
+            b.Property(x => x.SwapOtp).HasColumnName("swap_otp");
             b.Property(x => x.Notes).HasColumnName("notes");
         });
 

@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS swap_transactions (
     total_amount NUMERIC(10, 2) NOT NULL DEFAULT 118.00,
     partner_commission_earned NUMERIC(10, 2) NOT NULL DEFAULT 25.00,
     payment_method INT NOT NULL DEFAULT 1,
+    swap_otp VARCHAR(10),
     notes TEXT
 );
 

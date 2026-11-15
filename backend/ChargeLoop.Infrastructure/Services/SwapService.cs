@@ -23,7 +23,7 @@ public class SwapService : ISwapService
         _notificationService = notificationService;
     }
 
-    public async Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query, string? reserveOtp = null)
+    public async Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query)
     {
         if (string.IsNullOrWhiteSpace(query)) return null;
         var q = query.Trim();
@@ -70,39 +70,16 @@ public class SwapService : ISwapService
             .FirstOrDefaultAsync();
 
         string? reservedStationName = null;
-        bool hasActiveReservation = activeReservation != null;
-        bool reserveOtpVerified = false;
-        var eligible = driver.KycStatus == KycStatus.Verified || remainingSwaps > 0 || driver.WalletBalance >= 0;
-        var msg = driver.KycStatus == KycStatus.Verified
-            ? "Driver verified & cleared for battery swap."
-            : "Driver found (KYC Pending — cash swap allowed).";
-
         if (activeReservation != null)
         {
             var resStation = await _context.Stations.AsNoTracking().FirstOrDefaultAsync(s => s.Id == activeReservation.StationId);
             reservedStationName = resStation?.Name ?? "Reserved Station";
+        }
 
-            if (string.IsNullOrWhiteSpace(reserveOtp))
-            {
-                eligible = false;
-                msg = $"Driver has an active reservation at {reservedStationName}. Enter Reserve OTP to unlock swap.";
-            }
-            else if (string.Equals(activeReservation.OtpCode, reserveOtp.Trim(), StringComparison.Ordinal))
-            {
-                reserveOtpVerified = true;
-                msg = $"Driver & Reserve OTP verified for {reservedStationName}!";
-            }
-            else
-            {
-                eligible = false;
-                msg = $"Invalid Reserve OTP for {reservedStationName}.";
-            }
-        }
-        else if (!string.IsNullOrWhiteSpace(reserveOtp))
-        {
-            eligible = false;
-            msg = "Driver has no active reservation matching this Reserve OTP.";
-        }
+        var eligible = driver.KycStatus == KycStatus.Verified || remainingSwaps > 0 || driver.WalletBalance >= 0;
+        var msg = driver.KycStatus == KycStatus.Verified
+            ? "Driver verified. Proceed to scan battery & verify Swap OTP."
+            : "Driver found (KYC Pending — cash swap allowed). Verify Swap OTP in Step 3.";
 
         return new DriverValidationDto(
             driver.Id,
@@ -117,9 +94,9 @@ public class SwapService : ISwapService
             remainingSwaps,
             eligible,
             msg,
-            hasActiveReservation,
+            activeReservation != null,
             reservedStationName,
-            reserveOtpVerified
+            false
         );
     }
 
@@ -176,6 +153,8 @@ public class SwapService : ISwapService
             throw new InvalidOperationException($"Issued battery has insufficient charge ({issued.StateOfChargePercent}%). Minimum required is 90%.");
         }
 
+        var swapOtp = Random.Shared.Next(100000, 999999).ToString();
+
         var swap = new SwapTransaction
         {
             DriverId = request.DriverId,
@@ -189,15 +168,71 @@ public class SwapService : ISwapService
             TaxAmount = 18.00m,
             TotalAmount = 118.00m,
             PartnerCommissionEarned = 25.00m,
+            PaymentMethod = request.PaymentMethod,
+            SwapOtp = swapOtp,
             Status = SwapStatus.Validated,
             InitiatedAt = DateTime.UtcNow
         };
         await _context.Swaps.AddAsync(swap);
         await _context.SaveChangesAsync();
 
-        var response = MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued.SerialNumber, "Swap validated successfully. Ready for battery exchange.");
+        var response = MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued.SerialNumber, "Swap request created! Share Swap OTP with the partner.");
         await _notificationService.NotifySwapStatusChangedAsync(request.DriverId, response);
         return response;
+    }
+
+    public async Task<SwapResponse> RegenerateSwapOtpAsync(Guid swapId)
+    {
+        var swap = await _context.Swaps.FindAsync(swapId)
+            ?? throw new KeyNotFoundException("Swap request not found.");
+
+        if (swap.Status == SwapStatus.Completed || swap.Status == SwapStatus.Failed)
+            throw new InvalidOperationException("Cannot regenerate OTP for a completed or failed swap.");
+
+        swap.SwapOtp = Random.Shared.Next(100000, 999999).ToString();
+        await _context.SaveChangesAsync();
+
+        var depleted = swap.DepletedBatteryId.HasValue ? await _context.Batteries.FindAsync(swap.DepletedBatteryId.Value) : null;
+        var issued = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
+        return MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "New Swap OTP generated.");
+    }
+
+    public async Task<SwapResponse> ValidateSwapOtpAsync(Guid? driverId, string otpCode)
+    {
+        if (string.IsNullOrWhiteSpace(otpCode))
+            throw new ArgumentException("Swap OTP is required.");
+
+        var code = otpCode.Trim();
+        var query = _context.Swaps
+            .AsNoTracking()
+            .Where(s => (s.Status == SwapStatus.Validated || s.Status == SwapStatus.Initiated) && s.SwapOtp == code);
+
+        if (driverId.HasValue && driverId.Value != Guid.Empty)
+        {
+            query = query.Where(s => s.DriverId == driverId.Value);
+        }
+
+        var swap = await query.OrderByDescending(s => s.InitiatedAt).FirstOrDefaultAsync()
+            ?? throw new InvalidOperationException("Invalid or expired Swap OTP.");
+
+        var depleted = swap.DepletedBatteryId.HasValue ? await _context.Batteries.FindAsync(swap.DepletedBatteryId.Value) : null;
+        var issued = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
+        return MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "Swap OTP verified! Ready to collect payment & confirm swap.");
+    }
+
+    public async Task<SwapResponse?> GetPendingSwapForDriverAsync(Guid driverId)
+    {
+        var swap = await _context.Swaps
+            .AsNoTracking()
+            .Where(s => s.DriverId == driverId && (s.Status == SwapStatus.Validated || s.Status == SwapStatus.Initiated))
+            .OrderByDescending(s => s.InitiatedAt)
+            .FirstOrDefaultAsync();
+
+        if (swap == null) return null;
+
+        var depleted = swap.DepletedBatteryId.HasValue ? await _context.Batteries.FindAsync(swap.DepletedBatteryId.Value) : null;
+        var issued = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
+        return MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "Pending vendor confirmation.");
     }
 
     public async Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request)
@@ -434,6 +469,7 @@ public class SwapService : ISwapService
             message,
             s.InvoiceNumber,
             s.BillSentChannels,
-            s.PaymentMethod
+            s.PaymentMethod,
+            s.SwapOtp
         );
 }

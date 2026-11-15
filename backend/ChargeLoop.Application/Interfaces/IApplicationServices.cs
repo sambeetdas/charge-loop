@@ -35,8 +35,11 @@ public interface IStationService
 
 public interface ISwapService
 {
-    Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query, string? reserveOtp = null);
+    Task<DriverValidationDto?> ValidateDriverForSwapAsync(string query);
     Task<SwapResponse> InitiateSwapAsync(InitiateSwapRequest request);
+    Task<SwapResponse> RegenerateSwapOtpAsync(Guid swapId);
+    Task<SwapResponse> ValidateSwapOtpAsync(Guid? driverId, string otpCode);
+    Task<SwapResponse?> GetPendingSwapForDriverAsync(Guid driverId);
     Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request);
     Task<PublishBillResponse> PublishSwapBillAsync(Guid swapId, PublishBillRequest request);
     Task<IReadOnlyList<SwapResponse>> GetDriverSwapHistoryAsync(Guid driverId);

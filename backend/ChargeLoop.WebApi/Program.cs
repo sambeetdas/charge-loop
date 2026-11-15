@@ -76,6 +76,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE partners ADD COLUMN IF NOT EXISTS email VARCHAR(150);
             ALTER TABLE batteries ADD COLUMN IF NOT EXISTS is_visible_to_driver BOOLEAN NOT NULL DEFAULT TRUE;
             ALTER TABLE reservations ADD COLUMN IF NOT EXISTS otp_code VARCHAR(10) NOT NULL DEFAULT '';
+            ALTER TABLE swap_transactions ADD COLUMN IF NOT EXISTS swap_otp VARCHAR(10);
             ALTER TABLE swap_transactions ALTER COLUMN depleted_battery_id DROP NOT NULL;
             ALTER TABLE partners ALTER COLUMN wallet_balance SET DEFAULT 0.00;
             ALTER TABLE drivers ALTER COLUMN wallet_balance SET DEFAULT 0.00;

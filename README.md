@@ -161,16 +161,18 @@ flutter run -d chrome
 3. **Partner Profile & Phone Number Change (OTP)**:
    - Edit Full Name, Business Name, Email, UPI ID, and Bank Account Number (`PUT /api/v1/auth/vendor/profile/{vendorId}`).
    - Change phone number securely with 2-step OTP verification (`POST /api/v1/auth/send-otp` &rarr; `POST /api/v1/auth/vendor/profile/{vendorId}/change-phone`).
-4. **Step 1 — Validate Driver & Reserve OTP Before Swap**:
-   - Enter Driver phone, name, or ID **and** the **Driver's Reserve OTP** (if the driver reserved a station) and click **Validate** (`GET /api/v1/swaps/validate-driver?query=...&reserveOtp=...`).
-   - If the driver has an active reservation, the **Swap** button remains **locked** until the matching 6-digit Reserve OTP is entered and verified.
+4. **Step 1 — Validate Driver Before Swap**:
+   - Enter Driver phone, name, or ID and click **Validate** (`GET /api/v1/swaps/validate-driver?query=...`).
 5. **Step 2 — 2-Step Battery QR Scan**:
    - Scan/enter the Driver's **Depleted Battery QR** (automatically prefilled if the driver already holds a battery, or left **empty** if it is the driver's first battery pickup) and select an **Active** charged battery from the store's inventory.
-6. **Step 3 — Collect Payment & Execute Swap**:
-   - Collect **Cash** (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`). Wallet, Card, and UPI show a Work-In-Progress notice.
+6. **Step 3 — Verify Driver's Swap OTP**:
+   - Enter the Driver's **6-digit Swap OTP** (from the Driver's Scan & Pay swap request) and click **Verify OTP** (`GET /api/v1/swaps/validate-otp?otpCode=...&driverId=...`).
+7. **Step 4 — Collect Payment & Execute Swap**:
+   - On OTP validation, **Cash Collected (₹)** (`₹118.00`) is displayed with the complete **Fare Breakup** (`Base Fee ₹100.00 + GST 18% ₹18.00 = ₹118.00`; future online payment transaction details will also appear here).
+   - Click **Confirm Swap & Collect Payment** (`POST /api/v1/swaps/confirm`) to complete the Driver's swap request.
    - Partner commission (**₹25.00**) is credited instantly to the Partner Commission Wallet and logged in `transactions` + `audit_logs`.
    - Any active reservation for that driver at the station is automatically marked `Fulfilled`, and the returned depleted battery (if any) moves to `Charging` at the store.
-7. **Step 4 — Publish Bill**:
+8. **Step 5 — Publish Bill**:
    - Dispatch/record the GST invoice to the Driver across **WhatsApp**, **SMS**, and **Email** (`POST /api/v1/swaps/{swapId}/publish-bill`).
 
 ---
@@ -181,21 +183,18 @@ flutter run -d chrome
    - Select **Driver** on the Sign In / Sign Up screen, enter a mobile number, and tap **Send OTP to Phone** (`POST /api/v1/auth/send-otp`).
    - Enter the 6-digit OTP (plus optional Name, Email for invoices, and Referral Code) and tap **Verify & Sign In** (`POST /api/v1/auth/verify-otp`) to receive a JWT token.
    - Initial Driver Wallet starts at **₹0.00**.
-2. **Station Locator, Pre-Reserve Battery Preview & 2-Hour Reservation OTP**:
+2. **Station Locator, Pre-Reserve Battery Preview & 2-Hour Reservation**:
    - Browse nearby swap hubs (`POST /api/v1/stations/nearby`) with live **Active (Charged)** and **Charging** counts.
    - Tap **🔋 Batteries** on any station card to preview **Active** batteries at that station **before** reserving (`GET /api/v1/stations/{stationId}/batteries`).
-   - Tap **Reserve** (`POST /api/v1/reservations/hold`) to hold an Active battery and receive a **6-digit Reservation OTP** displayed on screen with a live **2-hour countdown**.
-   - After **2 hours**, the reservation and OTP automatically expire and disappear so you can reserve again; you can also tap **Reverse / Cancel Reserve** (`DELETE /api/v1/reservations/{reservationId}`) at any time.
-3. **Scan & Pay (Reserved Station Only & Itemized Fare Breakup)**:
+   - Tap **Reserve** (`POST /api/v1/reservations/hold`) to hold an Active battery for **2 hours** with a live countdown (no OTP on Reserve). After **2 hours**, the reservation automatically expires so you can reserve again; you can also tap **Reverse Reserve** (`DELETE /api/v1/reservations/{reservationId}`) at any time.
+3. **Scan & Pay (Swap Request + Swap OTP & Itemized Fare Breakup)**:
    - In **Scan Station & Battery QR**, only your active **Reserved Station** is shown.
    - **First Battery vs Replacement**:
      - First battery pickup: the depleted battery field stays **empty**.
      - Replacement swap: the depleted battery field automatically displays your currently assigned battery QR/Serial.
-   - Select an Active battery to receive, review the **read-only** Cash amount (**₹118.00**) with its complete **Fare Breakup**:
-     - **Base Swap & Energy Fee**: `₹100.00`
-     - **GST (18% on ₹100.00)**: `₹18.00`
-     - **Total Payable (Cash)**: `₹118.00`
-   - Tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`) to complete the swap and view your GST receipt.
+   - Select an Active battery to receive, review the **read-only** Cash amount (**₹118.00**) with its complete **Fare Breakup** (**Base Swap & Energy Fee** `₹100.00` + **GST 18%** `₹18.00` = `₹118.00`), and tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate`).
+   - This submits a **Swap Request** (Pending Vendor Confirmation) and generates a **6-digit Swap OTP** on screen. You can tap **🔄 Regenerate OTP** (`POST /api/v1/swaps/{swapId}/regenerate-otp`) at any time before the vendor confirms.
+   - Once the Vendor verifies your Swap OTP and clicks **Confirm Swap**, your request is marked **Completed**.
 4. **Wallet, Cash Top-Up & Referral**:
    - View wallet balance and recent transactions (`GET /api/v1/wallet/balance/{driverId}?accountType=0`), record a **Cash Top-Up** (`POST /api/v1/wallet/topup` with `CorrelationId` idempotency), or claim a friend's `CL-...` referral code (`POST /api/v1/auth/referral/claim`) for **₹50** bonus.
 5. **Billing & Swap History**:
