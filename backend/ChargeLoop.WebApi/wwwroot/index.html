@@ -1624,10 +1624,16 @@ async function refreshVendorViews() {
   document.getElementById('editVendorUpi').value = state.vendor.upiId || '';
   document.getElementById('editVendorBank').value = state.vendor.bankAccountNumber || '';
 
+  const prevDeskSid = document.getElementById('vendorDeskStationSelect').value;
+  const prevRegSid = document.getElementById('regBatStationSelect').value;
   const opts = state.vendorStations.map(s => `<option value="${s.id}">${s.name} (${s.availableChargedBatteries} charged)</option>`).join('')
     || '<option value="">No stores yet — add one in Stores tab</option>';
-  document.getElementById('vendorDeskStationSelect').innerHTML = opts;
-  document.getElementById('regBatStationSelect').innerHTML = opts;
+  const deskSel = document.getElementById('vendorDeskStationSelect');
+  const regSel = document.getElementById('regBatStationSelect');
+  deskSel.innerHTML = opts;
+  regSel.innerHTML = opts;
+  if (prevDeskSid && state.vendorStations.some(s => s.id === prevDeskSid)) deskSel.value = prevDeskSid;
+  if (prevRegSid && state.vendorStations.some(s => s.id === prevRegSid)) regSel.value = prevRegSid;
 
   document.getElementById('vendorStoresList').innerHTML = state.vendorStations.map(s => `
     <div class="card row-between">

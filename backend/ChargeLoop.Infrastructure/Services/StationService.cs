@@ -86,8 +86,7 @@ public class StationService : IStationService
         }
 
         return await query
-            .OrderByDescending(b => b.Status == BatteryStatus.AvailableCharged)
-            .ThenByDescending(b => b.StateOfChargePercent)
+            .OrderBy(b => b.SerialNumber)
             .Select(b => new BatteryDto(
                 b.Id,
                 b.SerialNumber,
