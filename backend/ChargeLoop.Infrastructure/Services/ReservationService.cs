@@ -37,6 +37,11 @@ public class ReservationService : IReservationService
         var battery = await _context.Batteries
             .FirstOrDefaultAsync(b => b.CurrentStationId == station.Id && b.Status == BatteryStatus.AvailableCharged);
 
+        if (battery == null && station.AvailableChargedBatteriesCount <= 0)
+        {
+            throw new InvalidOperationException("No charged batteries available at this station right now.");
+        }
+
         var reservation = new Reservation
         {
             DriverId = request.DriverId,

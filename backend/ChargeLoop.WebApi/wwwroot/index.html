@@ -1038,7 +1038,7 @@ async function loadStationChargedBatteries() {
 
 async function reserveAtStation(stationId) {
   try {
-    await apiFetch('/reservations', {
+    await apiFetch('/reservations/hold', {
       method: 'POST',
       body: JSON.stringify({ driverId: state.driver.id, stationId })
     });
