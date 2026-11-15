@@ -1,5 +1,6 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChargeLoop.WebApi.Controllers;
@@ -57,6 +58,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPost("referral/claim")]
     public async Task<ActionResult<ReferralResponse>> ClaimReferral([FromBody] ClaimReferralRequest request)
     {
@@ -75,6 +77,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpGet("profile/{driverId:guid}")]
     public async Task<ActionResult<DriverDetailDto>> GetProfile(Guid driverId)
     {
@@ -90,6 +93,7 @@ public class AuthController : ControllerBase
         return Ok(drivers);
     }
 
+    [Authorize]
     [HttpPost("kyc")]
     public async Task<ActionResult> SubmitKyc([FromBody] KycSubmissionRequest request)
     {
@@ -98,6 +102,7 @@ public class AuthController : ControllerBase
         return Ok(new { Message = "KYC verified successfully" });
     }
 
+    [Authorize]
     [HttpPost("vehicle")]
     public async Task<ActionResult> LinkVehicle([FromBody] VehicleLinkRequest request)
     {
@@ -118,6 +123,7 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize]
     [HttpGet("vendor/profile/{vendorId:guid}")]
     public async Task<ActionResult<VendorProfileDto>> GetVendorProfile(Guid vendorId)
     {

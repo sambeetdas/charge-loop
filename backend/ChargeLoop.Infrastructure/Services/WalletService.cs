@@ -46,6 +46,20 @@ public class WalletService : IWalletService
 
     public async Task<WalletBalanceResponse> TopUpAsync(WalletTopUpRequest request)
     {
+        var correlationId = request.CorrelationId ?? Guid.NewGuid();
+
+        // Idempotency check by CorrelationId
+        if (request.CorrelationId.HasValue)
+        {
+            var existingTx = await _context.Transactions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.CorrelationId == request.CorrelationId.Value);
+            if (existingTx != null)
+            {
+                return await GetBalanceDetailsAsync(request.AccountId, request.AccountType);
+            }
+        }
+
         decimal newBalance = 0.00m;
         if (request.AccountType == WalletAccountType.Driver)
         {
@@ -72,11 +86,35 @@ public class WalletService : IWalletService
             AccountType = request.AccountType,
             Amount = request.Amount,
             Type = WalletTransactionType.Credit,
-            Reason = $"Top-up via reference {request.PaymentReference}",
+            Reason = $"Cash Top-up ({request.PaymentReference})",
             ReferenceId = request.PaymentReference,
             Timestamp = DateTime.UtcNow
         };
         await _context.WalletTransactions.AddAsync(transaction);
+
+        await _context.Transactions.AddAsync(new PaymentTransaction
+        {
+            CorrelationId = correlationId,
+            UserId = request.AccountId,
+            UserRole = request.AccountType.ToString(),
+            TransactionType = "WalletCashTopUp",
+            PaymentMode = "CASH",
+            Amount = request.Amount,
+            Status = "Completed",
+            Notes = $"Ref: {request.PaymentReference}",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.AuditLogs.AddAsync(new AuditLog
+        {
+            CorrelationId = correlationId,
+            EventName = "WALLET_CASH_TOPUP",
+            ActorId = request.AccountId,
+            ActorRole = request.AccountType.ToString(),
+            Details = $"Amount={request.Amount}, Ref={request.PaymentReference}",
+            CreatedAt = DateTime.UtcNow
+        });
+
         await _context.SaveChangesAsync();
 
         var recent = await _context.WalletTransactions

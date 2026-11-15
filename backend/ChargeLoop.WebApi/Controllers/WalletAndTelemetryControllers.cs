@@ -1,11 +1,13 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
 using ChargeLoop.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChargeLoop.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/wallet")]
 public class WalletController : ControllerBase
 {
@@ -33,7 +35,8 @@ public class WalletController : ControllerBase
     [HttpPost("topup")]
     public async Task<ActionResult<WalletBalanceResponse>> TopUp([FromBody] WalletTopUpRequest request)
     {
-        var response = await _walletService.TopUpAsync(request);
+        var corrId = request.CorrelationId ?? (HttpContext.Items["CorrelationId"] as Guid?);
+        var response = await _walletService.TopUpAsync(request with { CorrelationId = corrId });
         return Ok(response);
     }
 }

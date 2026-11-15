@@ -9,10 +9,14 @@ namespace ChargeLoop.Infrastructure.Services;
 public class VendorService : IVendorService
 {
     private readonly ChargeLoopDbContext _context;
+    private readonly IJwtTokenService? _jwtTokenService;
+    private readonly ITransactionAuditService? _auditService;
 
-    public VendorService(ChargeLoopDbContext context)
+    public VendorService(ChargeLoopDbContext context, IJwtTokenService? jwtTokenService = null, ITransactionAuditService? auditService = null)
     {
         _context = context;
+        _jwtTokenService = jwtTokenService;
+        _auditService = auditService;
     }
 
     public async Task<VendorAuthResponse> AuthenticateWithPhoneAsync(VendorAuthRequest request)
@@ -49,7 +53,12 @@ public class VendorService : IVendorService
             }
         }
 
-        var token = $"ey-chargeloop-vendor-jwt-{existing.Id}";
+        var token = _jwtTokenService?.GenerateToken(existing.Id, existing.PhoneNumber, "Vendor")
+            ?? $"ey-chargeloop-vendor-jwt-{existing.Id}";
+        if (_auditService != null)
+        {
+            await _auditService.LogEventAsync(Guid.NewGuid(), "VENDOR_AUTHENTICATED", existing.Id, "Vendor", $"Phone={existing.PhoneNumber}");
+        }
         return new VendorAuthResponse(
             existing.Id,
             existing.PhoneNumber,

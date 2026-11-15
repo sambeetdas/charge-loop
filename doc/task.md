@@ -62,26 +62,32 @@
 ## 4. Phase 4: Partner & Driver Workflow Enhancements (PLANNED 📋)
 
 ### 4.1 Partner (Vendor) Workflow Tasks
-- [ ] **TASK-PA07 (Driver Validation before Swap)**: Add `GET /api/v1/swaps/validate-driver?phoneOrId=...` endpoint and Partner Swap Desk UI to validate Driver KYC, active vehicle, currently mounted battery, subscription pass, and wallet balance before unlocking the Swap button.
-- [ ] **TASK-PA08 (Partner 2-Step Battery QR Scan)**: Add Partner-driven Swap workflow: (1) Scan Driver's old battery QR code for disconnection, and (2) Scan new charged station battery QR code for assignment to the driver.
-- [ ] **TASK-PA09 (Multi-Method Payment Initiation)**: Extend `PaymentMethod` enum and Swap confirmation flow to support **Card (Credit/Debit)**, **UPI**, **Cash**, **Wallet**, and **Weekly Subscription Quota**.
-- [ ] **TASK-PA10 (Register Battery with Store Details)**: Add `POST /api/v1/stations/{stationId}/batteries` endpoint and Partner UI form to register individual battery packs (Serial Number, Model Type, SOC %, SOH %) linked to a specific Store/Station.
-- [ ] **TASK-PA11 (Multi-Channel Bill Publishing)**: Generate GST Invoice numbers (`INV-YYYYMMDD-XXXX`) and implement `POST /api/v1/swaps/{swapId}/publish-bill` to dispatch bills to the Driver via **WhatsApp**, **SMS**, and **Email**.
+- [x] **TASK-PA07 (Driver Validation before Swap)**: Add `GET /api/v1/swaps/validate-driver?query=...` endpoint and Partner Swap Desk UI to validate Driver KYC, active vehicle, currently mounted battery, subscription pass, and wallet balance before unlocking the Swap button.
+- [x] **TASK-PA08 (Partner 2-Step Battery QR Scan)**: Add Partner-driven Swap workflow: (1) Scan Driver's old battery QR code for disconnection, and (2) Scan new charged station battery QR code for assignment to the driver.
+- [x] **TASK-PA09 (Cash-First Payment & WIP Online Gate)**: Support **Cash** (with manual Cash amount input), **Wallet**, and **Weekly Subscription Quota**, while showing *"Work in progress to integrate online payment. Please wait for few days."* for Card/UPI.
+- [x] **TASK-PA10 (Register Battery with Store Details)**: Add `POST /api/v1/stations/{stationId}/batteries` endpoint and Partner UI form to register individual battery packs (Serial Number, Model Type, SOC %, SOH %) linked to a specific Store/Station.
+- [x] **TASK-PA11 (Multi-Channel Bill Publishing)**: Generate GST Invoice numbers (`INV-CL-YYYYMMDD-XXXXXX`) and implement `POST /api/v1/swaps/{swapId}/publish-bill` to record bill dispatch channels.
 
 ### 4.2 Driver Workflow Tasks
-- [ ] **TASK-DR01 (Phone Registration with OTP Verification)**: Implement 2-step OTP flow (`POST /api/v1/auth/send-otp` and `POST /api/v1/auth/verify-otp`) with 6-digit OTP verification screen during Driver registration/sign-in.
-- [ ] **TASK-DR02 (Billing History & Invoice Viewer)**: Upgrade Driver Swap History into a full Billing History view with invoice numbers, tax breakdown, payment mode badges, and downloadable/shareable bills.
-- [ ] **TASK-DR03 (Scan & Pay + Credit/Debit Card Support)**: Add QR Scan & Pay workflow and Credit/Debit Card payment processor (Card number, expiry, CVV) for both wallet top-ups and direct swap payments.
-- [ ] **TASK-DR04 (Refer a Friend Program)**: Add unique referral code generation per driver (`referral_code`, `referred_by_code` in `drivers` table), `POST /api/v1/auth/referral/apply` endpoint, and "Refer & Earn ₹50" UI card in the Driver app.
+- [x] **TASK-DR01 (Phone Registration with OTP Verification)**: Implement 2-step OTP flow (`POST /api/v1/auth/send-otp` and `POST /api/v1/auth/verify-otp`) with 6-digit demo OTP shown in UI.
+- [x] **TASK-DR02 (Billing History & Invoice Viewer)**: Upgrade Driver Swap History into a full Billing History view with invoice numbers, tax breakdown, payment mode badges, and viewable bills.
+- [x] **TASK-DR03 (Scan & Pay + Cash Input)**: Add QR Scan & Pay workflow with Cash amount input and online payment WIP notice.
+- [x] **TASK-DR04 (Refer a Friend Program)**: Add unique referral code generation per driver (`referral_code`, `referred_by_code` in `drivers` table), `POST /api/v1/auth/referral/claim` endpoint, and "Refer & Earn ₹50" UI card in Web & Mobile.
 
 ---
 
-## 5. Phase 5: Production Hardware & Third-Party SDKs (ROADMAP 🟡)
+## 5. Phase 5: Production Hardening & Backlog
 
+### 5.1 Completed Security, Ledger & Mobile Parity
+- [x] **TASK-SEC01 (JWT Authentication)**: Issue signed HMAC-SHA256 JWT tokens on Driver & Partner sign-in, enforce `JwtBearer` authentication in `Program.cs`, and attach `Authorization: Bearer <token>` in Web & Flutter clients.
+- [x] **TASK-LEDGER01 (Unified `transactions` Table + Idempotency)**: Create `transactions` table in PostgreSQL keyed by unique `correlation_id` (`Guid`) so every Cash swap & Cash top-up is idempotently recorded.
+- [x] **TASK-AUDIT01 (End-to-End `audit_logs` Table)**: Add `CorrelationAndAuditMiddleware` (`X-Correlation-Id` `Guid`) and `audit_logs` table tracking every `/api/*` request, duration, actor, and domain event.
+- [x] **TASK-MOB01 (Flutter Mobile Parity)**: Wire 2-step OTP login into `auth_screen.dart`, Cash top-up + online WIP notice into `wallet_screen.dart`, and Partner Swap Desk + Register Battery into `vendor_home_screen.dart`.
+
+### 5.2 Backlog (Next Integrations)
+- [ ] **TASK-B01 (Real OTP SMS Gateway)**: Replace demo OTP UI display with actual SMS delivery via MSG91 / Gupshup / Twilio (DLT templates).
+- [ ] **TASK-B02 (Online Payment Gateway)**: Integrate Razorpay / Cashfree / Stripe for Card, UPI Intent, and online Wallet top-ups with webhook signature verification.
+- [ ] **TASK-B03 (Real Bill Dispatch)**: Connect `PublishSwapBillAsync` to WhatsApp Business API, SMS, and SMTP/SendGrid email delivery.
 - [ ] **TASK-H01**: Integrate `mobile_scanner` plugin in Flutter to scan physical QR codes and battery barcodes using native camera.
 - [ ] **TASK-H02**: Integrate `google_maps_flutter` with Google Maps API key for live map tile rendering and marker clustering.
 - [ ] **TASK-H03**: Implement GPS location permissions (`geolocator`) to sort stations by real GPS coordinates.
-- [ ] **TASK-S01**: Integrate Indian SMS OTP service (Gupshup / MSG91) with DLT registration templates.
-- [ ] **TASK-P01**: Integrate Razorpay / Cashfree UPI Intent SDK for in-app UPI payments.
-- [ ] **TASK-A01**: Configure iOS runner (`ios/`) with Apple Sign-in and iOS location entitlements.
-- [ ] **TASK-A02**: Configure macOS desktop target (`macos/`) for station partners and operations managers with receipt printer drivers.

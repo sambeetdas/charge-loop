@@ -623,22 +623,18 @@
       <div class="card">
         <div class="step-header"><span class="step-badge">2</span> Choose Payment Method</div>
         <div class="pay-options">
-          <div class="pay-chip active" data-pm="4" onclick="selectDriverPayMethod(4, this)">💳 Credit / Debit Card</div>
-          <div class="pay-chip" data-pm="2" onclick="selectDriverPayMethod(2, this)">📱 UPI Intent</div>
+          <div class="pay-chip active" data-pm="3" onclick="selectDriverPayMethod(3, this)">💵 Cash</div>
           <div class="pay-chip" data-pm="1" onclick="selectDriverPayMethod(1, this)">👛 ChargeLoop Wallet</div>
           <div class="pay-chip" data-pm="0" onclick="selectDriverPayMethod(0, this)">📋 Weekly Pass</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card / 📱 UPI (Online)</div>
         </div>
 
-        <div id="driverCardFields" class="card-elevated" style="margin-bottom:12px;">
-          <div class="muted" style="margin-bottom:6px;">Card Details (Visa / Mastercard / RuPay)</div>
-          <input id="driverCardNum" class="input-field" placeholder="Card Number (e.g. 4532 •••• •••• 8891)" value="4532 8810 2234 8891">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <input id="driverCardExp" class="input-field" placeholder="MM/YY" value="08/28" style="margin-bottom:0;">
-            <input id="driverCardCvv" class="input-field" type="password" placeholder="CVV" value="742" style="margin-bottom:0;">
-          </div>
+        <div id="driverCashFields" class="card-elevated" style="margin-bottom:12px;">
+          <div class="muted" style="margin-bottom:6px;">Cash Amount Paid (₹) — Tracked in Ledger</div>
+          <input id="driverCashAmount" class="input-field" type="number" value="118" placeholder="Enter Cash Amount (₹)" style="margin-bottom:0;">
         </div>
 
-        <button class="btn btn-primary" onclick="executeDriverScanAndPay()">Confirm Swap &amp; Pay (₹118)</button>
+        <button class="btn btn-primary" onclick="executeDriverScanAndPay()">Confirm Swap &amp; Record Payment</button>
       </div>
 
       <div id="driverSwapReceipt" class="card hidden"></div>
@@ -654,12 +650,12 @@
           <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(200)">+₹200</button>
           <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(500)">+₹500</button>
         </div>
-        <input id="walletTopupAmount" class="input-field" type="number" value="200" placeholder="Enter amount (₹)">
+        <input id="walletTopupAmount" class="input-field" type="number" value="200" placeholder="Enter Cash amount (₹)">
         <div class="pay-options" style="margin-bottom:10px;">
-          <div class="pay-chip active" onclick="selectTopupMode('CARD', this)">💳 Credit / Debit Card</div>
-          <div class="pay-chip" onclick="selectTopupMode('UPI', this)">📱 UPI Instant</div>
+          <div class="pay-chip active" onclick="selectTopupMode('CASH', this)">💵 Cash Top-Up</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card / 📱 UPI (Online)</div>
         </div>
-        <button class="btn btn-primary" onclick="topUpDriverWallet()">Add Money to Wallet</button>
+        <button class="btn btn-primary" onclick="topUpDriverWallet()">Record Cash Top-Up</button>
       </div>
 
       <div class="card">
@@ -756,10 +752,14 @@
       <div class="card">
         <div class="step-header"><span class="step-badge">3</span> Collect Payment &amp; Execute Swap</div>
         <div class="pay-options">
-          <div class="pay-chip active" data-vpm="4" onclick="selectVendorPayMethod(4, this)">💳 Card</div>
-          <div class="pay-chip" data-vpm="2" onclick="selectVendorPayMethod(2, this)">📱 UPI</div>
-          <div class="pay-chip" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash</div>
+          <div class="pay-chip active" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash</div>
           <div class="pay-chip" data-vpm="0" onclick="selectVendorPayMethod(0, this)">📋 Weekly Pass</div>
+          <div class="pay-chip" data-vpm="1" onclick="selectVendorPayMethod(1, this)">👛 Wallet</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card / 📱 UPI</div>
+        </div>
+        <div id="vendorCashFields" class="card-elevated" style="margin-bottom:10px;">
+          <div class="muted" style="margin-bottom:4px;">Cash Collected (₹)</div>
+          <input id="vendorCashAmount" class="input-field" type="number" value="118" placeholder="Enter Cash Amount (₹)" style="margin-bottom:0;">
         </div>
         <button id="vendorSwapBtn" class="btn btn-primary" disabled onclick="executePartnerSwap()">
           🔒 Validate Driver First to Unlock Swap
@@ -863,16 +863,21 @@
 const API = '/api/v1';
 let state = {
   role: null,
+  token: null,
   driver: null,
   vendor: null,
   stations: [],
   vendorStations: [],
-  driverPayMethod: 4,
-  topupMode: 'CARD',
-  vendorPayMethod: 4,
+  driverPayMethod: 3,
+  topupMode: 'CASH',
+  vendorPayMethod: 3,
   validatedDriver: null,
   lastVendorSwap: null
 };
+
+function showOnlinePaymentWip() {
+  showToast('Work in progress to integrate online payment. Please wait for few days.', true);
+}
 
 function showToast(msg, isError = false) {
   const el = document.getElementById('toast');
@@ -883,8 +888,18 @@ function showToast(msg, isError = false) {
 }
 
 async function apiFetch(path, options = {}) {
+  const correlationId = (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  }));
+  const authHeader = state.token ? { 'Authorization': `Bearer ${state.token}` } : {};
   const res = await fetch(API + path, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Correlation-Id': correlationId,
+      ...authHeader,
+      ...(options.headers || {})
+    },
     ...options
   });
   const text = await res.text();
@@ -960,6 +975,7 @@ async function verifyDriverOtp() {
       method: 'POST',
       body: JSON.stringify({ phoneNumber, otpCode, fullName, email, referralCode })
     });
+    state.token = auth.token;
     await enterDriverApp(auth.driverId);
   } catch (e) { showToast(e.message, true); }
 }
@@ -970,6 +986,7 @@ async function quickSignInDriver(phoneNumber, fullName) {
       method: 'POST',
       body: JSON.stringify({ phoneNumber, fullName, languageCode: 'en' })
     });
+    state.token = auth.token;
     await enterDriverApp(auth.driverId);
   } catch (e) { showToast(e.message, true); }
 }
@@ -1061,7 +1078,7 @@ function selectDriverPayMethod(pm, el) {
   state.driverPayMethod = pm;
   document.querySelectorAll('#view-driver-scan .pay-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('driverCardFields').classList.toggle('hidden', pm !== 4);
+  document.getElementById('driverCashFields').classList.toggle('hidden', pm !== 3);
 }
 
 async function executeDriverScanAndPay() {
@@ -1070,6 +1087,7 @@ async function executeDriverScanAndPay() {
   const partnerId = sel.options[sel.selectedIndex]?.dataset.partner;
   const depletedBatterySerial = document.getElementById('scanDepletedSerial').value.trim() || state.driver.activeBattery?.serialNumber || 'BAT-LFP-1001';
   const issuedBatterySerial = document.getElementById('scanIssuedSelect').value;
+  const cashAmount = state.driverPayMethod === 3 ? Number(document.getElementById('driverCashAmount').value || 118) : null;
 
   try {
     const init = await apiFetch('/swaps/initiate', {
@@ -1084,7 +1102,12 @@ async function executeDriverScanAndPay() {
     });
     const done = await apiFetch('/swaps/confirm', {
       method: 'POST',
-      body: JSON.stringify({ swapId: init.swapId, paymentMethod: state.driverPayMethod })
+      body: JSON.stringify({
+        swapId: init.swapId,
+        paymentMethod: state.driverPayMethod,
+        cashAmount,
+        correlationId: crypto.randomUUID()
+      })
     });
     const box = document.getElementById('driverSwapReceipt');
     box.classList.remove('hidden');
@@ -1118,7 +1141,8 @@ async function topUpDriverWallet() {
         accountId: state.driver.id,
         accountType: 0,
         amount,
-        paymentReference: `${state.topupMode}-${Date.now()}`
+        paymentReference: `${state.topupMode}-${Date.now()}`,
+        correlationId: crypto.randomUUID()
       })
     });
     await refreshDriverViews();
@@ -1269,6 +1293,7 @@ async function quickSignInVendor(phoneNumber, fullName = null, businessName = nu
       method: 'POST',
       body: JSON.stringify({ phoneNumber, fullName, businessName })
     });
+    state.token = auth.token;
     state.role = 'vendor';
     state.vendor = await apiFetch(`/auth/vendor/profile/${auth.vendorId}`);
     document.getElementById('view-auth').classList.add('hidden');
@@ -1357,6 +1382,7 @@ function selectVendorPayMethod(pm, el) {
   state.vendorPayMethod = pm;
   document.querySelectorAll('#view-vendor-desk .pay-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('vendorCashFields').classList.toggle('hidden', pm !== 3);
 }
 
 async function executePartnerSwap() {
@@ -1365,6 +1391,7 @@ async function executePartnerSwap() {
   if (!stationId) return showToast('Add a store first in Stores tab', true);
   const depletedBatterySerial = document.getElementById('vendorDepletedQr').value.trim() || 'BAT-LFP-1001';
   const issuedBatterySerial = document.getElementById('vendorIssuedQrSelect').value;
+  const cashAmount = state.vendorPayMethod === 3 ? Number(document.getElementById('vendorCashAmount').value || 118) : null;
 
   try {
     const init = await apiFetch('/swaps/initiate', {
@@ -1379,7 +1406,12 @@ async function executePartnerSwap() {
     });
     const done = await apiFetch('/swaps/confirm', {
       method: 'POST',
-      body: JSON.stringify({ swapId: init.swapId, paymentMethod: state.vendorPayMethod })
+      body: JSON.stringify({
+        swapId: init.swapId,
+        paymentMethod: state.vendorPayMethod,
+        cashAmount,
+        correlationId: crypto.randomUUID()
+      })
     });
     state.lastVendorSwap = done;
     document.getElementById('vendorBillCard').classList.remove('hidden');
@@ -1490,7 +1522,7 @@ function handleHeaderAction() {
 }
 
 function signOut() {
-  state = { ...state, role: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null };
+  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null };
   document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-auth').classList.remove('hidden');
   document.getElementById('navDriver').classList.add('hidden');

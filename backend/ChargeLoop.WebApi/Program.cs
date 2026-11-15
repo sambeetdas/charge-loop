@@ -1,8 +1,12 @@
+using System.Text;
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Infrastructure;
 using ChargeLoop.Infrastructure.Services;
 using ChargeLoop.WebApi.Hubs;
+using ChargeLoop.WebApi.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,27 @@ builder.Services.AddSignalR();
 
 // Application & Infrastructure Services
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "ChargeLoop_SuperSecret_JWT_Signing_Key_2026_Min32Chars!";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "ChargeLoop.WebApi";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "ChargeLoop.Clients";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+builder.Services.AddAuthorization();
 
 // CORS setup for mobile and web clients
 builder.Services.AddCors(options =>
@@ -52,7 +77,9 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<CorrelationAndAuditMiddleware>();
 
 app.MapControllers();
 app.MapHub<StationHub>("/hubs/stations");

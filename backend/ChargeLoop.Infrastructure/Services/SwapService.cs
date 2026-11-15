@@ -149,6 +149,32 @@ public class SwapService : ISwapService
 
     public async Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request)
     {
+        var correlationId = request.CorrelationId ?? Guid.NewGuid();
+
+        // Idempotency check: if this CorrelationId was already processed, return existing swap result
+        if (request.CorrelationId.HasValue)
+        {
+            var existingTx = await _context.Transactions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.CorrelationId == request.CorrelationId.Value);
+            if (existingTx != null && existingTx.SwapId.HasValue)
+            {
+                var existingSwap = await _context.Swaps.FindAsync(existingTx.SwapId.Value);
+                if (existingSwap != null)
+                {
+                    var dBat = await _context.Batteries.FindAsync(existingSwap.DepletedBatteryId);
+                    var iBat = await _context.Batteries.FindAsync(existingSwap.IssuedBatteryId);
+                    return MapToResponse(existingSwap, dBat?.SerialNumber ?? "BAT-DEPLETED", iBat?.SerialNumber ?? "BAT-ISSUED",
+                        "Idempotent replay: Swap already completed for this CorrelationId.");
+                }
+            }
+        }
+
+        if (request.PaymentMethod == PaymentMethod.Card || request.PaymentMethod == PaymentMethod.UpiIntent)
+        {
+            throw new InvalidOperationException("Work in progress to integrate online payment. Please wait for few days.");
+        }
+
         var swap = await _context.Swaps.FindAsync(request.SwapId);
         if (swap == null) throw new ArgumentException("Swap transaction not found");
 
@@ -179,6 +205,12 @@ public class SwapService : ISwapService
             swap.BaseFee = 0m;
             swap.TaxAmount = 0m;
             swap.TotalAmount = 0m;
+        }
+        else if (request.PaymentMethod == PaymentMethod.Cash && request.CashAmount.HasValue && request.CashAmount.Value > 0)
+        {
+            swap.TotalAmount = request.CashAmount.Value;
+            swap.BaseFee = Math.Round(swap.TotalAmount / 1.18m, 2);
+            swap.TaxAmount = swap.TotalAmount - swap.BaseFee;
         }
 
         // 2. Instant credit of partner commission
@@ -218,6 +250,39 @@ public class SwapService : ISwapService
         swap.DurationSeconds = (int)(swap.CompletedAt.Value - swap.InitiatedAt).TotalSeconds;
         swap.PaymentMethod = request.PaymentMethod;
         swap.InvoiceNumber ??= $"INV-CL-{DateTime.UtcNow:yyyyMMdd}-{swap.Id.ToString()[..6].ToUpperInvariant()}";
+
+        var paymentMode = request.PaymentMethod switch
+        {
+            PaymentMethod.Cash => "CASH",
+            PaymentMethod.Wallet => "WALLET",
+            PaymentMethod.SubscriptionQuota => "SUBSCRIPTION",
+            _ => "CASH"
+        };
+
+        await _context.Transactions.AddAsync(new PaymentTransaction
+        {
+            CorrelationId = correlationId,
+            UserId = swap.DriverId,
+            UserRole = "Driver",
+            StationId = swap.StationId,
+            SwapId = swap.Id,
+            TransactionType = $"Swap{paymentMode}",
+            PaymentMode = paymentMode,
+            Amount = swap.TotalAmount,
+            Status = "Completed",
+            Notes = $"Invoice {swap.InvoiceNumber}",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.AuditLogs.AddAsync(new AuditLog
+        {
+            CorrelationId = correlationId,
+            EventName = $"SWAP_CONFIRMED_{paymentMode}",
+            ActorId = swap.DriverId,
+            ActorRole = "Driver",
+            Details = $"SwapId={swap.Id}, Amount={swap.TotalAmount}, Invoice={swap.InvoiceNumber}",
+            CreatedAt = DateTime.UtcNow
+        });
 
         await _context.SaveChangesAsync();
 

@@ -1,18 +1,34 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../../models/models.dart';
 
 class ApiClient {
   final String baseUrl;
+  static String? authToken;
 
   ApiClient({this.baseUrl = ApiConstants.localhostUrl});
+
+  static String newCorrelationId() {
+    final rng = Random();
+    String hex(int count) => List.generate(count, (_) => rng.nextInt(16).toRadixString(16)).join();
+    return '${hex(8)}-${hex(4)}-4${hex(3)}-${['8', '9', 'a', 'b'][rng.nextInt(4)]}${hex(3)}-${hex(12)}';
+  }
+
+  Map<String, String> _headers() {
+    return {
+      'Content-Type': 'application/json',
+      'X-Correlation-Id': newCorrelationId(),
+      if (authToken != null && authToken!.isNotEmpty) 'Authorization': 'Bearer $authToken',
+    };
+  }
 
   // 1. Driver Authentication (Reads and registers directly in PostgreSQL)
   Future<DriverProfile> authenticate(String phone, {String? name}) async {
     final response = await http.post(
       Uri.parse('$baseUrl${ApiConstants.authPhone}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'phoneNumber': phone.trim(),
         'fullName': name?.trim(),
@@ -21,7 +37,9 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200) {
-      return DriverProfile.fromJson(jsonDecode(response.body));
+      final profile = DriverProfile.fromJson(jsonDecode(response.body));
+      authToken = profile.token;
+      return profile;
     } else {
       throw Exception('Authentication failed: ${response.body}');
     }
@@ -31,7 +49,7 @@ class ApiClient {
   Future<Map<String, dynamic>> sendOtp(String phone) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/send-otp'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({'phoneNumber': phone.trim()}),
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) return jsonDecode(response.body);
@@ -47,7 +65,7 @@ class ApiClient {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/verify-otp'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'phoneNumber': phone.trim(),
         'otpCode': otpCode.trim(),
@@ -56,14 +74,18 @@ class ApiClient {
         'referralCode': referralCode?.trim(),
       }),
     ).timeout(const Duration(seconds: 8));
-    if (response.statusCode == 200) return DriverProfile.fromJson(jsonDecode(response.body));
+    if (response.statusCode == 200) {
+      final profile = DriverProfile.fromJson(jsonDecode(response.body));
+      authToken = profile.token;
+      return profile;
+    }
     throw Exception('OTP verification failed: ${response.body}');
   }
 
   Future<Map<String, dynamic>> claimReferral(String driverId, String referralCode) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/referral/claim'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({'driverId': driverId, 'referralCode': referralCode.trim()}),
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) return jsonDecode(response.body);
@@ -73,7 +95,7 @@ class ApiClient {
   Future<Map<String, dynamic>> validateDriverForSwap(String query) async {
     final response = await http.get(
       Uri.parse('$baseUrl/swaps/validate-driver?query=${Uri.encodeComponent(query.trim())}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) return jsonDecode(response.body);
     throw Exception('Driver validation failed: ${response.body}');
@@ -87,7 +109,7 @@ class ApiClient {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/stations/$stationId/batteries'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'stationId': stationId,
         'serialNumber': serialNumber.trim(),
@@ -102,7 +124,7 @@ class ApiClient {
   Future<Map<String, dynamic>> publishSwapBill(String swapId, List<String> channels) async {
     final response = await http.post(
       Uri.parse('$baseUrl/swaps/$swapId/publish-bill'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({'channels': channels}),
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) return jsonDecode(response.body);
@@ -113,7 +135,7 @@ class ApiClient {
   Future<VendorProfile> authenticateVendor(String phone, {String? name, String? businessName}) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/vendor/phone'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'phoneNumber': phone.trim(),
         'fullName': name?.trim(),
@@ -122,7 +144,9 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200) {
-      return VendorProfile.fromJson(jsonDecode(response.body));
+      final vendor = VendorProfile.fromJson(jsonDecode(response.body));
+      authToken = vendor.token;
+      return vendor;
     } else {
       throw Exception('Vendor authentication failed: ${response.body}');
     }
@@ -132,7 +156,7 @@ class ApiClient {
   Future<DriverDetailModel> getDriverDetails(String driverId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/auth/profile/$driverId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
     ).timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200) {
@@ -150,7 +174,7 @@ class ApiClient {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl${ApiConstants.stationsNearby}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'latitude': lat,
         'longitude': lng,
@@ -170,7 +194,7 @@ class ApiClient {
   Future<List<BatteryModel>> getStationBatteries(String stationId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/stations/$stationId/batteries'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
     ).timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200) {
@@ -191,7 +215,7 @@ class ApiClient {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl${ApiConstants.swapInitiate}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'driverId': driverId,
         'stationId': stationId,
@@ -211,14 +235,18 @@ class ApiClient {
   // 6. Confirm Swap Completion (Updates PostgreSQL ledger and battery states)
   Future<SwapRecord> confirmSwap({
     required String swapId,
-    int paymentMethod = 1, // Wallet
+    int paymentMethod = 3, // Cash
+    double? cashAmount,
+    String? correlationId,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl${ApiConstants.swapConfirm}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'swapId': swapId,
         'paymentMethod': paymentMethod,
+        if (cashAmount != null) 'cashAmount': cashAmount,
+        'correlationId': correlationId ?? newCorrelationId(),
       }),
     ).timeout(const Duration(seconds: 8));
 
@@ -230,15 +258,16 @@ class ApiClient {
   }
 
   // 7. Wallet Top Up (Updates PostgreSQL driver balance and transaction history)
-  Future<double> topUpWallet(String accountId, double amount, {String paymentMethod = 'CARD'}) async {
+  Future<double> topUpWallet(String accountId, double amount, {String paymentMethod = 'CASH', String? correlationId}) async {
     final response = await http.post(
       Uri.parse('$baseUrl${ApiConstants.walletTopUp}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'accountId': accountId,
         'accountType': 0, // Driver
         'amount': amount,
         'paymentReference': '$paymentMethod-REF-${DateTime.now().millisecondsSinceEpoch}',
+        'correlationId': correlationId ?? newCorrelationId(),
       }),
     ).timeout(const Duration(seconds: 8));
 
@@ -264,7 +293,7 @@ class ApiClient {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/v1/stations'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(),
       body: jsonEncode({
         'partnerId': partnerId,
         'name': name,

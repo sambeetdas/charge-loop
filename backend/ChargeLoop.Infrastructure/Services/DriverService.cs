@@ -10,10 +10,14 @@ namespace ChargeLoop.Infrastructure.Services;
 public class DriverService : IDriverService
 {
     private readonly ChargeLoopDbContext _context;
+    private readonly IJwtTokenService? _jwtTokenService;
+    private readonly ITransactionAuditService? _auditService;
 
-    public DriverService(ChargeLoopDbContext context)
+    public DriverService(ChargeLoopDbContext context, IJwtTokenService? jwtTokenService = null, ITransactionAuditService? auditService = null)
     {
         _context = context;
+        _jwtTokenService = jwtTokenService;
+        _auditService = auditService;
     }
 
     public async Task<AuthResponse> AuthenticateWithPhoneAsync(AuthRequest request)
@@ -62,7 +66,12 @@ public class DriverService : IDriverService
             if (changed) await _context.SaveChangesAsync();
         }
 
-        var token = $"ey-chargeloop-jwt-{existing.Id}";
+        var token = _jwtTokenService?.GenerateToken(existing.Id, existing.PhoneNumber, "Driver")
+            ?? $"ey-chargeloop-jwt-{existing.Id}";
+        if (_auditService != null)
+        {
+            await _auditService.LogEventAsync(Guid.NewGuid(), "DRIVER_AUTHENTICATED", existing.Id, "Driver", $"Phone={existing.PhoneNumber}");
+        }
         return new AuthResponse(
             existing.Id,
             existing.PhoneNumber,

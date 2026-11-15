@@ -185,3 +185,36 @@ CREATE INDEX IF NOT EXISTS idx_swap_station_id ON swap_transactions(station_id);
 CREATE INDEX IF NOT EXISTS idx_wallet_account ON wallet_transactions(account_id, account_type);
 CREATE INDEX IF NOT EXISTS idx_reservations_driver_station ON reservations(driver_id, station_id);
 CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_verifications(phone_number);
+
+-- Unified Financial Transactions Table (Idempotent by correlation_id)
+CREATE TABLE IF NOT EXISTS transactions (
+    id UUID PRIMARY KEY,
+    correlation_id UUID NOT NULL UNIQUE,
+    user_id UUID NOT NULL,
+    user_role VARCHAR(20) NOT NULL,
+    station_id UUID,
+    swap_id UUID,
+    transaction_type VARCHAR(40) NOT NULL,
+    payment_mode VARCHAR(20) NOT NULL DEFAULT 'CASH',
+    amount NUMERIC(12,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Completed',
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_tx_user ON transactions(user_id, created_at DESC);
+
+-- End-to-End Audit Logs Table (Tracked by correlation_id)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY,
+    correlation_id UUID NOT NULL,
+    event_name VARCHAR(80) NOT NULL,
+    actor_id UUID,
+    actor_role VARCHAR(20),
+    http_method VARCHAR(10),
+    endpoint VARCHAR(255),
+    status_code INT,
+    duration_ms BIGINT,
+    details TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_audit_corr ON audit_logs(correlation_id, created_at DESC);

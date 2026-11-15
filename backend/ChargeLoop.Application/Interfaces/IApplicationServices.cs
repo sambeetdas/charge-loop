@@ -78,3 +78,15 @@ public interface IRealTimeNotificationService
     Task NotifyStationUpdatedAsync(StationDto station);
     Task NotifySwapStatusChangedAsync(Guid driverId, SwapResponse swap);
 }
+
+public interface IJwtTokenService
+{
+    string GenerateToken(Guid userId, string phoneNumber, string role);
+}
+
+public interface ITransactionAuditService
+{
+    Task<IReadOnlyList<TransactionDto>> GetUserTransactionsAsync(Guid userId);
+    Task<IReadOnlyList<AuditLogDto>> GetAuditLogsAsync(Guid? correlationId = null);
+    Task LogEventAsync(Guid correlationId, string eventName, Guid? actorId, string? actorRole, string? details = null);
+}

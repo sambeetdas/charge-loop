@@ -1,10 +1,12 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChargeLoop.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/swaps")]
 public class SwapsController : ControllerBase
 {
@@ -51,7 +53,8 @@ public class SwapsController : ControllerBase
     {
         try
         {
-            var result = await _swapService.ConfirmSwapAsync(request);
+            var corrId = request.CorrelationId ?? (HttpContext.Items["CorrelationId"] as Guid?);
+            var result = await _swapService.ConfirmSwapAsync(request with { CorrelationId = corrId });
             return Ok(result);
         }
         catch (ArgumentException ex)

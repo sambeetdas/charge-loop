@@ -107,7 +107,7 @@ public record InitiateSwapRequest(
     string IssuedBatterySerial
 );
 
-public record ConfirmSwapRequest(Guid SwapId, PaymentMethod PaymentMethod);
+public record ConfirmSwapRequest(Guid SwapId, PaymentMethod PaymentMethod, decimal? CashAmount = null, Guid? CorrelationId = null);
 
 public record SwapResponse(
     Guid SwapId,
@@ -132,9 +132,38 @@ public record SwapResponse(
 public record PublishBillRequest(List<string> Channels, string? RecipientEmail = null, string? RecipientPhone = null);
 public record PublishBillResponse(Guid SwapId, string InvoiceNumber, List<string> SentChannels, DateTime PublishedAt, string Message);
 
-public record WalletTopUpRequest(Guid AccountId, WalletAccountType AccountType, decimal Amount, string PaymentReference);
+public record WalletTopUpRequest(Guid AccountId, WalletAccountType AccountType, decimal Amount, string PaymentReference, Guid? CorrelationId = null);
 public record WalletBalanceResponse(Guid AccountId, decimal Balance, List<WalletTransactionDto> RecentTransactions);
 public record WalletTransactionDto(Guid Id, decimal Amount, WalletTransactionType Type, string Reason, DateTime Timestamp);
+
+public record TransactionDto(
+    Guid Id,
+    Guid CorrelationId,
+    Guid UserId,
+    string UserRole,
+    Guid? StationId,
+    Guid? SwapId,
+    string TransactionType,
+    string PaymentMode,
+    decimal Amount,
+    string Status,
+    string? Notes,
+    DateTime CreatedAt
+);
+
+public record AuditLogDto(
+    Guid Id,
+    Guid CorrelationId,
+    string EventName,
+    Guid? ActorId,
+    string? ActorRole,
+    string? HttpMethod,
+    string? Endpoint,
+    int? StatusCode,
+    long? DurationMs,
+    string? Details,
+    DateTime CreatedAt
+);
 
 public record BatteryTelemetryReport(
     string SerialNumber,

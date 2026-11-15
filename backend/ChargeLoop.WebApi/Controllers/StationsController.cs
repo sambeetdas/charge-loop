@@ -1,10 +1,12 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChargeLoop.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/stations")]
 public class StationsController : ControllerBase
 {
@@ -15,6 +17,7 @@ public class StationsController : ControllerBase
         _stationService = stationService;
     }
 
+    [AllowAnonymous]
     [HttpPost("nearby")]
     public async Task<ActionResult<IReadOnlyList<StationDto>>> GetNearbyStations([FromBody] NearbyStationsRequest request)
     {
@@ -22,6 +25,7 @@ public class StationsController : ControllerBase
         return Ok(stations);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<StationDto>> GetStationById(Guid id)
     {
@@ -30,6 +34,7 @@ public class StationsController : ControllerBase
         return Ok(station);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:guid}/batteries")]
     public async Task<ActionResult<IReadOnlyList<BatteryDto>>> GetStationBatteries(Guid id)
     {

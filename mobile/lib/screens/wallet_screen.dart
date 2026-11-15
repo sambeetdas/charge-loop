@@ -15,9 +15,9 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   final ApiClient _apiClient = ApiClient();
   final TextEditingController _refController = TextEditingController();
+  final TextEditingController _cashController = TextEditingController(text: '200');
   double _balance = 450.0;
   bool _isProcessing = false;
-  String _paymentMode = 'CARD';
 
   @override
   void initState() {
@@ -25,9 +25,19 @@ class _WalletScreenState extends State<WalletScreen> {
     _balance = widget.profile.walletBalance;
   }
 
+  void _showOnlineWip() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: AppColors.warningAmber,
+        content: Text('Work in progress to integrate online payment. Please wait for few days.', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
   void _topUp(double amount) async {
+    if (amount <= 0) return;
     setState(() => _isProcessing = true);
-    final newBal = await _apiClient.topUpWallet(widget.profile.id, amount, paymentMethod: _paymentMode);
+    final newBal = await _apiClient.topUpWallet(widget.profile.id, amount, paymentMethod: 'CASH');
     setState(() {
       _balance = newBal;
       _isProcessing = false;
@@ -37,7 +47,7 @@ class _WalletScreenState extends State<WalletScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.surfaceElevated,
-          content: Text('₹${amount.toStringAsFixed(0)} added successfully via $_paymentMode!'),
+          content: Text('₹${amount.toStringAsFixed(0)} Cash top-up recorded!'),
         ),
       );
     }
@@ -121,23 +131,36 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Quick Top-Up Section
+          // Quick Top-Up Section (Cash + Online WIP)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Quick Recharge',
+                'Cash Top-Up',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              ToggleButtons(
-                isSelected: [_paymentMode == 'CARD', _paymentMode == 'UPI'],
-                onPressed: (idx) => setState(() => _paymentMode = idx == 0 ? 'CARD' : 'UPI'),
-                borderRadius: BorderRadius.circular(10),
-                selectedColor: Colors.black,
-                fillColor: AppColors.neonGreen,
-                color: AppColors.textSecondary,
-                constraints: const BoxConstraints(minHeight: 32, minWidth: 64),
-                children: const [Text('Card'), Text('UPI')],
+              TextButton(
+                onPressed: _showOnlineWip,
+                child: const Text('Card / UPI (Online)', style: TextStyle(color: AppColors.warningAmber)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _cashController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(hintText: 'Enter Cash Amount (₹)', isDense: true),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(minimumSize: const Size(110, 44)),
+                onPressed: _isProcessing ? null : () => _topUp(double.tryParse(_cashController.text) ?? 0),
+                child: const Text('Add Cash'),
               ),
             ],
           ),

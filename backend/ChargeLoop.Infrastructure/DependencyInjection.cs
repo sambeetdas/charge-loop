@@ -18,6 +18,8 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddSingleton<IRealTimeNotificationService, RealTimeNotificationService>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<ITransactionAuditService, TransactionAuditService>();
         services.AddScoped<IStationService, StationService>();
         services.AddScoped<ISwapService, SwapService>();
         services.AddScoped<IWalletService, WalletService>();

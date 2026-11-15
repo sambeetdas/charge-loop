@@ -91,3 +91,34 @@ public class OtpVerification
     public bool IsUsed { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+
+public class PaymentTransaction
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid CorrelationId { get; set; }
+    public Guid UserId { get; set; }
+    public string UserRole { get; set; } = "Driver";
+    public Guid? StationId { get; set; }
+    public Guid? SwapId { get; set; }
+    public string TransactionType { get; set; } = string.Empty;
+    public string PaymentMode { get; set; } = "CASH";
+    public decimal Amount { get; set; }
+    public string Status { get; set; } = "Completed";
+    public string? Notes { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class AuditLog
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid CorrelationId { get; set; }
+    public string EventName { get; set; } = string.Empty;
+    public Guid? ActorId { get; set; }
+    public string? ActorRole { get; set; }
+    public string? HttpMethod { get; set; }
+    public string? Endpoint { get; set; }
+    public int? StatusCode { get; set; }
+    public long? DurationMs { get; set; }
+    public string? Details { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}

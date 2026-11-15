@@ -19,6 +19,8 @@ public class ChargeLoopDbContext : DbContext
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
+    public DbSet<PaymentTransaction> Transactions => Set<PaymentTransaction>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -238,6 +240,44 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.OtpCode).HasColumnName("otp_code");
             b.Property(x => x.ExpiresAt).HasColumnName("expires_at");
             b.Property(x => x.IsUsed).HasColumnName("is_used");
+            b.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // Unified Financial Transactions mapping
+        modelBuilder.Entity<PaymentTransaction>(b =>
+        {
+            b.ToTable("transactions");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.CorrelationId).HasColumnName("correlation_id");
+            b.HasIndex(x => x.CorrelationId).IsUnique();
+            b.Property(x => x.UserId).HasColumnName("user_id");
+            b.Property(x => x.UserRole).HasColumnName("user_role");
+            b.Property(x => x.StationId).HasColumnName("station_id");
+            b.Property(x => x.SwapId).HasColumnName("swap_id");
+            b.Property(x => x.TransactionType).HasColumnName("transaction_type");
+            b.Property(x => x.PaymentMode).HasColumnName("payment_mode");
+            b.Property(x => x.Amount).HasColumnName("amount").HasColumnType("numeric(12,2)");
+            b.Property(x => x.Status).HasColumnName("status");
+            b.Property(x => x.Notes).HasColumnName("notes");
+            b.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // End-to-End Audit Logs mapping
+        modelBuilder.Entity<AuditLog>(b =>
+        {
+            b.ToTable("audit_logs");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.CorrelationId).HasColumnName("correlation_id");
+            b.Property(x => x.EventName).HasColumnName("event_name");
+            b.Property(x => x.ActorId).HasColumnName("actor_id");
+            b.Property(x => x.ActorRole).HasColumnName("actor_role");
+            b.Property(x => x.HttpMethod).HasColumnName("http_method");
+            b.Property(x => x.Endpoint).HasColumnName("endpoint");
+            b.Property(x => x.StatusCode).HasColumnName("status_code");
+            b.Property(x => x.DurationMs).HasColumnName("duration_ms");
+            b.Property(x => x.Details).HasColumnName("details");
             b.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
     }

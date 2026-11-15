@@ -13,16 +13,52 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _businessController = TextEditingController();
 
   String _selectedRole = 'driver'; // 'driver' or 'vendor'
   bool _isLoading = false;
+  bool _otpSent = false;
+  String? _demoOtp;
+
+  void _sendOtp() async {
+    final phone = _phoneController.text.trim().replaceAll(' ', '');
+    if (phone.isEmpty || phone.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final res = await ApiClient().sendOtp(phone);
+      final otp = res['demoOtp']?.toString() ?? '';
+      setState(() {
+        _otpSent = true;
+        _demoOtp = otp;
+        _otpController.text = otp;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: AppColors.dangerRed, content: Text('Error: $e')),
+        );
+      }
+    }
+  }
 
   void _login() async {
     final phone = _phoneController.text.trim().replaceAll(' ', '');
     final name = _nameController.text.trim();
     final business = _businessController.text.trim();
+
+    if (_selectedRole == 'driver' && !_otpSent) {
+      _sendOtp();
+      return;
+    }
 
     if (phone.isEmpty || phone.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,7 +72,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_selectedRole == 'driver') {
-        final profile = await client.authenticate(phone, name: name.isEmpty ? null : name);
+        final profile = await client.verifyOtp(
+          phone: phone,
+          otpCode: _otpController.text.trim(),
+          fullName: name.isEmpty ? null : name,
+        );
         setState(() => _isLoading = false);
 
         if (mounted) {
@@ -354,6 +394,46 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ],
+
+              // OTP Input for Driver
+              if (_selectedRole == 'driver' && _otpSent) ...[
+                const SizedBox(height: 12),
+                if (_demoOtp != null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.neonGreen.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.neonGreen.withOpacity(0.4)),
+                    ),
+                    child: Text(
+                      'Demo OTP: $_demoOtp (valid 5 mins)',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.neonGreen),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      hintText: 'Enter 6-digit OTP',
+                      hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                    ),
                   ),
                 ),
               ],

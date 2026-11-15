@@ -20,6 +20,14 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
   StationModel? _selectedStation;
   bool _isLoadingStations = true;
 
+  // Partner Swap Desk State
+  final _driverQueryCtrl = TextEditingController();
+  final _depletedCtrl = TextEditingController(text: 'BAT-LFP-1001');
+  final _issuedCtrl = TextEditingController(text: 'BAT-LFP-NEW01');
+  final _cashCtrl = TextEditingController(text: '118');
+  Map<String, dynamic>? _validatedDriver;
+  bool _deskBusy = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +49,114 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _isLoadingStations = false);
+    }
+  }
+
+  void _showRegisterBatteryDialog() {
+    if (_selectedStation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add/select a station first.')),
+      );
+      return;
+    }
+    final serialCtrl = TextEditingController();
+    final modelCtrl = TextEditingController(text: 'LFP-48V-30Ah');
+    final socCtrl = TextEditingController(text: '100');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Register Battery — ${_selectedStation!.name}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: serialCtrl, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'Battery Serial / QR')),
+            const SizedBox(height: 10),
+            TextField(controller: modelCtrl, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'Model Type')),
+            const SizedBox(height: 10),
+            TextField(controller: socCtrl, keyboardType: TextInputType.number, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'SOC % (0-100)')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              if (serialCtrl.text.trim().isEmpty) return;
+              try {
+                await ApiClient().registerBatteryAtStation(
+                  stationId: _selectedStation!.id,
+                  serialNumber: serialCtrl.text.trim(),
+                  modelType: modelCtrl.text.trim(),
+                  soc: int.tryParse(socCtrl.text.trim()) ?? 100,
+                );
+                if (ctx.mounted) Navigator.pop(ctx);
+                _loadVendorStations();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Battery registered at store!')));
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: AppColors.dangerRed, content: Text('$e')));
+                }
+              }
+            },
+            child: const Text('Register'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _validateDriver() async {
+    if (_driverQueryCtrl.text.trim().isEmpty) return;
+    setState(() => _deskBusy = true);
+    try {
+      final res = await ApiClient().validateDriverForSwap(_driverQueryCtrl.text.trim());
+      setState(() {
+        _validatedDriver = res;
+        if (res['activeBatterySerial'] != null) {
+          _depletedCtrl.text = res['activeBatterySerial'];
+        }
+        _deskBusy = false;
+      });
+    } catch (e) {
+      setState(() {
+        _validatedDriver = null;
+        _deskBusy = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: AppColors.dangerRed, content: Text('$e')));
+      }
+    }
+  }
+
+  void _executePartnerCashSwap() async {
+    if (_validatedDriver == null || _selectedStation == null) return;
+    setState(() => _deskBusy = true);
+    try {
+      final init = await ApiClient().initiateSwap(
+        driverId: _validatedDriver!['driverId'],
+        stationId: _selectedStation!.id,
+        partnerId: widget.vendor.id,
+        depletedBatterySerial: _depletedCtrl.text.trim(),
+        issuedBatterySerial: _issuedCtrl.text.trim(),
+      );
+      await ApiClient().confirmSwap(
+        swapId: init.swapId,
+        paymentMethod: 3, // Cash
+        cashAmount: double.tryParse(_cashCtrl.text.trim()) ?? 118.0,
+      );
+      setState(() => _deskBusy = false);
+      _loadVendorStations();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cash swap completed & logged!')));
+      }
+    } catch (e) {
+      setState(() => _deskBusy = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: AppColors.dangerRed, content: Text('$e')));
+      }
     }
   }
 
@@ -301,8 +417,99 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
         const SizedBox(height: 20),
 
         // Operational Status Switcher
-        const Text('Operational Status Control', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Operational Status Control', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+            TextButton.icon(
+              onPressed: _showRegisterBatteryDialog,
+              icon: const Icon(Icons.battery_charging_full, size: 16, color: AppColors.neonGreen),
+              label: const Text('+ Register Battery', style: TextStyle(color: AppColors.neonGreen)),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
+
+        // Partner Swap Desk Card (Validate -> QR -> Cash Amount -> Swap)
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Partner Swap Desk (Cash)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _driverQueryCtrl,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(hintText: 'Driver Phone / Name', isDense: true),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(90, 42)),
+                      onPressed: _deskBusy ? null : _validateDriver,
+                      child: const Text('Validate'),
+                    ),
+                  ],
+                ),
+                if (_validatedDriver != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '✓ ${_validatedDriver!['fullName']} (${_validatedDriver!['phoneNumber']})',
+                    style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _depletedCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Depleted Battery QR (Disconnect)', isDense: true),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _issuedCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'New Battery QR (Assign)', isDense: true),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _cashCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(labelText: 'Cash Collected (₹)', isDense: true),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _deskBusy ? null : _executePartnerCashSwap,
+                          child: const Text('Execute Cash Swap'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: AppColors.warningAmber,
+                              content: Text('Work in progress to integrate online payment. Please wait for few days.', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                            ),
+                          );
+                        },
+                        child: const Text('Card/UPI'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
