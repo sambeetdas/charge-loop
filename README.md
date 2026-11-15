@@ -54,7 +54,7 @@ ChargeLoop/
 
 ### ⚡ 1-Click Launch (Backend + Mobile App)
 
-Simply run the PowerShell script (or double-click `run.bat`):
+Simply run the PowerShell script:
 
 ```powershell
 .\run.ps1
@@ -131,13 +131,56 @@ flutter run -d chrome
 
 ---
 
-## ⚡ Core 2-Minute Battery Swap Flow
+## 🔄 End-to-End User Flows
 
-1. **Station Arrival**: Driver arrives at station (e.g. *Janakpuri Swap Hub*).
-2. **Scan Handshake**: Driver scans station QR code (`POST /api/v1/swaps/initiate`).
-3. **Automated Validation (< 1.5s)**: Backend verifies battery serials, cell temperature, and minimum 90% SOC.
-4. **Physical Exchange**: Partner places new 100% charged battery into driver's EV (~60–90s).
-5. **Settlement**: Partner confirms swap (`POST /api/v1/swaps/confirm`). Driver wallet deducted (₹118 with GST) and partner instantly credited commission (₹25).
+> [!IMPORTANT]
+> **Security & Idempotency**: All protected endpoints require a signed **JWT Bearer token** (`Authorization: Bearer <token>`), and every payment/wallet operation is tracked end-to-end in PostgreSQL (`transactions` and `audit_logs`) using a unique `X-Correlation-Id` (`Guid`) for idempotency.
+
+### 🚗 Driver Flow
+
+> [!NOTE]
+> **Demo OTP Mode**: During the MVP phase, `POST /api/v1/auth/send-otp` displays the 6-digit OTP directly in the UI. Real SMS gateway delivery (MSG91 / Twilio) is tracked in the backlog.
+
+1. **Phone Registration & OTP Verification**:
+   - Select **Driver** on the Sign In / Sign Up screen, enter a mobile number, and tap **Send OTP to Phone** (`POST /api/v1/auth/send-otp`).
+   - Enter the 6-digit OTP (plus optional Name, Email for invoices, and Referral Code) and tap **Verify & Sign In** (`POST /api/v1/auth/verify-otp`) to receive a JWT token.
+2. **Station Locator & Reservation**:
+   - Browse nearby swap hubs (`POST /api/v1/stations/nearby`) with live **Available Charged Batteries** counts and reserve a battery (`POST /api/v1/reservations`).
+3. **Wallet & Cash Top-Up**:
+   - View wallet balance and recent transactions (`GET /api/v1/wallet/balance/{driverId}?accountType=0`).
+   - Add money by entering a **Cash** amount (`POST /api/v1/wallet/topup` with `CorrelationId` idempotency).
+4. **Scan & Pay (2-Minute Swap)**:
+   - Select station, enter/scan depleted battery QR, pick a charged battery, choose **Cash** (enter Cash amount), **ChargeLoop Wallet**, or **Weekly Pass**, and confirm (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`).
+5. **Billing & Swap History**:
+   - View GST invoices (`INV-CL-YYYYMMDD-XXXXXX`), tax breakdown, payment mode, and published channels (`GET /api/v1/swaps/history/{driverId}`).
+6. **Refer a Friend**:
+   - Share your unique `CL-...` referral code or claim a friend's code (`POST /api/v1/auth/referral/claim`) to credit **₹50** to both wallets.
+
+---
+
+### 🏪 Partner (Vendor) Flow
+
+> [!TIP]
+> **Multi-Store Support**: A single Partner can operate multiple stations/hubs. Sign in first, then add stores and register batteries per store from the **Stores** tab.
+
+1. **Partner Sign In**:
+   - Select **Partner / Vendor**, enter mobile number (and optional Name / Business Name), and sign in (`POST /api/v1/auth/vendor/phone`) to receive a JWT token.
+2. **Store & Battery Registration**:
+   - Add a new Station/Hub (`POST /api/v1/stations`).
+   - Register individual batteries along with Store details — Serial/QR, Model Type, and SOC % (`POST /api/v1/stations/{stationId}/batteries`) — automatically updating live charged battery counts.
+3. **Step 1 — Validate Driver Before Swap**:
+   - Enter Driver phone, name, or ID and click **Validate** (`GET /api/v1/swaps/validate-driver?query=...`).
+   - The **Swap** button stays locked until the driver's KYC, active battery, wallet balance, and Weekly Pass quota are verified.
+4. **Step 2 — 2-Step Battery QR Scan**:
+   - Scan/enter the Driver's **Depleted Battery QR** for disconnection and select/scan the **New Charged Battery QR** from the store's inventory.
+5. **Step 3 — Collect Payment & Execute Swap**:
+   - Collect **Cash** (enter collected Cash amount), **Weekly Pass** quota, or **Wallet** (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`).
+   - Partner commission (₹25.00) is credited instantly and logged in `transactions`.
+6. **Step 4 — Publish Bill**:
+   - Dispatch/record the GST invoice to the Driver across **WhatsApp**, **SMS**, and **Email** (`POST /api/v1/swaps/{swapId}/publish-bill`).
+
+> [!WARNING]
+> **Online Payments (Card / UPI)**: Online payment gateway integration is currently in progress. Selecting **Card / UPI (Online)** in the Web or Mobile UI displays: *"Work in progress to integrate online payment. Please wait for few days."*
 
 ---
 
@@ -145,4 +188,4 @@ flutter run -d chrome
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for full details.
 
-Copyright (c) 2026 Sambeet Das & ChargeLoop Energy Solutions.
+Copyright (c) 2026 ChargeLoop Energy Solutions.
