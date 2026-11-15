@@ -8,6 +8,7 @@ public class Partner
     public string FullName { get; set; } = string.Empty;
     public string BusinessName { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
+    public string? Email { get; set; }
     public string? UpiId { get; set; }
     public string? BankAccountNumber { get; set; }
     public decimal WalletBalance { get; set; } = 0.00m;

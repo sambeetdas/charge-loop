@@ -79,6 +79,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.FullName).HasColumnName("full_name");
             b.Property(x => x.BusinessName).HasColumnName("business_name");
             b.Property(x => x.PhoneNumber).HasColumnName("phone_number");
+            b.Property(x => x.Email).HasColumnName("email");
             b.Property(x => x.UpiId).HasColumnName("upi_id");
             b.Property(x => x.BankAccountNumber).HasColumnName("bank_account_number");
             b.Property(x => x.WalletBalance).HasColumnName("wallet_balance").HasColumnType("numeric(12,2)");
@@ -127,6 +128,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.Status).HasColumnName("status");
             b.Property(x => x.CurrentStationId).HasColumnName("current_station_id");
             b.Property(x => x.CurrentDriverId).HasColumnName("current_driver_id");
+            b.Property(x => x.IsVisibleToDriver).HasColumnName("is_visible_to_driver");
             b.Property(x => x.LastTelemetryTimestamp).HasColumnName("last_telemetry_timestamp");
         });
 
@@ -210,6 +212,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.DriverId).HasColumnName("driver_id");
             b.Property(x => x.StationId).HasColumnName("station_id");
             b.Property(x => x.ReservedBatteryId).HasColumnName("reserved_battery_id");
+            b.Property(x => x.OtpCode).HasColumnName("otp_code");
             b.Property(x => x.ReservedAt).HasColumnName("reserved_at");
             b.Property(x => x.ExpiresAt).HasColumnName("expires_at");
             b.Property(x => x.Status).HasColumnName("status");

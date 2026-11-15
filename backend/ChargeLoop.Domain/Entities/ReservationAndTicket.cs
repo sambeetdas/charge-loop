@@ -8,8 +8,9 @@ public class Reservation
     public Guid DriverId { get; set; }
     public Guid StationId { get; set; }
     public Guid? ReservedBatteryId { get; set; }
+    public string OtpCode { get; set; } = string.Empty;
     public DateTime ReservedAt { get; set; } = DateTime.UtcNow;
-    public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddMinutes(15);
+    public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddHours(2);
     public ReservationStatus Status { get; set; } = ReservationStatus.Active;
 }
 

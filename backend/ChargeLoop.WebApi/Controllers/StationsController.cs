@@ -36,10 +36,28 @@ public class StationsController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("{id:guid}/batteries")]
-    public async Task<ActionResult<IReadOnlyList<BatteryDto>>> GetStationBatteries(Guid id)
+    public async Task<ActionResult<IReadOnlyList<BatteryDto>>> GetStationBatteries(Guid id, [FromQuery] bool includeAll = false)
     {
-        var batteries = await _stationService.GetStationBatteriesAsync(id);
+        var batteries = await _stationService.GetStationBatteriesAsync(id, includeAll);
         return Ok(batteries);
+    }
+
+    [HttpPatch("{id:guid}/batteries/{batteryId:guid}/visibility")]
+    public async Task<ActionResult<BatteryDto>> ToggleBatteryVisibility(Guid id, Guid batteryId, [FromBody] ToggleBatteryVisibilityRequest request)
+    {
+        try
+        {
+            var battery = await _stationService.ToggleBatteryVisibilityAsync(id, batteryId, request.IsVisibleToDriver);
+            return Ok(battery);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
     }
 
     [HttpPost("{id:guid}/batteries")]

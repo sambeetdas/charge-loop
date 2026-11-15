@@ -616,6 +616,8 @@
         </button>
       </div>
 
+      <div id="driverActiveReservationBox" class="hidden"></div>
+
       <div class="section-title">
         <span>Nearby Swap Stations</span>
         <button class="btn btn-secondary btn-sm" onclick="loadStations()">Refresh</button>
@@ -712,6 +714,32 @@
             <div id="profDriverEmail" class="muted"></div>
           </div>
           <span id="profKycBadge" class="mint-pill">KYC</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;">✏️ Edit Profile</div>
+        <input id="editDriverName" class="input-field" placeholder="Full Name">
+        <input id="editDriverEmail" class="input-field" placeholder="Email Address">
+        <select id="editDriverLang" class="input-field">
+          <option value="en">English (en)</option>
+          <option value="hi">Hindi (hi)</option>
+        </select>
+        <button class="btn btn-primary" onclick="saveDriverProfile()">Save Profile</button>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (OTP)</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="chgDriverPhone" class="input-field" placeholder="New 10-digit Phone" style="margin-bottom:0;">
+          <button class="btn btn-secondary btn-sm" onclick="sendDriverChangePhoneOtp()">Send OTP</button>
+        </div>
+        <div id="chgDriverOtpStep2" class="hidden">
+          <div id="chgDriverOtpBanner" class="card-elevated" style="margin-bottom:8px;font-size:12px;color:var(--mint-text);"></div>
+          <div style="display:flex;gap:8px;">
+            <input id="chgDriverOtp" class="input-field" placeholder="Enter 6-digit OTP" style="margin-bottom:0;">
+            <button class="btn btn-primary btn-sm" onclick="confirmDriverChangePhone()">Verify &amp; Update</button>
+          </div>
         </div>
       </div>
 
@@ -817,7 +845,7 @@
       </div>
 
       <div id="vendorStoresList"></div>
-      <div class="section-title"><span>Available Charged Batteries in Selected Store</span></div>
+      <div class="section-title"><span>Store Battery Inventory</span></div>
       <div id="vendorStoreBatteriesList"></div>
     </div>
 
@@ -837,7 +865,34 @@
         <div id="profVendorName" style="font-size:18px;font-weight:800;">Partner</div>
         <div id="profVendorBiz" class="mint-text" style="font-size:13px;font-weight:700;margin:2px 0;"></div>
         <div id="profVendorPhone" class="muted"></div>
+        <div id="profVendorEmail" class="muted"></div>
       </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;">✏️ Edit Partner Profile</div>
+        <input id="editVendorName" class="input-field" placeholder="Full Name">
+        <input id="editVendorBiz" class="input-field" placeholder="Business / Hub Name">
+        <input id="editVendorEmail" class="input-field" placeholder="Email Address">
+        <input id="editVendorUpi" class="input-field" placeholder="UPI ID (for payouts)">
+        <input id="editVendorBank" class="input-field" placeholder="Bank Account Number">
+        <button class="btn btn-primary" onclick="saveVendorProfile()">Save Partner Profile</button>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (OTP)</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="chgVendorPhone" class="input-field" placeholder="New 10-digit Phone" style="margin-bottom:0;">
+          <button class="btn btn-secondary btn-sm" onclick="sendVendorChangePhoneOtp()">Send OTP</button>
+        </div>
+        <div id="chgVendorOtpStep2" class="hidden">
+          <div id="chgVendorOtpBanner" class="card-elevated" style="margin-bottom:8px;font-size:12px;color:var(--mint-text);"></div>
+          <div style="display:flex;gap:8px;">
+            <input id="chgVendorOtp" class="input-field" placeholder="Enter 6-digit OTP" style="margin-bottom:0;">
+            <button class="btn btn-primary btn-sm" onclick="confirmVendorChangePhone()">Verify &amp; Update</button>
+          </div>
+        </div>
+      </div>
+
       <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
     </div>
   </div>
@@ -884,7 +939,9 @@ let state = {
   topupMode: 'CASH',
   vendorPayMethod: 3,
   validatedDriver: null,
-  lastVendorSwap: null
+  lastVendorSwap: null,
+  activeReservation: null,
+  reservationTimer: null
 };
 
 function showOnlinePaymentWip() {
@@ -997,6 +1054,20 @@ async function refreshDriverViews() {
   document.getElementById('profDriverEmail').textContent = state.driver.email || 'No email set';
   document.getElementById('profKycBadge').textContent = state.driver.kycStatus === 1 ? 'KYC Verified' : 'KYC Pending';
 
+  document.getElementById('editDriverName').value = state.driver.fullName || '';
+  document.getElementById('editDriverEmail').value = state.driver.email || '';
+  document.getElementById('editDriverLang').value = state.driver.languageCode || 'en';
+
+  const depInput = document.getElementById('scanDepletedSerial');
+  if (state.driver.activeBattery) {
+    depInput.value = state.driver.activeBattery.serialNumber;
+    depInput.placeholder = 'Your Assigned Battery QR / Serial';
+  } else {
+    depInput.value = '';
+    depInput.placeholder = 'Leave empty for first battery pickup';
+  }
+
+  await loadActiveReservation();
   await Promise.all([loadStations(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
 }
 
@@ -1007,6 +1078,106 @@ function switchDriverTab(tab) {
   document.querySelectorAll('#navDriver .nav-item').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === tab);
   });
+}
+
+async function loadActiveReservation() {
+  try {
+    const res = await apiFetch(`/reservations/driver/${state.driver.id}`);
+    state.activeReservation = res && new Date(res.expiresAt) > new Date() ? res : null;
+  } catch (e) {
+    state.activeReservation = null;
+  }
+  renderActiveReservation();
+}
+
+function renderActiveReservation() {
+  const box = document.getElementById('driverActiveReservationBox');
+  if (state.reservationTimer) {
+    clearInterval(state.reservationTimer);
+    state.reservationTimer = null;
+  }
+  const res = state.activeReservation;
+  if (!res || new Date(res.expiresAt) <= new Date()) {
+    state.activeReservation = null;
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+
+  const updateBox = () => {
+    const msLeft = new Date(res.expiresAt) - new Date();
+    if (msLeft <= 0) {
+      state.activeReservation = null;
+      clearInterval(state.reservationTimer);
+      state.reservationTimer = null;
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      loadStations();
+      return;
+    }
+    const totalSec = Math.floor(msLeft / 1000);
+    const hrs = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    const countdown = `${hrs}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+
+    box.classList.remove('hidden');
+    box.innerHTML = `
+      <div class="grid-hero" style="margin-bottom:14px;">
+        <div class="row-between" style="margin-bottom:6px;">
+          <span class="mint-pill">🔒 ACTIVE RESERVATION</span>
+          <span class="amber-pill">⏳ ${countdown}</span>
+        </div>
+        <div style="font-weight:800;font-size:16px;">${res.stationName}</div>
+        ${res.batterySerial ? `<div class="muted">Held Battery: <b>${res.batterySerial}</b></div>` : ''}
+        <div class="card-elevated row-between" style="margin:10px 0;">
+          <div>
+            <div class="muted" style="font-size:10px;">RESERVATION OTP (VALID 2 HOURS)</div>
+            <div style="font-size:24px;font-weight:900;color:var(--mint);letter-spacing:3px;">${res.otpCode || '------'}</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="switchDriverTab('scan')">Go to Scan &amp; Pay</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="width:100%;border-color:rgba(239,68,68,0.4);color:#FCA5A5;" onclick="cancelActiveReservation('${res.id}')">Reverse / Cancel Reserve</button>
+      </div>
+    `;
+  };
+
+  updateBox();
+  state.reservationTimer = setInterval(updateBox, 1000);
+}
+
+async function cancelActiveReservation(reservationId) {
+  try {
+    await apiFetch(`/reservations/${reservationId}`, { method: 'DELETE' });
+    state.activeReservation = null;
+    renderActiveReservation();
+    await loadStations();
+    showToast('Reservation reversed! You can reserve another station.');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function toggleStationBatteriesPreview(stationId) {
+  const el = document.getElementById(`stationBats-${stationId}`);
+  if (!el) return;
+  if (!el.classList.contains('hidden')) {
+    el.classList.add('hidden');
+    return;
+  }
+  try {
+    const bats = await apiFetch(`/stations/${stationId}/batteries`);
+    el.classList.remove('hidden');
+    el.innerHTML = bats.length
+      ? bats.map(b => `
+          <div class="card-elevated row-between" style="margin-top:6px;padding:8px 10px;">
+            <div>
+              <div style="font-weight:700;font-size:13px;">${b.serialNumber}</div>
+              <div class="muted" style="font-size:11px;">${b.modelType} • SOH ${b.stateOfHealthPercent}%</div>
+            </div>
+            <span class="mint-pill">${b.stateOfChargePercent}% SOC</span>
+          </div>
+        `).join('')
+      : '<div class="muted" style="margin-top:6px;">No charged batteries visible to drivers in this store.</div>';
+  } catch (e) { showToast(e.message, true); }
 }
 
 async function loadStations() {
@@ -1025,14 +1196,29 @@ async function loadStations() {
         <div class="muted" style="margin-bottom:10px;">📍 ${s.address}, ${s.city} • ${s.distanceKm ?? '—'} km</div>
         <div class="row-between">
           <span class="amber-pill">⚡ ${s.chargingBatteries} Charging • ${s.estimatedWaitMinutes}m wait</span>
-          <button class="btn btn-primary btn-sm" onclick="reserveAtStation('${s.id}')">Reserve</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleStationBatteriesPreview('${s.id}')">🔋 Batteries</button>
+            <button class="btn btn-primary btn-sm" onclick="reserveAtStation('${s.id}')">Reserve</button>
+          </div>
         </div>
+        <div id="stationBats-${s.id}" class="hidden" style="margin-top:8px;"></div>
       </div>
     `).join('') || '<div class="muted">No stations found nearby.</div>';
 
     const sel = document.getElementById('scanStationSelect');
-    sel.innerHTML = state.stations.map(s => `<option value="${s.id}" data-partner="${s.partnerId}">${s.name} (${s.availableChargedBatteries} ready)</option>`).join('');
-    if (state.stations.length) await loadStationChargedBatteries();
+    if (state.activeReservation && new Date(state.activeReservation.expiresAt) > new Date()) {
+      const reservedStation = state.stations.find(s => s.id === state.activeReservation.stationId);
+      if (reservedStation) {
+        sel.innerHTML = `<option value="${reservedStation.id}" data-partner="${reservedStation.partnerId}">${reservedStation.name} (Reserved • ${reservedStation.availableChargedBatteries} ready)</option>`;
+        await loadStationChargedBatteries();
+      } else {
+        sel.innerHTML = `<option value="${state.activeReservation.stationId}">${state.activeReservation.stationName} (Reserved)</option>`;
+        await loadStationChargedBatteries();
+      }
+    } else {
+      sel.innerHTML = '<option value="">No reserved station — reserve a station on Home first</option>';
+      document.getElementById('scanIssuedSelect').innerHTML = '<option value="">Reserve a station first to see batteries</option>';
+    }
   } catch (e) { console.error(e); }
 }
 
@@ -1044,15 +1230,21 @@ async function loadStationChargedBatteries() {
   sel.innerHTML = bats.length
     ? bats.map(b => `<option value="${b.serialNumber}">${b.serialNumber} — ${b.stateOfChargePercent}% SOC (${b.modelType})</option>`).join('')
     : '<option value="">No charged batteries available in this store</option>';
+  if (state.activeReservation?.batterySerial) {
+    sel.value = state.activeReservation.batterySerial;
+  }
 }
 
 async function reserveAtStation(stationId) {
   try {
-    await apiFetch('/reservations/hold', {
+    const res = await apiFetch('/reservations/hold', {
       method: 'POST',
       body: JSON.stringify({ driverId: state.driver.id, stationId })
     });
-    showToast('Battery reserved for 15 minutes!');
+    state.activeReservation = res;
+    renderActiveReservation();
+    await loadStations();
+    showToast(`Reserved! OTP: ${res.otpCode} (valid 2 hours)`);
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -1066,9 +1258,11 @@ function selectDriverPayMethod(pm, el) {
 async function executeDriverScanAndPay() {
   const sel = document.getElementById('scanStationSelect');
   const stationId = sel.value;
+  if (!stationId) return showToast('Please reserve a station on Home tab first.', true);
   const partnerId = sel.options[sel.selectedIndex]?.dataset.partner;
-  const depletedBatterySerial = document.getElementById('scanDepletedSerial').value.trim() || state.driver.activeBattery?.serialNumber || 'BAT-LFP-1001';
+  const depletedBatterySerial = document.getElementById('scanDepletedSerial').value.trim();
   const issuedBatterySerial = document.getElementById('scanIssuedSelect').value;
+  if (!issuedBatterySerial) return showToast('Select an available battery to swap.', true);
   const cashAmount = state.driverPayMethod === 3 ? Number(document.getElementById('driverCashAmount').value || 118) : null;
 
   try {
@@ -1292,6 +1486,52 @@ async function verifyVendorOtp() {
   } catch (e) { showToast(e.message, true); }
 }
 
+async function saveDriverProfile() {
+  const fullName = document.getElementById('editDriverName').value.trim();
+  const email = document.getElementById('editDriverEmail').value.trim();
+  const languageCode = document.getElementById('editDriverLang').value;
+  try {
+    await apiFetch(`/auth/profile/${state.driver.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ fullName, email, languageCode })
+    });
+    await refreshDriverViews();
+    document.getElementById('headerUserText').textContent = state.driver.fullName.split(' ')[0];
+    showToast('Driver profile updated!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function sendDriverChangePhoneOtp() {
+  const newPhoneNumber = document.getElementById('chgDriverPhone').value.trim();
+  if (!newPhoneNumber) return showToast('Enter new phone number', true);
+  try {
+    const res = await apiFetch('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber: newPhoneNumber })
+    });
+    document.getElementById('chgDriverOtpStep2').classList.remove('hidden');
+    document.getElementById('chgDriverOtpBanner').textContent = `Demo OTP for ${res.phoneNumber}: ${res.demoOtp}`;
+    showToast('OTP sent to ' + res.phoneNumber);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function confirmDriverChangePhone() {
+  const newPhoneNumber = document.getElementById('chgDriverPhone').value.trim();
+  const otpCode = document.getElementById('chgDriverOtp').value.trim();
+  if (!newPhoneNumber || !otpCode) return showToast('Enter phone and OTP', true);
+  try {
+    await apiFetch(`/auth/profile/${state.driver.id}/change-phone`, {
+      method: 'POST',
+      body: JSON.stringify({ newPhoneNumber, otpCode })
+    });
+    document.getElementById('chgDriverOtpStep2').classList.add('hidden');
+    document.getElementById('chgDriverPhone').value = '';
+    document.getElementById('chgDriverOtp').value = '';
+    await refreshDriverViews();
+    showToast('Phone number updated!');
+  } catch (e) { showToast(e.message, true); }
+}
+
 async function enterVendorApp(auth) {
   state.token = auth.token;
   state.role = 'vendor';
@@ -1311,6 +1551,13 @@ async function refreshVendorViews() {
   document.getElementById('profVendorName').textContent = state.vendor.fullName;
   document.getElementById('profVendorBiz').textContent = state.vendor.businessName;
   document.getElementById('profVendorPhone').textContent = state.vendor.phoneNumber;
+  document.getElementById('profVendorEmail').textContent = state.vendor.email || 'No email set';
+
+  document.getElementById('editVendorName').value = state.vendor.fullName || '';
+  document.getElementById('editVendorBiz').value = state.vendor.businessName || '';
+  document.getElementById('editVendorEmail').value = state.vendor.email || '';
+  document.getElementById('editVendorUpi').value = state.vendor.upiId || '';
+  document.getElementById('editVendorBank').value = state.vendor.bankAccountNumber || '';
 
   const opts = state.vendorStations.map(s => `<option value="${s.id}">${s.name} (${s.availableChargedBatteries} charged)</option>`).join('')
     || '<option value="">No stores yet — add one in Stores tab</option>';
@@ -1460,16 +1707,87 @@ async function registerBatteryForStore() {
 async function loadSelectedStoreBatteries() {
   const sid = document.getElementById('regBatStationSelect').value;
   if (!sid) return;
-  const bats = await apiFetch(`/stations/${sid}/batteries`);
-  document.getElementById('vendorStoreBatteriesList').innerHTML = bats.map(b => `
-    <div class="card row-between">
-      <div>
-        <div style="font-weight:800;">${b.serialNumber}</div>
-        <div class="muted">${b.modelType} • SOH ${b.stateOfHealthPercent}%</div>
+  const bats = await apiFetch(`/stations/${sid}/batteries?includeAll=true`);
+  document.getElementById('vendorStoreBatteriesList').innerHTML = bats.map(b => {
+    const isCharged = b.status === 0;
+    const toggleBtn = isCharged
+      ? `<button class="btn btn-sm ${b.isVisibleToDriver ? 'btn-primary' : 'btn-secondary'}" onclick="toggleBatteryVisibility('${sid}', '${b.id}', ${!b.isVisibleToDriver})">${b.isVisibleToDriver ? '👁️ Shown to Driver' : '🙈 Hidden from Driver'}</button>`
+      : `<span class="amber-pill">⚡ Undercharging — Hidden</span>`;
+    return `
+      <div class="card">
+        <div class="row-between" style="margin-bottom:8px;">
+          <div>
+            <div style="font-weight:800;">${b.serialNumber}</div>
+            <div class="muted">${b.modelType} • SOH ${b.stateOfHealthPercent}%</div>
+          </div>
+          <span class="${isCharged ? 'mint-pill' : 'amber-pill'}">${b.stateOfChargePercent}% SOC (${isCharged ? 'Charged' : 'Charging'})</span>
+        </div>
+        <div class="row-between">
+          <span class="muted" style="font-size:11px;">Driver Visibility</span>
+          ${toggleBtn}
+        </div>
       </div>
-      <span class="mint-pill">${b.stateOfChargePercent}% SOC</span>
-    </div>
-  `).join('') || '<div class="muted">No charged batteries in this store yet.</div>';
+    `;
+  }).join('') || '<div class="muted">No batteries in this store yet.</div>';
+}
+
+async function toggleBatteryVisibility(stationId, batteryId, isVisibleToDriver) {
+  try {
+    await apiFetch(`/stations/${stationId}/batteries/${batteryId}/visibility`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isVisibleToDriver })
+    });
+    await refreshVendorViews();
+    showToast(isVisibleToDriver ? 'Battery is now visible to drivers!' : 'Battery hidden from drivers.');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function saveVendorProfile() {
+  const fullName = document.getElementById('editVendorName').value.trim();
+  const businessName = document.getElementById('editVendorBiz').value.trim();
+  const email = document.getElementById('editVendorEmail').value.trim();
+  const upiId = document.getElementById('editVendorUpi').value.trim();
+  const bankAccountNumber = document.getElementById('editVendorBank').value.trim();
+  try {
+    await apiFetch(`/auth/vendor/profile/${state.vendor.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ fullName, businessName, email, upiId, bankAccountNumber })
+    });
+    await refreshVendorViews();
+    document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
+    showToast('Partner profile updated!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function sendVendorChangePhoneOtp() {
+  const newPhoneNumber = document.getElementById('chgVendorPhone').value.trim();
+  if (!newPhoneNumber) return showToast('Enter new phone number', true);
+  try {
+    const res = await apiFetch('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber: newPhoneNumber })
+    });
+    document.getElementById('chgVendorOtpStep2').classList.remove('hidden');
+    document.getElementById('chgVendorOtpBanner').textContent = `Demo OTP for ${res.phoneNumber}: ${res.demoOtp}`;
+    showToast('OTP sent to ' + res.phoneNumber);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function confirmVendorChangePhone() {
+  const newPhoneNumber = document.getElementById('chgVendorPhone').value.trim();
+  const otpCode = document.getElementById('chgVendorOtp').value.trim();
+  if (!newPhoneNumber || !otpCode) return showToast('Enter phone and OTP', true);
+  try {
+    await apiFetch(`/auth/vendor/profile/${state.vendor.id}/change-phone`, {
+      method: 'POST',
+      body: JSON.stringify({ newPhoneNumber, otpCode })
+    });
+    document.getElementById('chgVendorOtpStep2').classList.add('hidden');
+    document.getElementById('chgVendorPhone').value = '';
+    document.getElementById('chgVendorOtp').value = '';
+    await refreshVendorViews();
+    showToast('Partner phone number updated!');
+  } catch (e) { showToast(e.message, true); }
 }
 
 function toggleAddStoreForm() {
@@ -1521,7 +1839,12 @@ function handleHeaderAction() {
 }
 
 function signOut() {
-  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null, driverPayMethod: 3, vendorPayMethod: 3 };
+  if (state.reservationTimer) {
+    clearInterval(state.reservationTimer);
+  }
+  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null, activeReservation: null, reservationTimer: null, driverPayMethod: 3, vendorPayMethod: 3 };
+  document.getElementById('driverActiveReservationBox').classList.add('hidden');
+  document.getElementById('driverActiveReservationBox').innerHTML = '';
   document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-auth').classList.remove('hidden');
   document.getElementById('navDriver').classList.add('hidden');

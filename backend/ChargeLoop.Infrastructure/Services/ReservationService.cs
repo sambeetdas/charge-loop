@@ -33,22 +33,27 @@ public class ReservationService : IReservationService
             r.Status = ReservationStatus.Cancelled;
         }
 
-        // Find an available charged battery at the station to hold
+        // Find an available charged & visible battery at the station to hold
         var battery = await _context.Batteries
-            .FirstOrDefaultAsync(b => b.CurrentStationId == station.Id && b.Status == BatteryStatus.AvailableCharged);
+            .FirstOrDefaultAsync(b => b.CurrentStationId == station.Id
+                && b.Status == BatteryStatus.AvailableCharged
+                && b.IsVisibleToDriver);
 
         if (battery == null && station.AvailableChargedBatteriesCount <= 0)
         {
             throw new InvalidOperationException("No charged batteries available at this station right now.");
         }
 
+        var otpCode = Random.Shared.Next(100000, 999999).ToString();
+
         var reservation = new Reservation
         {
             DriverId = request.DriverId,
             StationId = request.StationId,
             ReservedBatteryId = battery?.Id,
+            OtpCode = otpCode,
             ReservedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddHours(2),
             Status = ReservationStatus.Active
         };
 
@@ -64,7 +69,8 @@ public class ReservationService : IReservationService
             battery?.SerialNumber,
             reservation.ReservedAt,
             reservation.ExpiresAt,
-            reservation.Status
+            reservation.Status,
+            reservation.OtpCode
         );
     }
 
@@ -90,7 +96,8 @@ public class ReservationService : IReservationService
             battery?.SerialNumber,
             res.ReservedAt,
             res.ExpiresAt,
-            res.Status
+            res.Status,
+            res.OtpCode
         );
     }
 

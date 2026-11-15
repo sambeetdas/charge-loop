@@ -86,6 +86,34 @@ public class AuthController : ControllerBase
         return Ok(profile);
     }
 
+    [Authorize]
+    [HttpPut("profile/{driverId:guid}")]
+    public async Task<ActionResult<DriverDetailDto>> UpdateDriverProfile(Guid driverId, [FromBody] UpdateDriverProfileRequest request)
+    {
+        var profile = await _driverService.UpdateProfileAsync(driverId, request);
+        if (profile == null) return NotFound("Driver not found");
+        return Ok(profile);
+    }
+
+    [Authorize]
+    [HttpPost("profile/{driverId:guid}/change-phone")]
+    public async Task<ActionResult<DriverDetailDto>> ChangeDriverPhone(Guid driverId, [FromBody] ChangePhoneRequest request)
+    {
+        try
+        {
+            var profile = await _driverService.ChangePhoneAsync(driverId, request);
+            return Ok(profile);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpGet("drivers")]
     public async Task<ActionResult> GetAllDrivers()
     {
@@ -147,6 +175,34 @@ public class AuthController : ControllerBase
         var profile = await _vendorService.GetProfileAsync(vendorId);
         if (profile == null) return NotFound("Vendor not found");
         return Ok(profile);
+    }
+
+    [Authorize]
+    [HttpPut("vendor/profile/{vendorId:guid}")]
+    public async Task<ActionResult<VendorProfileDto>> UpdateVendorProfile(Guid vendorId, [FromBody] UpdateVendorProfileRequest request)
+    {
+        var profile = await _vendorService.UpdateProfileAsync(vendorId, request);
+        if (profile == null) return NotFound("Vendor not found");
+        return Ok(profile);
+    }
+
+    [Authorize]
+    [HttpPost("vendor/profile/{vendorId:guid}/change-phone")]
+    public async Task<ActionResult<VendorProfileDto>> ChangeVendorPhone(Guid vendorId, [FromBody] ChangePhoneRequest request)
+    {
+        try
+        {
+            var profile = await _vendorService.ChangePhoneAsync(vendorId, request);
+            return Ok(profile);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
     }
 
     [HttpGet("vendors")]

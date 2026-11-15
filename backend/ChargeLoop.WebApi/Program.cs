@@ -1,11 +1,13 @@
 using System.Text;
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Infrastructure;
+using ChargeLoop.Infrastructure.Persistence;
 using ChargeLoop.Infrastructure.Services;
 using ChargeLoop.WebApi.Hubs;
 using ChargeLoop.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +65,29 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Ensure latest schema columns & clean wallet defaults on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ChargeLoopDbContext>();
+    if (db.Database.IsRelational())
+    {
+        await db.Database.ExecuteSqlRawAsync(@"
+            ALTER TABLE partners ADD COLUMN IF NOT EXISTS email VARCHAR(150);
+            ALTER TABLE batteries ADD COLUMN IF NOT EXISTS is_visible_to_driver BOOLEAN NOT NULL DEFAULT TRUE;
+            ALTER TABLE reservations ADD COLUMN IF NOT EXISTS otp_code VARCHAR(10) NOT NULL DEFAULT '';
+            ALTER TABLE swap_transactions ALTER COLUMN depleted_battery_id DROP NOT NULL;
+            ALTER TABLE partners ALTER COLUMN wallet_balance SET DEFAULT 0.00;
+            ALTER TABLE drivers ALTER COLUMN wallet_balance SET DEFAULT 0.00;
+            UPDATE partners p SET wallet_balance = 0.00
+            WHERE p.wallet_balance = 50.00
+              AND NOT EXISTS (SELECT 1 FROM wallet_transactions wt WHERE wt.account_id = p.id AND wt.account_type = 1);
+            UPDATE drivers d SET wallet_balance = 0.00
+            WHERE d.wallet_balance = 200.00
+              AND NOT EXISTS (SELECT 1 FROM wallet_transactions wt WHERE wt.account_id = d.id AND wt.account_type = 0);
+        ");
+    }
+}
 
 // Configure the HTTP request pipeline
 app.UseCors("AllowAll");

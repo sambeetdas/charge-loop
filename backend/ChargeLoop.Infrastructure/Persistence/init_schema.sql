@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS partners (
     full_name VARCHAR(150) NOT NULL,
     business_name VARCHAR(200) NOT NULL,
     phone_number VARCHAR(20) NOT NULL UNIQUE,
+    email VARCHAR(150),
     upi_id VARCHAR(100),
     bank_account_number VARCHAR(50),
     wallet_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
@@ -63,6 +64,7 @@ CREATE TABLE IF NOT EXISTS batteries (
     status INT NOT NULL DEFAULT 0, -- 0=AvailableCharged, 1=ChargingInStation, 2=InUseByDriver, 3=MaintenanceFaulty
     current_station_id UUID REFERENCES stations(id) ON DELETE SET NULL,
     current_driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
+    is_visible_to_driver BOOLEAN NOT NULL DEFAULT TRUE,
     last_telemetry_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -71,8 +73,8 @@ CREATE TABLE IF NOT EXISTS swap_transactions (
     driver_id UUID NOT NULL REFERENCES drivers(id),
     station_id UUID NOT NULL REFERENCES stations(id),
     partner_id UUID NOT NULL REFERENCES partners(id),
-    depleted_battery_id UUID NOT NULL REFERENCES batteries(id),
-    depleted_battery_soc INT NOT NULL,
+    depleted_battery_id UUID REFERENCES batteries(id),
+    depleted_battery_soc INT NOT NULL DEFAULT 0,
     issued_battery_id UUID NOT NULL REFERENCES batteries(id),
     issued_battery_soc INT NOT NULL DEFAULT 100,
     initiated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -124,6 +126,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     driver_id UUID NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
     station_id UUID NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
     reserved_battery_id UUID REFERENCES batteries(id) ON DELETE SET NULL,
+    otp_code VARCHAR(10) NOT NULL DEFAULT '',
     reserved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMPTZ NOT NULL,
     status INT NOT NULL DEFAULT 0

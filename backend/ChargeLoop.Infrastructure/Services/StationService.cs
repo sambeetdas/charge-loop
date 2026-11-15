@@ -70,11 +70,24 @@ public class StationService : IStationService
         );
     }
 
-    public async Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId)
+    public async Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId, bool includeAll = false)
     {
-        return await _context.Batteries
+        var query = _context.Batteries
             .AsNoTracking()
-            .Where(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.AvailableCharged)
+            .Where(b => b.CurrentStationId == stationId);
+
+        if (includeAll)
+        {
+            query = query.Where(b => b.Status == BatteryStatus.AvailableCharged || b.Status == BatteryStatus.ChargingInStation);
+        }
+        else
+        {
+            query = query.Where(b => b.Status == BatteryStatus.AvailableCharged && b.IsVisibleToDriver);
+        }
+
+        return await query
+            .OrderByDescending(b => b.Status == BatteryStatus.AvailableCharged)
+            .ThenByDescending(b => b.StateOfChargePercent)
             .Select(b => new BatteryDto(
                 b.Id,
                 b.SerialNumber,
@@ -82,7 +95,8 @@ public class StationService : IStationService
                 b.StateOfChargePercent,
                 b.StateOfHealthPercent,
                 b.CellTemperatureCelsius,
-                b.Status
+                b.Status,
+                b.IsVisibleToDriver
             ))
             .ToListAsync();
     }
@@ -113,7 +127,8 @@ public class StationService : IStationService
             CellTemperatureCelsius = request.CellTemperatureCelsius,
             Status = status,
             CurrentStationId = station.Id,
-            CurrentDriverId = null
+            CurrentDriverId = null,
+            IsVisibleToDriver = status == BatteryStatus.AvailableCharged
         };
 
         await _context.Batteries.AddAsync(battery);
@@ -137,7 +152,48 @@ public class StationService : IStationService
             battery.StateOfChargePercent,
             battery.StateOfHealthPercent,
             battery.CellTemperatureCelsius,
-            battery.Status
+            battery.Status,
+            battery.IsVisibleToDriver
+        );
+    }
+
+    public async Task<BatteryDto> ToggleBatteryVisibilityAsync(Guid stationId, Guid batteryId, bool isVisibleToDriver)
+    {
+        var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId)
+            ?? throw new KeyNotFoundException("Station/store not found.");
+
+        var battery = await _context.Batteries.FirstOrDefaultAsync(b => b.Id == batteryId && b.CurrentStationId == stationId)
+            ?? throw new KeyNotFoundException("Battery not found in this store.");
+
+        if (isVisibleToDriver && battery.Status != BatteryStatus.AvailableCharged)
+        {
+            throw new InvalidOperationException("Undercharging batteries cannot be shown to drivers until charged.");
+        }
+
+        battery.IsVisibleToDriver = isVisibleToDriver;
+        await _context.SaveChangesAsync();
+
+        station.AvailableChargedBatteriesCount = await _context.Batteries
+            .CountAsync(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.AvailableCharged && b.IsVisibleToDriver);
+        station.ChargingBatteriesCount = await _context.Batteries
+            .CountAsync(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.ChargingInStation);
+        station.LastStatusUpdate = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        await _notificationService.NotifyStationUpdatedAsync(new StationDto(
+            station.Id, station.PartnerId, station.Name, station.Address, station.City,
+            station.Latitude, station.Longitude, station.AvailableChargedBatteriesCount,
+            station.ChargingBatteriesCount, station.EstimatedWaitTimeMinutes, station.Status, null));
+
+        return new BatteryDto(
+            battery.Id,
+            battery.SerialNumber,
+            battery.ModelType,
+            battery.StateOfChargePercent,
+            battery.StateOfHealthPercent,
+            battery.CellTemperatureCelsius,
+            battery.Status,
+            battery.IsVisibleToDriver
         );
     }
 

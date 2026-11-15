@@ -90,18 +90,27 @@ public class SwapService : ISwapService
         var station = await _context.Stations.FindAsync(request.StationId);
         if (station == null) throw new ArgumentException("Station not found in database");
 
-        // 2. Validate batteries from database (or create if newly introduced)
-        var depleted = await _context.Batteries.FirstOrDefaultAsync(b => b.SerialNumber == request.DepletedBatterySerial);
-        if (depleted == null)
+        // 2. Validate depleted battery (null allowed for driver's first battery pickup)
+        Battery? depleted = null;
+        if (!string.IsNullOrWhiteSpace(request.DepletedBatterySerial))
         {
-            depleted = new Battery
+            depleted = await _context.Batteries.FirstOrDefaultAsync(b => b.SerialNumber == request.DepletedBatterySerial);
+            if (depleted == null)
             {
-                SerialNumber = request.DepletedBatterySerial,
-                StateOfChargePercent = 18,
-                Status = BatteryStatus.InUseByDriver
-            };
-            await _context.Batteries.AddAsync(depleted);
-            await _context.SaveChangesAsync();
+                depleted = new Battery
+                {
+                    SerialNumber = request.DepletedBatterySerial.Trim(),
+                    StateOfChargePercent = 18,
+                    Status = BatteryStatus.InUseByDriver
+                };
+                await _context.Batteries.AddAsync(depleted);
+                await _context.SaveChangesAsync();
+            }
+        }
+        else
+        {
+            // If driver already has an active battery assigned, use it for replacement
+            depleted = await _context.Batteries.FirstOrDefaultAsync(b => b.CurrentDriverId == request.DriverId);
         }
 
         var issued = await _context.Batteries.FirstOrDefaultAsync(b => b.SerialNumber == request.IssuedBatterySerial);
@@ -128,8 +137,8 @@ public class SwapService : ISwapService
             DriverId = request.DriverId,
             StationId = request.StationId,
             PartnerId = request.PartnerId,
-            DepletedBatteryId = depleted.Id,
-            DepletedBatterySoc = depleted.StateOfChargePercent,
+            DepletedBatteryId = depleted?.Id,
+            DepletedBatterySoc = depleted?.StateOfChargePercent ?? 0,
             IssuedBatteryId = issued.Id,
             IssuedBatterySoc = issued.StateOfChargePercent,
             BaseFee = 100.00m,
@@ -142,7 +151,7 @@ public class SwapService : ISwapService
         await _context.Swaps.AddAsync(swap);
         await _context.SaveChangesAsync();
 
-        var response = MapToResponse(swap, depleted.SerialNumber, issued.SerialNumber, "Swap validated successfully. Ready for battery exchange.");
+        var response = MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued.SerialNumber, "Swap validated successfully. Ready for battery exchange.");
         await _notificationService.NotifySwapStatusChangedAsync(request.DriverId, response);
         return response;
     }
@@ -217,12 +226,17 @@ public class SwapService : ISwapService
         await _walletService.CreditPartnerCommissionAsync(swap.PartnerId, swap.PartnerCommissionEarned, swap.Id);
 
         // 3. Update battery states in database
-        var depleted = await _context.Batteries.FindAsync(swap.DepletedBatteryId);
-        if (depleted != null)
+        Battery? depleted = null;
+        if (swap.DepletedBatteryId.HasValue)
         {
-            depleted.Status = BatteryStatus.ChargingInStation;
-            depleted.CurrentStationId = swap.StationId;
-            depleted.CurrentDriverId = null;
+            depleted = await _context.Batteries.FindAsync(swap.DepletedBatteryId.Value);
+            if (depleted != null)
+            {
+                depleted.Status = BatteryStatus.ChargingInStation;
+                depleted.CurrentStationId = swap.StationId;
+                depleted.CurrentDriverId = null;
+                depleted.IsVisibleToDriver = false;
+            }
         }
 
         var issued = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
@@ -241,8 +255,20 @@ public class SwapService : ISwapService
             {
                 station.AvailableChargedBatteriesCount--;
             }
-            station.ChargingBatteriesCount++;
+            if (depleted != null)
+            {
+                station.ChargingBatteriesCount++;
+            }
             station.LastStatusUpdate = DateTime.UtcNow;
+        }
+
+        // Complete any active reservation for this driver at this station
+        var activeReservations = await _context.Reservations
+            .Where(r => r.DriverId == swap.DriverId && r.StationId == swap.StationId && r.Status == ReservationStatus.Active)
+            .ToListAsync();
+        foreach (var r in activeReservations)
+        {
+            r.Status = ReservationStatus.Fulfilled;
         }
 
         swap.Status = SwapStatus.Completed;
@@ -286,7 +312,7 @@ public class SwapService : ISwapService
 
         await _context.SaveChangesAsync();
 
-        var depletedSerial = depleted?.SerialNumber ?? "BAT-DEPLETED";
+        var depletedSerial = depleted?.SerialNumber ?? "FIRST-PICKUP";
         var issuedSerial = issued?.SerialNumber ?? "BAT-ISSUED";
 
         var response = MapToResponse(swap, depletedSerial, issuedSerial, "Swap completed! Safe travels.");
@@ -305,9 +331,9 @@ public class SwapService : ISwapService
         var result = new List<SwapResponse>();
         foreach (var s in swaps)
         {
-            var depleted = await _context.Batteries.FindAsync(s.DepletedBatteryId);
+            var depleted = s.DepletedBatteryId.HasValue ? await _context.Batteries.FindAsync(s.DepletedBatteryId.Value) : null;
             var issued = await _context.Batteries.FindAsync(s.IssuedBatteryId);
-            result.Add(MapToResponse(s, depleted?.SerialNumber ?? "BAT-DEPLETED", issued?.SerialNumber ?? "BAT-ISSUED", "Completed"));
+            result.Add(MapToResponse(s, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "Completed"));
         }
 
         return result;

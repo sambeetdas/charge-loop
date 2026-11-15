@@ -15,8 +15,13 @@ public record ReferralResponse(bool Success, decimal BonusAmount, decimal NewWal
 
 public record VendorAuthRequest(string PhoneNumber, string? FullName, string? BusinessName);
 public record VerifyVendorOtpRequest(string PhoneNumber, string OtpCode, string? FullName = null, string? BusinessName = null);
-public record VendorAuthResponse(Guid VendorId, string PhoneNumber, string FullName, string BusinessName, string Token, decimal WalletBalance);
-public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, string BusinessName, string? UpiId, string? BankAccountNumber, decimal WalletBalance, List<StationDto> Stations);
+public record VendorAuthResponse(Guid VendorId, string PhoneNumber, string FullName, string BusinessName, string Token, decimal WalletBalance, string? Email = null);
+public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, string BusinessName, string? UpiId, string? BankAccountNumber, decimal WalletBalance, List<StationDto> Stations, string? Email = null);
+
+public record UpdateDriverProfileRequest(string? FullName, string? Email, string? LanguageCode);
+public record UpdateVendorProfileRequest(string? FullName, string? BusinessName, string? Email, string? UpiId, string? BankAccountNumber);
+public record ChangePhoneRequest(string NewPhoneNumber, string OtpCode);
+public record ToggleBatteryVisibilityRequest(bool IsVisibleToDriver);
 
 public record KycSubmissionRequest(Guid DriverId, string DrivingLicenseNumber, string AadhaarNumber);
 public record VehicleLinkRequest(Guid DriverId, string RegistrationNumber, string Oem, string Model, string BatteryType);
@@ -57,7 +62,8 @@ public record BatteryDto(
     int StateOfChargePercent,
     int StateOfHealthPercent,
     double CellTemperatureCelsius,
-    BatteryStatus Status
+    BatteryStatus Status,
+    bool IsVisibleToDriver = true
 );
 
 public record DriverDetailDto(
@@ -212,7 +218,8 @@ public record ReservationDto(
     string? BatterySerial,
     DateTime ReservedAt,
     DateTime ExpiresAt,
-    ReservationStatus Status
+    ReservationStatus Status,
+    string OtpCode = ""
 );
 
 public record CreateTicketRequest(

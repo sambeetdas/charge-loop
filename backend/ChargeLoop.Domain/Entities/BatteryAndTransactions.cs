@@ -14,6 +14,7 @@ public class Battery
     public BatteryStatus Status { get; set; } = BatteryStatus.AvailableCharged;
     public Guid? CurrentStationId { get; set; }
     public Guid? CurrentDriverId { get; set; }
+    public bool IsVisibleToDriver { get; set; } = true;
     public DateTime LastTelemetryTimestamp { get; set; } = DateTime.UtcNow;
 }
 
@@ -25,7 +26,7 @@ public class SwapTransaction
     public Guid PartnerId { get; set; }
     
     // Batteries swapped
-    public Guid DepletedBatteryId { get; set; }
+    public Guid? DepletedBatteryId { get; set; }
     public int DepletedBatterySoc { get; set; }
     public Guid IssuedBatteryId { get; set; }
     public int IssuedBatterySoc { get; set; } = 100;

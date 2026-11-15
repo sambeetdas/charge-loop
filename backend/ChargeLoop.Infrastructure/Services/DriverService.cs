@@ -241,6 +241,52 @@ public class DriverService : IDriverService
         );
     }
 
+    public async Task<DriverDetailDto?> UpdateProfileAsync(Guid driverId, UpdateDriverProfileRequest request)
+    {
+        var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId);
+        if (driver == null) return null;
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+            driver.FullName = request.FullName.Trim();
+        if (request.Email != null)
+            driver.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        if (!string.IsNullOrWhiteSpace(request.LanguageCode))
+            driver.LanguageCode = request.LanguageCode.Trim();
+
+        await _context.SaveChangesAsync();
+        return await GetDriverDetailsAsync(driverId);
+    }
+
+    public async Task<DriverDetailDto> ChangePhoneAsync(Guid driverId, ChangePhoneRequest request)
+    {
+        var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == driverId)
+            ?? throw new KeyNotFoundException("Driver not found.");
+
+        var newPhone = NormalizePhone(request.NewPhoneNumber);
+        if (string.IsNullOrWhiteSpace(newPhone))
+            throw new ArgumentException("Valid phone number is required.");
+
+        var otpEntry = await _context.OtpVerifications
+            .Where(o => o.PhoneNumber == newPhone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otpEntry == null || otpEntry.OtpCode != request.OtpCode.Trim())
+            throw new InvalidOperationException("Invalid or expired OTP code.");
+
+        var last10 = newPhone.Length >= 10 ? newPhone[^10..] : newPhone;
+        var conflict = await _context.Drivers.AnyAsync(d => d.Id != driverId &&
+            (d.PhoneNumber == newPhone || (last10.Length == 10 && d.PhoneNumber.EndsWith(last10))));
+        if (conflict)
+            throw new InvalidOperationException("This phone number is already registered to another driver.");
+
+        otpEntry.IsUsed = true;
+        driver.PhoneNumber = newPhone;
+        await _context.SaveChangesAsync();
+
+        return (await GetDriverDetailsAsync(driverId))!;
+    }
+
     public async Task<IReadOnlyList<Driver>> GetAllDriversAsync()
     {
         return await _context.Drivers

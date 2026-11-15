@@ -12,6 +12,8 @@ public interface IDriverService
     Task<ReferralResponse> ClaimReferralCodeAsync(ClaimReferralRequest request);
     Task<Driver?> GetProfileAsync(Guid driverId);
     Task<DriverDetailDto?> GetDriverDetailsAsync(Guid driverId);
+    Task<DriverDetailDto?> UpdateProfileAsync(Guid driverId, UpdateDriverProfileRequest request);
+    Task<DriverDetailDto> ChangePhoneAsync(Guid driverId, ChangePhoneRequest request);
     Task<IReadOnlyList<Driver>> GetAllDriversAsync();
     Task<bool> SubmitKycAsync(KycSubmissionRequest request);
     Task<Vehicle> LinkVehicleAsync(VehicleLinkRequest request);
@@ -21,8 +23,9 @@ public interface IStationService
 {
     Task<IReadOnlyList<StationDto>> GetNearbyStationsAsync(NearbyStationsRequest request);
     Task<StationDto?> GetStationByIdAsync(Guid stationId);
-    Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId);
+    Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId, bool includeAll = false);
     Task<BatteryDto> RegisterBatteryAtStationAsync(RegisterBatteryRequest request);
+    Task<BatteryDto> ToggleBatteryVisibilityAsync(Guid stationId, Guid batteryId, bool isVisibleToDriver);
     Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes);
     Task<StationDto> CreateStationAsync(CreateStationRequest request);
     Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId);
@@ -71,6 +74,8 @@ public interface IVendorService
     Task<VendorAuthResponse> AuthenticateWithPhoneAsync(VendorAuthRequest request);
     Task<VendorAuthResponse> VerifyOtpAndAuthenticateAsync(VerifyVendorOtpRequest request);
     Task<VendorProfileDto?> GetProfileAsync(Guid vendorId);
+    Task<VendorProfileDto?> UpdateProfileAsync(Guid vendorId, UpdateVendorProfileRequest request);
+    Task<VendorProfileDto> ChangePhoneAsync(Guid vendorId, ChangePhoneRequest request);
     Task<IReadOnlyList<Partner>> GetAllVendorsAsync();
 }
 

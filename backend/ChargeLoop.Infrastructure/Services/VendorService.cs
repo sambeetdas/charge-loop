@@ -81,7 +81,8 @@ public class VendorService : IVendorService
             existing.FullName,
             existing.BusinessName,
             token,
-            existing.WalletBalance
+            existing.WalletBalance,
+            existing.Email
         );
     }
 
@@ -140,8 +141,59 @@ public class VendorService : IVendorService
             partner.UpiId,
             partner.BankAccountNumber,
             partner.WalletBalance,
-            stationDtos
+            stationDtos,
+            partner.Email
         );
+    }
+
+    public async Task<VendorProfileDto?> UpdateProfileAsync(Guid vendorId, UpdateVendorProfileRequest request)
+    {
+        var partner = await _context.Partners.FirstOrDefaultAsync(p => p.Id == vendorId);
+        if (partner == null) return null;
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+            partner.FullName = request.FullName.Trim();
+        if (!string.IsNullOrWhiteSpace(request.BusinessName))
+            partner.BusinessName = request.BusinessName.Trim();
+        if (request.Email != null)
+            partner.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        if (request.UpiId != null)
+            partner.UpiId = string.IsNullOrWhiteSpace(request.UpiId) ? null : request.UpiId.Trim();
+        if (request.BankAccountNumber != null)
+            partner.BankAccountNumber = string.IsNullOrWhiteSpace(request.BankAccountNumber) ? null : request.BankAccountNumber.Trim();
+
+        await _context.SaveChangesAsync();
+        return await GetProfileAsync(vendorId);
+    }
+
+    public async Task<VendorProfileDto> ChangePhoneAsync(Guid vendorId, ChangePhoneRequest request)
+    {
+        var partner = await _context.Partners.FirstOrDefaultAsync(p => p.Id == vendorId)
+            ?? throw new KeyNotFoundException("Vendor not found.");
+
+        var newPhone = NormalizePhone(request.NewPhoneNumber);
+        if (string.IsNullOrWhiteSpace(newPhone))
+            throw new ArgumentException("Valid phone number is required.");
+
+        var otpEntry = await _context.OtpVerifications
+            .Where(o => o.PhoneNumber == newPhone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otpEntry == null || otpEntry.OtpCode != request.OtpCode.Trim())
+            throw new InvalidOperationException("Invalid or expired OTP code.");
+
+        var last10 = newPhone.Length >= 10 ? newPhone[^10..] : newPhone;
+        var conflict = await _context.Partners.AnyAsync(p => p.Id != vendorId &&
+            (p.PhoneNumber == newPhone || (last10.Length == 10 && p.PhoneNumber.EndsWith(last10))));
+        if (conflict)
+            throw new InvalidOperationException("This phone number is already registered to another partner.");
+
+        otpEntry.IsUsed = true;
+        partner.PhoneNumber = newPhone;
+        await _context.SaveChangesAsync();
+
+        return (await GetProfileAsync(vendorId))!;
     }
 
     public async Task<IReadOnlyList<Partner>> GetAllVendorsAsync()
