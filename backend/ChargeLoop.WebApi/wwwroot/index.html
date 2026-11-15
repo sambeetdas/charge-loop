@@ -556,9 +556,6 @@
               <button class="btn btn-secondary btn-sm" onclick="sendDriverOtp()">Resend</button>
             </div>
           </div>
-
-          <div class="section-title"><span>Quick Select Active Driver</span></div>
-          <div id="quickDriversList"></div>
         </div>
 
         <!-- Vendor Auth -->
@@ -567,9 +564,6 @@
           <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)">
           <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)">
           <button class="btn btn-primary" onclick="signInVendor()">Sign In as Partner</button>
-
-          <div class="section-title"><span>Quick Select Active Partner</span></div>
-          <div id="quickVendorsList"></div>
         </div>
       </div>
     </div>
@@ -924,36 +918,6 @@ function selectAuthRole(role) {
   document.getElementById('roleTabVendor').classList.toggle('active', role === 'vendor');
   document.getElementById('authDriverBox').classList.toggle('hidden', role !== 'driver');
   document.getElementById('authVendorBox').classList.toggle('hidden', role !== 'vendor');
-}
-
-async function initAuthLists() {
-  try {
-    const [drivers, vendors] = await Promise.all([
-      apiFetch('/auth/drivers'),
-      apiFetch('/auth/vendors')
-    ]);
-    const dBox = document.getElementById('quickDriversList');
-    dBox.innerHTML = (drivers || []).slice(0, 4).map(d => `
-      <div class="card-elevated row-between" style="margin-bottom:8px;cursor:pointer;" onclick="quickSignInDriver('${d.phoneNumber}', '${(d.fullName || '').replace(/'/g, '')}')">
-        <div>
-          <div style="font-weight:700;font-size:13px;">${d.fullName}</div>
-          <div class="muted">${d.phoneNumber}</div>
-        </div>
-        <span style="color:var(--mint);font-weight:800;">₹${Number(d.walletBalance || 0).toFixed(2)}</span>
-      </div>
-    `).join('');
-
-    const vBox = document.getElementById('quickVendorsList');
-    vBox.innerHTML = (vendors || []).slice(0, 4).map(v => `
-      <div class="card-elevated row-between" style="margin-bottom:8px;cursor:pointer;" onclick="quickSignInVendor('${v.phoneNumber}', '${(v.fullName || '').replace(/'/g, '')}')">
-        <div>
-          <div style="font-weight:700;font-size:13px;">${v.businessName || v.fullName}</div>
-          <div class="muted">${v.phoneNumber}</div>
-        </div>
-        <span style="color:var(--mint);font-weight:800;">₹${Number(v.walletBalance || 0).toFixed(2)}</span>
-      </div>
-    `).join('');
-  } catch (e) { console.error(e); }
 }
 
 async function sendDriverOtp() {
@@ -1537,8 +1501,6 @@ function signOut() {
   document.getElementById('navVendor').classList.add('hidden');
   document.getElementById('headerUserText').textContent = 'Sign In';
 }
-
-initAuthLists();
 </script>
 </body>
 </html>
