@@ -194,6 +194,7 @@ public class StationService : IStationService
         };
 
         _context.Stations.Add(station);
+        await _context.SaveChangesAsync();
 
         // Seed initial charged batteries for this new station so drivers can immediately swap there
         int chargedCount = request.InitialChargedBatteries > 0 ? request.InitialChargedBatteries : 6;
