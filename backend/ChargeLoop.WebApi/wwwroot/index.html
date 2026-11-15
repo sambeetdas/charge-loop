@@ -644,8 +644,21 @@
         </div>
 
         <div id="driverCashFields" class="card-elevated" style="margin-bottom:12px;">
-          <div class="muted" style="margin-bottom:6px;">Cash Amount Paid (₹) — Tracked in Ledger</div>
-          <input id="driverCashAmount" class="input-field" type="number" value="118" placeholder="Enter Cash Amount (₹)" style="margin-bottom:0;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:8px;">🧾 Fare Breakup</div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Base Swap &amp; Energy Fee</span>
+            <span>₹100.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
+            <span>GST (18% on ₹100.00)</span>
+            <span>₹18.00</span>
+          </div>
+          <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
+            <span>Total Payable (Cash)</span>
+            <span style="color:var(--mint);">₹118.00</span>
+          </div>
+          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Amount (₹) — Fixed System Fare (Read-Only)</div>
+          <input id="driverCashAmount" class="input-field" type="number" value="118.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
         </div>
 
         <button class="btn btn-primary" onclick="executeDriverScanAndPay()">Confirm Swap &amp; Record Payment</button>
