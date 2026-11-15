@@ -222,9 +222,17 @@
 
     .pill-row {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+      flex-wrap: nowrap;
+      gap: 5px;
       margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .pill-row .mint-pill,
+    .pill-row .amber-pill {
+      padding: 4px 7px;
+      font-size: 10px;
+      white-space: nowrap;
     }
 
     .mint-pill {
