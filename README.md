@@ -1,6 +1,6 @@
 # ChargeLoop EV Battery Swapping Application Suite
 
-ChargeLoop operates an enterprise Battery-as-a-Service (BaaS) swapping network for electric 2-wheelers and 3-wheelers. Drivers exchange a depleted battery for a fully charged one in under **2 minutes** at partner-run stations.
+ChargeLoop operates an enterprise Battery-as-a-Service (BaaS) swapping network for electric 2-wheelers and 3-wheelers. Drivers exchange a depleted battery for a fully charged one quickly at partner-run stations.
 
 ---
 
@@ -9,7 +9,7 @@ ChargeLoop operates an enterprise Battery-as-a-Service (BaaS) swapping network f
 * **Mobile App Client**: **Flutter (Dart)** — Multiplatform codebase designed for **Android first** (budget device friendly, high-contrast sunlight readability) and seamlessly deployable to **iOS & macOS**.
 * **Backend Core API**: **ASP.NET Core (.NET 11, C#)** — High-throughput Clean Architecture API with:
   * **Real-time SignalR Hub** (`/hubs/stations`) for instant battery count and swap state broadcasting.
-  * **Swap Engine** for sub-1.5s battery validation and 2-minute physical swap verification.
+  * **Swap Engine** for fast battery validation and physical swap verification.
   * **Double-entry Wallet & Commission Ledger** for drivers and station partners.
   * **Geospatial Station Discovery** (Haversine & PostGIS compatible).
   * **IoT Telemetry Ingestion** for battery state of charge (SOC), cell temperature, and anti-theft monitoring.
@@ -44,7 +44,7 @@ ChargeLoop/
 │       ├── core/network/                 # REST & SignalR API client
 │       ├── models/                       # Data models (Driver, Vendor, Station, Battery)
 │       ├── widgets/                      # Custom Battery Gauge (SOC %), status badges
-│       └── screens/                      # Auth, Stations Map, 2-Min Swap, Wallet, Vendor Operations & Profiles
+│       └── screens/                      # Auth, Stations Map, Battery Swap, Wallet, Vendor Operations & Profiles
 └── docker-compose.yml                    # PostgreSQL + PostGIS & Redis services
 ```
 
@@ -149,7 +149,7 @@ flutter run -d chrome
 3. **Wallet & Cash Top-Up**:
    - View wallet balance and recent transactions (`GET /api/v1/wallet/balance/{driverId}?accountType=0`).
    - Add money by entering a **Cash** amount (`POST /api/v1/wallet/topup` with `CorrelationId` idempotency).
-4. **Scan & Pay (2-Minute Swap)**:
+4. **Scan & Pay (Battery Swap)**:
    - Select station, enter/scan depleted battery QR, pick a charged battery, choose **Cash** (enter Cash amount), **ChargeLoop Wallet**, or **Weekly Pass**, and confirm (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`).
 5. **Billing & Swap History**:
    - View GST invoices (`INV-CL-YYYYMMDD-XXXXXX`), tax breakdown, payment mode, and published channels (`GET /api/v1/swaps/history/{driverId}`).

@@ -177,7 +177,7 @@ class _SwapScreenState extends State<SwapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('2-Minute Battery Swap'),
+        title: const Text('Battery Swap'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -297,7 +297,7 @@ class _SwapScreenState extends State<SwapScreen> {
           ElevatedButton.icon(
             onPressed: _startSwap,
             icon: const Icon(Icons.flash_on),
-            label: const Text('Initiate 2-Min Swap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            label: const Text('Initiate Battery Swap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

@@ -205,7 +205,7 @@ class ApiClient {
     }
   }
 
-  // 5. Initiate 2-Minute Swap (Records in PostgreSQL)
+  // 5. Initiate Battery Swap (Records in PostgreSQL)
   Future<SwapResponseModel> initiateSwap({
     required String driverId,
     required String stationId,

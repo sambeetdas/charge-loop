@@ -289,7 +289,7 @@ public class SwapService : ISwapService
         var depletedSerial = depleted?.SerialNumber ?? "BAT-DEPLETED";
         var issuedSerial = issued?.SerialNumber ?? "BAT-ISSUED";
 
-        var response = MapToResponse(swap, depletedSerial, issuedSerial, "Swap completed in under 2 minutes! Safe travels.");
+        var response = MapToResponse(swap, depletedSerial, issuedSerial, "Swap completed! Safe travels.");
         await _notificationService.NotifySwapStatusChangedAsync(swap.DriverId, response);
         return response;
     }
