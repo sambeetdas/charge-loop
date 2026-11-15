@@ -147,23 +147,29 @@ flutter run -d chrome
 1. **Partner Sign In / Sign Up (2-Step OTP)**:
    - Select **Partner / Vendor**, enter mobile number, and tap **Send OTP to Phone** (`POST /api/v1/auth/send-otp`).
    - Enter the 6-digit OTP (plus optional Full Name and Business / Hub Name) and tap **Verify & Sign In** (`POST /api/v1/auth/vendor/verify-otp`) to receive a JWT token.
-   - Initial Partner Commission Wallet starts at **₹0.00**.
-2. **Store & Battery Inventory Management**:
-   - Add a new Station/Hub (`POST /api/v1/stations`).
-   - Register individual batteries at a store — Serial/QR, Model Type, and SOC % (`POST /api/v1/stations/{stationId}/batteries`).
-   - View **all** batteries in the store (`GET /api/v1/stations/{stationId}/batteries?includeAll=true`), including both `Charged` (SOC ≥ 80%) and `Charging` batteries.
-   - Toggle **Shown / Hidden from Driver** (`PATCH /api/v1/stations/{stationId}/batteries/{batteryId}/visibility`) on any charged battery. Undercharging (`Charging`) batteries stay hidden from drivers automatically.
+   - Initial Partner Commission Wallet starts at **₹0.00** (same phone number can be registered as both Driver and Partner with separate profiles and wallets).
+2. **Store & Battery Inventory Management (4-Status Lifecycle)**:
+   - Add one or more Stations/Hubs (`POST /api/v1/stations`). New stores start with **0** batteries (no dummy batteries are auto-seeded).
+   - Register individual batteries at a store — Serial/QR, Model Type, and SOC % (`POST /api/v1/stations/{stationId}/batteries`). Batteries with SOC ≥ 80% start as **Active**; batteries with SOC < 80% start as **Charging**.
+   - View **all** store batteries (`GET /api/v1/stations/{stationId}/batteries?includeAll=true`).
+   - Change any battery's status with the 4-way toggle (`PATCH /api/v1/stations/{stationId}/batteries/{batteryId}/status`):
+     - **Active** (`AvailableCharged = 0`): Visible to drivers and eligible for reservation/assignment.
+     - **Inactive** (`Inactive = 4`): Hidden from drivers and cannot be assigned.
+     - **Charging** (`ChargingInStation = 1`): Hidden from drivers and cannot be assigned while charging.
+     - **Out of Order** (`MaintenanceFaulty = 3`): Hidden from drivers and blocked from assignment.
+   - **Rule**: Only **Active** batteries can be shown to drivers or assigned during a swap.
 3. **Partner Profile & Phone Number Change (OTP)**:
    - Edit Full Name, Business Name, Email, UPI ID, and Bank Account Number (`PUT /api/v1/auth/vendor/profile/{vendorId}`).
    - Change phone number securely with 2-step OTP verification (`POST /api/v1/auth/send-otp` &rarr; `POST /api/v1/auth/vendor/profile/{vendorId}/change-phone`).
-4. **Step 1 — Validate Driver Before Swap**:
-   - Enter Driver phone, name, or ID and click **Validate** (`GET /api/v1/swaps/validate-driver?query=...`).
-   - The **Swap** button stays locked until the driver's KYC, active battery, wallet balance, and Weekly Pass quota are verified.
+4. **Step 1 — Validate Driver & Reserve OTP Before Swap**:
+   - Enter Driver phone, name, or ID **and** the **Driver's Reserve OTP** (if the driver reserved a station) and click **Validate** (`GET /api/v1/swaps/validate-driver?query=...&reserveOtp=...`).
+   - If the driver has an active reservation, the **Swap** button remains **locked** until the matching 6-digit Reserve OTP is entered and verified.
 5. **Step 2 — 2-Step Battery QR Scan**:
-   - Scan/enter the Driver's **Depleted Battery QR** (or leave empty if the driver is picking up their first battery) and select the **New Charged Battery QR** from the store's inventory.
+   - Scan/enter the Driver's **Depleted Battery QR** (automatically prefilled if the driver already holds a battery, or left **empty** if it is the driver's first battery pickup) and select an **Active** charged battery from the store's inventory.
 6. **Step 3 — Collect Payment & Execute Swap**:
    - Collect **Cash** (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`). Wallet, Card, and UPI show a Work-In-Progress notice.
-   - Partner commission (**₹25.00**) is credited instantly and logged in `transactions`.
+   - Partner commission (**₹25.00**) is credited instantly to the Partner Commission Wallet and logged in `transactions` + `audit_logs`.
+   - Any active reservation for that driver at the station is automatically marked `Fulfilled`, and the returned depleted battery (if any) moves to `Charging` at the store.
 7. **Step 4 — Publish Bill**:
    - Dispatch/record the GST invoice to the Driver across **WhatsApp**, **SMS**, and **Email** (`POST /api/v1/swaps/{swapId}/publish-bill`).
 
@@ -176,13 +182,20 @@ flutter run -d chrome
    - Enter the 6-digit OTP (plus optional Name, Email for invoices, and Referral Code) and tap **Verify & Sign In** (`POST /api/v1/auth/verify-otp`) to receive a JWT token.
    - Initial Driver Wallet starts at **₹0.00**.
 2. **Station Locator, Pre-Reserve Battery Preview & 2-Hour Reservation OTP**:
-   - Browse nearby swap hubs (`POST /api/v1/stations/nearby`) with live **Charged** and **Charging** counts.
-   - Tap **🔋 Batteries** on any station card to preview available charged batteries visible to drivers **before** reserving (`GET /api/v1/stations/{stationId}/batteries`).
-   - Tap **Reserve** (`POST /api/v1/reservations/hold`) to receive a **6-digit Reservation OTP** displayed on screen for **2 hours** (automatically disappears after 2 hours so you can reserve again), or tap **Reverse / Cancel Reserve** (`DELETE /api/v1/reservations/{reservationId}`) at any time.
-3. **Scan & Pay (Reserved Station Only)**:
-   - In **Scan Station & Battery QR**, only your **Reserved Station** is shown.
-   - **First Battery vs Replacement**: If this is your first battery pickup, the depleted battery field stays **empty**; if you already have an assigned battery and are coming for a replacement, it automatically displays your assigned battery QR/Serial.
-   - Select the charged battery, pay via **Cash** (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`), and view your GST receipt.
+   - Browse nearby swap hubs (`POST /api/v1/stations/nearby`) with live **Active (Charged)** and **Charging** counts.
+   - Tap **🔋 Batteries** on any station card to preview **Active** batteries at that station **before** reserving (`GET /api/v1/stations/{stationId}/batteries`).
+   - Tap **Reserve** (`POST /api/v1/reservations/hold`) to hold an Active battery and receive a **6-digit Reservation OTP** displayed on screen with a live **2-hour countdown**.
+   - After **2 hours**, the reservation and OTP automatically expire and disappear so you can reserve again; you can also tap **Reverse / Cancel Reserve** (`DELETE /api/v1/reservations/{reservationId}`) at any time.
+3. **Scan & Pay (Reserved Station Only & Itemized Fare Breakup)**:
+   - In **Scan Station & Battery QR**, only your active **Reserved Station** is shown.
+   - **First Battery vs Replacement**:
+     - First battery pickup: the depleted battery field stays **empty**.
+     - Replacement swap: the depleted battery field automatically displays your currently assigned battery QR/Serial.
+   - Select an Active battery to receive, review the **read-only** Cash amount (**₹118.00**) with its complete **Fare Breakup**:
+     - **Base Swap & Energy Fee**: `₹100.00`
+     - **GST (18% on ₹100.00)**: `₹18.00`
+     - **Total Payable (Cash)**: `₹118.00`
+   - Tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate` &rarr; `POST /api/v1/swaps/confirm`) to complete the swap and view your GST receipt.
 4. **Wallet, Cash Top-Up & Referral**:
    - View wallet balance and recent transactions (`GET /api/v1/wallet/balance/{driverId}?accountType=0`), record a **Cash Top-Up** (`POST /api/v1/wallet/topup` with `CorrelationId` idempotency), or claim a friend's `CL-...` referral code (`POST /api/v1/auth/referral/claim`) for **₹50** bonus.
 5. **Billing & Swap History**:
