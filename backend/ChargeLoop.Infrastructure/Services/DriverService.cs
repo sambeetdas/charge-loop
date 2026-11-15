@@ -20,15 +20,30 @@ public class DriverService : IDriverService
         _auditService = auditService;
     }
 
+    private static string NormalizePhone(string raw)
+    {
+        var digits = new string((raw ?? "").Where(char.IsDigit).ToArray());
+        if (digits.Length == 10) return $"+91{digits}";
+        if (digits.Length == 12 && digits.StartsWith("91")) return $"+{digits}";
+        return (raw ?? string.Empty).Trim();
+    }
+
     public async Task<AuthResponse> AuthenticateWithPhoneAsync(AuthRequest request)
     {
-        var existing = await _context.Drivers.FirstOrDefaultAsync(d => d.PhoneNumber == request.PhoneNumber);
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var existing = await _context.Drivers.FirstOrDefaultAsync(d =>
+            d.PhoneNumber == normalized ||
+            d.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && d.PhoneNumber.EndsWith(last10)));
+
         if (existing == null)
         {
-            var suffix = request.PhoneNumber.Length >= 4 ? request.PhoneNumber[^4..] : request.PhoneNumber;
+            var suffix = normalized.Length >= 4 ? normalized[^4..] : normalized;
             existing = new Driver
             {
-                PhoneNumber = request.PhoneNumber,
+                PhoneNumber = normalized,
                 FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Driver " + suffix : request.FullName,
                 Email = request.Email,
                 LanguageCode = request.LanguageCode ?? "en",
@@ -86,7 +101,7 @@ public class DriverService : IDriverService
 
     public async Task<SendOtpResponse> SendOtpAsync(SendOtpRequest request)
     {
-        var phone = request.PhoneNumber.Trim();
+        var phone = NormalizePhone(request.PhoneNumber);
         var otp = Random.Shared.Next(100000, 999999).ToString();
         var expiresAt = DateTime.UtcNow.AddMinutes(5);
 
@@ -106,7 +121,7 @@ public class DriverService : IDriverService
 
     public async Task<AuthResponse> VerifyOtpAndAuthenticateAsync(VerifyOtpRequest request)
     {
-        var phone = request.PhoneNumber.Trim();
+        var phone = NormalizePhone(request.PhoneNumber);
         var otpEntry = await _context.OtpVerifications
             .Where(o => o.PhoneNumber == phone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
             .OrderByDescending(o => o.CreatedAt)

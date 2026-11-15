@@ -19,16 +19,32 @@ public class VendorService : IVendorService
         _auditService = auditService;
     }
 
+    private static string NormalizePhone(string raw)
+    {
+        var digits = new string((raw ?? "").Where(char.IsDigit).ToArray());
+        if (digits.Length == 10) return $"+91{digits}";
+        if (digits.Length == 12 && digits.StartsWith("91")) return $"+{digits}";
+        return (raw ?? string.Empty).Trim();
+    }
+
     public async Task<VendorAuthResponse> AuthenticateWithPhoneAsync(VendorAuthRequest request)
     {
-        var existing = await _context.Partners.FirstOrDefaultAsync(p => p.PhoneNumber == request.PhoneNumber);
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var existing = await _context.Partners.FirstOrDefaultAsync(p =>
+            p.PhoneNumber == normalized ||
+            p.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && p.PhoneNumber.EndsWith(last10)));
+
         if (existing == null)
         {
+            var suffix = normalized.Length >= 4 ? normalized[^4..] : normalized;
             existing = new Partner
             {
-                PhoneNumber = request.PhoneNumber,
-                FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Vendor " + request.PhoneNumber[^4..] : request.FullName,
-                BusinessName = string.IsNullOrWhiteSpace(request.BusinessName) ? "ChargeLoop Station " + request.PhoneNumber[^4..] : request.BusinessName,
+                PhoneNumber = normalized,
+                FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Vendor " + suffix : request.FullName,
+                BusinessName = string.IsNullOrWhiteSpace(request.BusinessName) ? "ChargeLoop Station " + suffix : request.BusinessName,
                 WalletBalance = 0.00m
             };
             await _context.Partners.AddAsync(existing);

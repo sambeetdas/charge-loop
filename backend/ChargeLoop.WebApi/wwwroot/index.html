@@ -625,10 +625,10 @@
       <div class="card">
         <div class="step-header"><span class="step-badge">2</span> Choose Payment Method</div>
         <div class="pay-options">
-          <div class="pay-chip active" data-pm="3" onclick="selectDriverPayMethod(3, this)">💵 Cash</div>
-          <div class="pay-chip" data-pm="1" onclick="selectDriverPayMethod(1, this)">👛 ChargeLoop Wallet</div>
-          <div class="pay-chip" data-pm="0" onclick="selectDriverPayMethod(0, this)">📋 Weekly Pass</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card / 📱 UPI (Online)</div>
+          <div class="pay-chip active" data-pm="3" onclick="selectDriverPayMethod(3, this)">💵 Cash Only</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">👛 Wallet (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">📱 UPI (WIP)</div>
         </div>
 
         <div id="driverCashFields" class="card-elevated" style="margin-bottom:12px;">
@@ -754,10 +754,10 @@
       <div class="card">
         <div class="step-header"><span class="step-badge">3</span> Collect Payment &amp; Execute Swap</div>
         <div class="pay-options">
-          <div class="pay-chip active" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash</div>
-          <div class="pay-chip" data-vpm="0" onclick="selectVendorPayMethod(0, this)">📋 Weekly Pass</div>
-          <div class="pay-chip" data-vpm="1" onclick="selectVendorPayMethod(1, this)">👛 Wallet</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card / 📱 UPI</div>
+          <div class="pay-chip active" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash Only</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">👛 Wallet (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()">📱 UPI (WIP)</div>
         </div>
         <div id="vendorCashFields" class="card-elevated" style="margin-bottom:10px;">
           <div class="muted" style="margin-bottom:4px;">Cash Collected (₹)</div>
@@ -1494,11 +1494,20 @@ function handleHeaderAction() {
 }
 
 function signOut() {
-  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null };
+  state = { ...state, role: null, token: null, driver: null, vendor: null, validatedDriver: null, lastVendorSwap: null, driverPayMethod: 3, vendorPayMethod: 3 };
   document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
   document.getElementById('view-auth').classList.remove('hidden');
   document.getElementById('navDriver').classList.add('hidden');
   document.getElementById('navVendor').classList.add('hidden');
+  document.getElementById('driverOtpStep1').classList.remove('hidden');
+  document.getElementById('driverOtpStep2').classList.add('hidden');
+  document.getElementById('authDriverOtp').value = '';
+  document.getElementById('validatedDriverBox').classList.add('hidden');
+  document.getElementById('vendorBillCard').classList.add('hidden');
+  document.getElementById('driverSwapReceipt').classList.add('hidden');
+  const vBtn = document.getElementById('vendorSwapBtn');
+  vBtn.disabled = true;
+  vBtn.textContent = '🔒 Validate Driver First to Unlock Swap';
   document.getElementById('headerUserText').textContent = 'Sign In';
 }
 </script>
