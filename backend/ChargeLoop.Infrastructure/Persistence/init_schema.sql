@@ -73,6 +73,8 @@ CREATE TABLE IF NOT EXISTS swap_transactions (
     driver_id UUID NOT NULL REFERENCES drivers(id),
     station_id UUID NOT NULL REFERENCES stations(id),
     partner_id UUID NOT NULL REFERENCES partners(id),
+    depleted_battery_id UUID NOT NULL REFERENCES batteries(id),
+    depleted_battery_soc INT NOT NULL,
     depleted_battery_id UUID REFERENCES batteries(id),
     depleted_battery_soc INT NOT NULL DEFAULT 0,
     issued_battery_id UUID NOT NULL REFERENCES batteries(id),
