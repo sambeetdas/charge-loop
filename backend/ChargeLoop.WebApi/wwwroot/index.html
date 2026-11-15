@@ -1712,7 +1712,7 @@ async function loadSelectedStoreBatteries() {
     const isCharged = b.status === 0;
     const toggleBtn = isCharged
       ? `<button class="btn btn-sm ${b.isVisibleToDriver ? 'btn-primary' : 'btn-secondary'}" onclick="toggleBatteryVisibility('${sid}', '${b.id}', ${!b.isVisibleToDriver})">${b.isVisibleToDriver ? '👁️ Shown to Driver' : '🙈 Hidden from Driver'}</button>`
-      : `<span class="amber-pill">⚡ Undercharging — Hidden</span>`;
+      : `<div style="display:flex;gap:6px;align-items:center;"><span class="amber-pill">⚡ Undercharging — Hidden</span><button class="btn btn-primary btn-sm" onclick="markBatteryCharged('${sid}', '${b.id}', 100)">Mark Charged (100%)</button></div>`;
     return `
       <div class="card">
         <div class="row-between" style="margin-bottom:8px;">
@@ -1739,6 +1739,17 @@ async function toggleBatteryVisibility(stationId, batteryId, isVisibleToDriver) 
     });
     await refreshVendorViews();
     showToast(isVisibleToDriver ? 'Battery is now visible to drivers!' : 'Battery hidden from drivers.');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function markBatteryCharged(stationId, batteryId, stateOfChargePercent) {
+  try {
+    await apiFetch(`/stations/${stationId}/batteries/${batteryId}/charge`, {
+      method: 'PATCH',
+      body: JSON.stringify({ stateOfChargePercent })
+    });
+    await refreshVendorViews();
+    showToast('Battery marked Charged (100%) and ready for drivers!');
   } catch (e) { showToast(e.message, true); }
 }
 

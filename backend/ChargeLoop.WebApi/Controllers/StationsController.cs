@@ -60,6 +60,20 @@ public class StationsController : ControllerBase
         }
     }
 
+    [HttpPatch("{id:guid}/batteries/{batteryId:guid}/charge")]
+    public async Task<ActionResult<BatteryDto>> UpdateBatteryCharge(Guid id, Guid batteryId, [FromBody] UpdateBatteryChargeRequest request)
+    {
+        try
+        {
+            var battery = await _stationService.UpdateBatteryChargeAsync(id, batteryId, request.StateOfChargePercent);
+            return Ok(battery);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+    }
+
     [HttpPost("{id:guid}/batteries")]
     public async Task<ActionResult<BatteryDto>> RegisterBattery(Guid id, [FromBody] RegisterBatteryRequest request)
     {

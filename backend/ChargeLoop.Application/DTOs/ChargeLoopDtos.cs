@@ -22,6 +22,7 @@ public record UpdateDriverProfileRequest(string? FullName, string? Email, string
 public record UpdateVendorProfileRequest(string? FullName, string? BusinessName, string? Email, string? UpiId, string? BankAccountNumber);
 public record ChangePhoneRequest(string NewPhoneNumber, string OtpCode);
 public record ToggleBatteryVisibilityRequest(bool IsVisibleToDriver);
+public record UpdateBatteryChargeRequest(int StateOfChargePercent);
 
 public record KycSubmissionRequest(Guid DriverId, string DrivingLicenseNumber, string AadhaarNumber);
 public record VehicleLinkRequest(Guid DriverId, string RegistrationNumber, string Oem, string Model, string BatteryType);

@@ -26,6 +26,7 @@ public interface IStationService
     Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId, bool includeAll = false);
     Task<BatteryDto> RegisterBatteryAtStationAsync(RegisterBatteryRequest request);
     Task<BatteryDto> ToggleBatteryVisibilityAsync(Guid stationId, Guid batteryId, bool isVisibleToDriver);
+    Task<BatteryDto> UpdateBatteryChargeAsync(Guid stationId, Guid batteryId, int stateOfChargePercent);
     Task<bool> UpdateStationAvailabilityAsync(Guid stationId, int availableCharged, int charging, int waitTimeMinutes);
     Task<StationDto> CreateStationAsync(CreateStationRequest request);
     Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId);
