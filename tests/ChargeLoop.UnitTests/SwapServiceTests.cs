@@ -167,4 +167,45 @@ public class SwapServiceTests
         Assert.Equal(4, updatedStation!.AvailableChargedBatteriesCount);
         Assert.Equal(3, updatedStation.ChargingBatteriesCount);
     }
+
+    [Fact]
+    public async Task FirstBatteryPickup_WithEmptyDepletedSerial_IssuesBatteryAndMarksReservationFulfilled()
+    {
+        var context = CreateInMemoryDbContext();
+        var walletService = new WalletService(context);
+        var swapService = new SwapService(context, walletService, new MockNotificationService());
+        var reservationService = new ReservationService(context);
+
+        var driver = new Driver { FullName = "First Time Driver", PhoneNumber = "+919000000010", WalletBalance = 0.00m };
+        var partner = new Partner { FullName = "Partner", BusinessName = "XYZ Mall", PhoneNumber = "+919000000011", WalletBalance = 0.00m };
+        var station = new Station { PartnerId = partner.Id, Name = "XYZ Mall", AvailableChargedBatteriesCount = 1, ChargingBatteriesCount = 0 };
+        var issued = new Battery { SerialNumber = "BAT-FIRST-100", StateOfChargePercent = 100, Status = BatteryStatus.AvailableCharged, CurrentStationId = station.Id };
+
+        await context.Drivers.AddAsync(driver);
+        await context.Partners.AddAsync(partner);
+        await context.Stations.AddAsync(station);
+        await context.Batteries.AddAsync(issued);
+        await context.SaveChangesAsync();
+
+        var reservation = await reservationService.CreateReservationAsync(new ReservationRequest(driver.Id, station.Id));
+
+        // Empty depleted serial for first battery pickup
+        var init = await swapService.InitiateSwapAsync(new InitiateSwapRequest(driver.Id, station.Id, partner.Id, "", issued.SerialNumber));
+        Assert.Equal("FIRST-PICKUP", init.DepletedBatterySerial);
+
+        var done = await swapService.ConfirmSwapAsync(new ConfirmSwapRequest(init.SwapId, PaymentMethod.Cash, 118.00m));
+        Assert.Equal(SwapStatus.Completed, done.Status);
+
+        var updatedIssued = await context.Batteries.FindAsync(issued.Id);
+        Assert.Equal(BatteryStatus.InUseByDriver, updatedIssued!.Status);
+        Assert.Equal(driver.Id, updatedIssued.CurrentDriverId);
+
+        var updatedPartner = await context.Partners.FindAsync(partner.Id);
+        Assert.Equal(25.00m, updatedPartner!.WalletBalance);
+
+        // Reservation should now be fulfilled and no longer active
+        var updatedReservation = await context.Reservations.FindAsync(reservation.Id);
+        Assert.Equal(ReservationStatus.Fulfilled, updatedReservation!.Status);
+        Assert.Null(await reservationService.GetActiveReservationAsync(driver.Id));
+    }
 }
