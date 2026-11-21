@@ -22,14 +22,9 @@ if [ ! -f /swapfile ]; then
 fi
 
 echo "=== [2/6] Installing System Packages, PostgreSQL & Caddy ==="
+export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get install -y curl git ufw postgresql postgresql-contrib debian-keyring debian-archive-keyring apt-transport-https
-
-if ! command -v caddy >/dev/null 2>&1; then
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.tar.gz' | tee /etc/apt/sources.list.d/caddy-stable.list
-  apt-get update -y && apt-get install -y caddy
-fi
+apt-get install -y curl git ufw postgresql postgresql-contrib caddy
 
 echo "=== [3/6] Installing .NET 11 SDK ==="
 if [ ! -x /usr/local/share/dotnet/dotnet ]; then
