@@ -4,6 +4,10 @@ public class PricingConfig
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public decimal BaseSwapFee { get; set; } = 100.00m;
+    public decimal PlatformFee { get; set; } = 10.00m;
+    public decimal ConvenienceFee { get; set; } = 5.00m;
+    public decimal PaymentGatewayFee { get; set; } = 2.50m;
+    public decimal BankCharges { get; set; } = 1.50m;
     public decimal GstPercent { get; set; } = 18.00m;
     public decimal PartnerCommission { get; set; } = 25.00m;
     public bool IsActive { get; set; } = true;

@@ -73,10 +73,10 @@ public class SwapServiceTests
         // Act
         var result = await swapService.InitiateSwapAsync(request);
 
-        // Assert
+        // Assert (100 + 10 platform + 5 convenience = 115 taxable; 18% GST = 20.70; total = 135.70)
         Assert.Equal(100.00m, result.BaseFee);
-        Assert.Equal(18.00m, result.TaxAmount);
-        Assert.Equal(118.00m, result.TotalAmount);
+        Assert.Equal(20.70m, result.TaxAmount);
+        Assert.Equal(135.70m, result.TotalAmount);
         Assert.Equal(25.00m, result.PartnerCommission);
         Assert.Equal(SwapStatus.Validated, result.Status);
     }
@@ -267,12 +267,16 @@ public class SwapServiceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             swapService.ValidateSwapOtpAsync(driver.Id, "000000"));
 
-        // Vendor validates regenerated OTP -> gets breakup (100 + 18 = 118)
+        // Vendor validates regenerated OTP -> gets full breakup (100 + 10 + 5 = 115 + 20.70 GST = 135.70)
         var verified = await swapService.ValidateSwapOtpAsync(driver.Id, regen.SwapOtp);
         Assert.Equal(init.SwapId, verified.SwapId);
         Assert.Equal(100.00m, verified.BaseFee);
-        Assert.Equal(18.00m, verified.TaxAmount);
-        Assert.Equal(118.00m, verified.TotalAmount);
+        Assert.Equal(10.00m, verified.PlatformFee);
+        Assert.Equal(5.00m, verified.ConvenienceFee);
+        Assert.Equal(0.00m, verified.PaymentGatewayFee);
+        Assert.Equal(0.00m, verified.BankCharges);
+        Assert.Equal(20.70m, verified.TaxAmount);
+        Assert.Equal(135.70m, verified.TotalAmount);
 
         // Vendor confirms swap -> Driver's request is Completed
         var confirmed = await swapService.ConfirmSwapAsync(new ConfirmSwapRequest(verified.SwapId, PaymentMethod.Cash, verified.TotalAmount));
@@ -290,6 +294,10 @@ public class SwapServiceTests
         await context.PricingConfigs.AddAsync(new PricingConfig
         {
             BaseSwapFee = 200.00m,
+            PlatformFee = 15.00m,
+            ConvenienceFee = 5.00m,
+            PaymentGatewayFee = 4.00m,
+            BankCharges = 2.00m,
             GstPercent = 12.00m,
             PartnerCommission = 40.00m,
             IsActive = true,
@@ -301,10 +309,15 @@ public class SwapServiceTests
         await context.Batteries.AddAsync(bat);
         await context.SaveChangesAsync();
 
+        // Cash: gateway & bank charges = 0 -> taxable = 200 + 15 + 5 = 220; 12% GST = 26.40; total = 246.40
         var init = await swapService.InitiateSwapAsync(new InitiateSwapRequest(Guid.NewGuid(), station.Id, station.PartnerId, "", bat.SerialNumber, PaymentMethod.Cash));
         Assert.Equal(200.00m, init.BaseFee);
-        Assert.Equal(24.00m, init.TaxAmount);
-        Assert.Equal(224.00m, init.TotalAmount);
+        Assert.Equal(15.00m, init.PlatformFee);
+        Assert.Equal(5.00m, init.ConvenienceFee);
+        Assert.Equal(0.00m, init.PaymentGatewayFee);
+        Assert.Equal(0.00m, init.BankCharges);
+        Assert.Equal(26.40m, init.TaxAmount);
+        Assert.Equal(246.40m, init.TotalAmount);
         Assert.Equal(40.00m, init.PartnerCommission);
     }
 }

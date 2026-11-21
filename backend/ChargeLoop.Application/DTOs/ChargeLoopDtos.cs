@@ -146,7 +146,12 @@ public record SwapResponse(
     string? InvoiceNumber = null,
     string? BillSentChannels = null,
     PaymentMethod? PaymentMethod = null,
-    string? SwapOtp = null
+    string? SwapOtp = null,
+    decimal PlatformFee = 0m,
+    decimal ConvenienceFee = 0m,
+    decimal PaymentGatewayFee = 0m,
+    decimal BankCharges = 0m,
+    decimal GstPercent = 18m
 );
 
 public record VendorPendingSwapDto(
@@ -271,6 +276,10 @@ public record SupportTicketDto(
 
 public record PricingConfigDto(
     decimal BaseSwapFee,
+    decimal PlatformFee,
+    decimal ConvenienceFee,
+    decimal PaymentGatewayFee,
+    decimal BankCharges,
     decimal GstPercent,
     decimal TaxAmount,
     decimal TotalAmount,
@@ -278,7 +287,15 @@ public record PricingConfigDto(
     DateTime UpdatedAt
 );
 
-public record UpdatePricingConfigRequest(decimal BaseSwapFee, decimal GstPercent, decimal PartnerCommission);
+public record UpdatePricingConfigRequest(
+    decimal BaseSwapFee,
+    decimal PlatformFee,
+    decimal ConvenienceFee,
+    decimal PaymentGatewayFee,
+    decimal BankCharges,
+    decimal GstPercent,
+    decimal PartnerCommission
+);
 
 public record BatteryTypeDto(Guid Id, string Code, string DisplayName, int Voltage, int CapacityAh, bool IsActive);
 

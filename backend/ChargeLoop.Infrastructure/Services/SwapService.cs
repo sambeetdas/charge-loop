@@ -159,10 +159,16 @@ public class SwapService : ISwapService
             .OrderByDescending(p => p.UpdatedAt)
             .FirstOrDefaultAsync();
 
-        var baseFee = pricing?.BaseSwapFee ?? 100.00m;
+        var isCash = request.PaymentMethod == PaymentMethod.Cash;
+        var baseSwapFee = pricing?.BaseSwapFee ?? 100.00m;
+        var platformFee = pricing?.PlatformFee ?? 10.00m;
+        var convenienceFee = pricing?.ConvenienceFee ?? 5.00m;
+        var gatewayFee = isCash ? 0.00m : (pricing?.PaymentGatewayFee ?? 2.50m);
+        var bankCharges = isCash ? 0.00m : (pricing?.BankCharges ?? 1.50m);
         var gstPercent = pricing?.GstPercent ?? 18.00m;
-        var taxAmount = Math.Round(baseFee * (gstPercent / 100m), 2);
-        var totalAmount = baseFee + taxAmount;
+        var taxableSubtotal = baseSwapFee + platformFee + convenienceFee + gatewayFee + bankCharges;
+        var taxAmount = Math.Round(taxableSubtotal * (gstPercent / 100m), 2);
+        var totalAmount = taxableSubtotal + taxAmount;
         var partnerCommission = pricing?.PartnerCommission ?? 25.00m;
 
         var swapOtp = Random.Shared.Next(100000, 999999).ToString();
@@ -176,7 +182,7 @@ public class SwapService : ISwapService
             DepletedBatterySoc = depleted?.StateOfChargePercent ?? 0,
             IssuedBatteryId = issued.Id,
             IssuedBatterySoc = issued.StateOfChargePercent,
-            BaseFee = baseFee,
+            BaseFee = baseSwapFee,
             TaxAmount = taxAmount,
             TotalAmount = totalAmount,
             PartnerCommissionEarned = partnerCommission,
@@ -188,7 +194,9 @@ public class SwapService : ISwapService
         await _context.Swaps.AddAsync(swap);
         await _context.SaveChangesAsync();
 
-        var response = MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued.SerialNumber, "Swap request created! Share Swap OTP with the partner.");
+        var response = MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued.SerialNumber,
+            "Swap request created! Share Swap OTP with the partner.",
+            platformFee, convenienceFee, gatewayFee, bankCharges, gstPercent);
         await _notificationService.NotifySwapStatusChangedAsync(request.DriverId, response);
         return response;
     }
@@ -229,7 +237,24 @@ public class SwapService : ISwapService
 
         var depleted = swap.DepletedBatteryId.HasValue ? await _context.Batteries.FindAsync(swap.DepletedBatteryId.Value) : null;
         var issued = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
-        return MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "Swap OTP verified! Ready to collect payment & confirm swap.");
+        return await MapWithPricingAsync(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "Swap OTP verified! Ready to collect payment & confirm swap.");
+    }
+
+    private async Task<SwapResponse> MapWithPricingAsync(SwapTransaction s, string dSerial, string iSerial, string message)
+    {
+        var pricing = await _context.PricingConfigs
+            .AsNoTracking()
+            .Where(p => p.IsActive)
+            .OrderByDescending(p => p.UpdatedAt)
+            .FirstOrDefaultAsync();
+        var isCash = s.PaymentMethod == PaymentMethod.Cash;
+        return MapToResponse(
+            s, dSerial, iSerial, message,
+            pricing?.PlatformFee ?? 10.00m,
+            pricing?.ConvenienceFee ?? 5.00m,
+            isCash ? 0.00m : (pricing?.PaymentGatewayFee ?? 2.50m),
+            isCash ? 0.00m : (pricing?.BankCharges ?? 1.50m),
+            pricing?.GstPercent ?? 18.00m);
     }
 
     public async Task<SwapResponse?> GetPendingSwapForDriverAsync(Guid driverId)
@@ -522,7 +547,10 @@ public class SwapService : ISwapService
         );
     }
 
-    private static SwapResponse MapToResponse(SwapTransaction s, string dSerial, string iSerial, string message) =>
+    private static SwapResponse MapToResponse(
+        SwapTransaction s, string dSerial, string iSerial, string message,
+        decimal platformFee = 0m, decimal convenienceFee = 0m,
+        decimal paymentGatewayFee = 0m, decimal bankCharges = 0m, decimal gstPercent = 18m) =>
         new(
             s.Id,
             s.Status,
@@ -541,6 +569,11 @@ public class SwapService : ISwapService
             s.InvoiceNumber,
             s.BillSentChannels,
             s.PaymentMethod,
-            s.SwapOtp
+            s.SwapOtp,
+            platformFee,
+            convenienceFee,
+            paymentGatewayFee,
+            bankCharges,
+            gstPercent
         );
 }

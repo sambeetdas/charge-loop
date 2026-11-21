@@ -663,6 +663,22 @@
             <span>Base Swap &amp; Energy Fee</span>
             <span id="driverBreakupBase">₹0.00</span>
           </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Platform Fee <span style="font-size:10px;">(ChargeLoop usage)</span></span>
+            <span id="driverBreakupPlatform">₹0.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Convenience Fee <span style="font-size:10px;">(Transaction)</span></span>
+            <span id="driverBreakupConv">₹0.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Payment Gateway Fee <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span id="driverBreakupGw">₹0.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Bank Charges <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span id="driverBreakupBank">₹0.00</span>
+          </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
             <span id="driverBreakupGstLabel">GST (18%)</span>
             <span id="driverBreakupTax">₹0.00</span>
@@ -832,8 +848,24 @@
             <span>Base Swap &amp; Energy Fee</span>
             <span id="vendorBreakupBase">₹0.00</span>
           </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Platform Fee</span>
+            <span id="vendorBreakupPlatform">₹0.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Convenience Fee</span>
+            <span id="vendorBreakupConv">₹0.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Payment Gateway Fee <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span id="vendorBreakupGw">₹0.00</span>
+          </div>
+          <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
+            <span>Bank Charges <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span id="vendorBreakupBank">₹0.00</span>
+          </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span>GST</span>
+            <span id="vendorBreakupGstLabel">GST</span>
             <span id="vendorBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
@@ -1391,9 +1423,13 @@ async function getBrowserCoordinates() {
 
 async function loadPricingConfig() {
   try {
-    const p = await apiFetch('/config/pricing');
+    const p = await apiFetch(`/config/pricing?paymentMethod=${state.driverPayMethod || 3}`);
     document.getElementById('driverBreakupBase').textContent = `₹${Number(p.baseSwapFee).toFixed(2)}`;
-    document.getElementById('driverBreakupGstLabel').textContent = `GST (${Number(p.gstPercent).toFixed(0)}% on ₹${Number(p.baseSwapFee).toFixed(2)})`;
+    document.getElementById('driverBreakupPlatform').textContent = `₹${Number(p.platformFee).toFixed(2)}`;
+    document.getElementById('driverBreakupConv').textContent = `₹${Number(p.convenienceFee).toFixed(2)}`;
+    document.getElementById('driverBreakupGw').textContent = `₹${Number(p.paymentGatewayFee).toFixed(2)}`;
+    document.getElementById('driverBreakupBank').textContent = `₹${Number(p.bankCharges).toFixed(2)}`;
+    document.getElementById('driverBreakupGstLabel').textContent = `GST (${Number(p.gstPercent).toFixed(0)}% on taxable charges)`;
     document.getElementById('driverBreakupTax').textContent = `₹${Number(p.taxAmount).toFixed(2)}`;
     document.getElementById('driverBreakupTotal').textContent = `₹${Number(p.totalAmount).toFixed(2)}`;
     document.getElementById('driverCashAmount').value = Number(p.totalAmount).toFixed(2);
@@ -1922,6 +1958,11 @@ async function verifyVendorSwapOtp() {
     }
 
     document.getElementById('vendorBreakupBase').textContent = `₹${Number(swap.baseFee).toFixed(2)}`;
+    document.getElementById('vendorBreakupPlatform').textContent = `₹${Number(swap.platformFee || 0).toFixed(2)}`;
+    document.getElementById('vendorBreakupConv').textContent = `₹${Number(swap.convenienceFee || 0).toFixed(2)}`;
+    document.getElementById('vendorBreakupGw').textContent = `₹${Number(swap.paymentGatewayFee || 0).toFixed(2)}`;
+    document.getElementById('vendorBreakupBank').textContent = `₹${Number(swap.bankCharges || 0).toFixed(2)}`;
+    document.getElementById('vendorBreakupGstLabel').textContent = `GST (${Number(swap.gstPercent || 18).toFixed(0)}%)`;
     document.getElementById('vendorBreakupTax').textContent = `₹${Number(swap.taxAmount).toFixed(2)}`;
     document.getElementById('vendorBreakupTotal').textContent = `₹${Number(swap.totalAmount).toFixed(2)}`;
     document.getElementById('vendorCashAmount').value = Number(swap.totalAmount).toFixed(2);
