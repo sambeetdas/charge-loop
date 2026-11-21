@@ -829,18 +829,18 @@
           <div style="font-weight:800;font-size:13px;margin-bottom:6px;">🧾 Fare Breakup &amp; Payment Details</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
             <span>Base Swap &amp; Energy Fee</span>
-            <span id="vendorBreakupBase">₹100.00</span>
+            <span id="vendorBreakupBase">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span>GST (18%)</span>
-            <span id="vendorBreakupTax">₹18.00</span>
+            <span>GST</span>
+            <span id="vendorBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
             <span>Cash Collected (₹)</span>
-            <span id="vendorBreakupTotal" style="color:var(--mint);">₹118.00</span>
+            <span id="vendorBreakupTotal" style="color:var(--mint);">₹0.00</span>
           </div>
-          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Collected (₹) — Read-Only (Online tx details will appear here in future)</div>
-          <input id="vendorCashAmount" class="input-field" type="number" value="118.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
+          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Collected (₹) — Read-Only (Matches Driver's Request)</div>
+          <input id="vendorCashAmount" class="input-field" type="number" value="0.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
         </div>
         <div id="vendorPaymentWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;">Verify Driver's Swap OTP in Step 3 to view Cash Collected &amp; breakup.</div>
         <button id="vendorSwapBtn" class="btn btn-primary" disabled onclick="executePartnerSwap()">
@@ -1892,7 +1892,7 @@ function selectVendorPayMethod(pm, el) {
   state.vendorPayMethod = pm;
   document.querySelectorAll('#view-vendor-desk .pay-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('vendorCashFields').classList.toggle('hidden', pm !== 3);
+  document.getElementById('vendorCashFields').classList.toggle('hidden', pm !== 3 || !state.vendorVerifiedSwap);
 }
 
 async function executePartnerSwap() {
@@ -2167,6 +2167,10 @@ function signOut() {
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('validatedDriverBox').classList.add('hidden');
   document.getElementById('vendorBillCard').classList.add('hidden');
+  document.getElementById('vendorCashFields').classList.add('hidden');
+  document.getElementById('vendorPaymentWaitingMsg').classList.remove('hidden');
+  document.getElementById('vendorSwapOtpBox').classList.add('hidden');
+  document.getElementById('vendorSwapOtpInput').value = '';
   document.getElementById('driverSwapReceipt').classList.add('hidden');
   const vBtn = document.getElementById('vendorSwapBtn');
   vBtn.disabled = true;
