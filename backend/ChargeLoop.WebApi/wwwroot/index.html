@@ -952,6 +952,89 @@
 
       <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
     </div>
+
+    <!-- DRIVER HELP -->
+    <div id="view-driver-help" class="hidden">
+      <div class="grid-hero">
+        <div class="mint-pill" style="margin-bottom:8px;">❓ DRIVER GUIDE &amp; WORKFLOW</div>
+        <div style="font-size:18px;font-weight:900;">How ChargeLoop Works for Drivers</div>
+        <div class="muted" style="margin-top:4px;">Complete walkthrough of every screen, button, and swap step.</div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">🔄 End-to-End Battery Swap Workflow</div>
+        <div class="muted" style="line-height:1.6;">
+          <b>1. Browse &amp; Preview (Home):</b> View nearby swap stations using your location. Tap <b>🔋 Batteries</b> on any station card to inspect Active charged batteries before reserving.<br>
+          <b>2. Reserve (2-Hour Hold):</b> Tap <b>Reserve</b> to hold an Active battery for 2 hours. You can cancel anytime using <b>Reverse Reserve</b>.<br>
+          <b>3. Scan &amp; Pay (Create Swap Request):</b> Open <b>Scan &amp; Pay</b> (only your Reserved Station is shown).<br>
+          &nbsp;&nbsp;• <b>First Battery Pickup:</b> Leave the Depleted Battery field empty.<br>
+          &nbsp;&nbsp;• <b>Replacement Swap:</b> Your currently assigned battery serial is prefilled automatically.<br>
+          &nbsp;&nbsp;• Review the DB-driven <b>Fare Breakup</b> (Base Fee + GST) and tap <b>Confirm Swap &amp; Record Payment</b>.<br>
+          <b>4. Share Swap OTP:</b> A 6-digit <b>Swap OTP</b> is generated on screen (tap <b>🔄 Regenerate OTP</b> if needed). Share it with the Partner at the station. Once the Partner verifies your OTP and confirms, your swap is completed!
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">💳 Wallet, Payments, Referrals &amp; Bills</div>
+        <div class="muted" style="line-height:1.6;">
+          • <b>Wallet:</b> Starts at ₹0.00. Record Cash Top-Ups in the <b>Wallet</b> tab.<br>
+          • <b>Payment Modes:</b> <b>Cash Only</b> is active. Wallet checkout, Card, and UPI are marked WIP (Work in Progress).<br>
+          • <b>Refer &amp; Earn:</b> Share your <code>CL-...</code> code or claim a friend's code for ₹50 wallet bonus each.<br>
+          • <b>Bills:</b> View GST tax invoices (<code>INV-CL-...</code>) and tax breakup in the <b>Bills</b> tab.
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">👤 Profile, PIN &amp; KYC</div>
+        <div class="muted" style="line-height:1.6;">
+          • Edit your Full Name, Email, and Language in <b>Profile</b>.<br>
+          • Update your mobile number anytime via OTP in <b>Change Phone Number</b>.<br>
+          • Complete KYC (Driving License &amp; Aadhaar) and subscribe to Weekly Plans from <b>Profile</b>.<br>
+          • Use <b>Forgot / Reset PIN?</b> on the Sign In screen if you ever forget your 4–6 digit PIN.
+        </div>
+      </div>
+    </div>
+
+    <!-- VENDOR HELP -->
+    <div id="view-vendor-help" class="hidden">
+      <div class="grid-hero">
+        <div class="mint-pill" style="margin-bottom:8px;">❓ PARTNER / VENDOR GUIDE</div>
+        <div style="font-size:18px;font-weight:900;">How ChargeLoop Works for Partners</div>
+        <div class="muted" style="margin-top:4px;">Store setup, 4-status battery control, Swap Desk, and commissions.</div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">🏪 Stores &amp; 4-Status Battery Lifecycle (Stores Tab)</div>
+        <div class="muted" style="line-height:1.6;">
+          • <b>Add Store:</b> Enter Store Name &amp; Street Address and tap <b>📍 Find</b> to auto-locate coordinates via Geocoding API.<br>
+          • <b>Register Battery:</b> Select your Store, enter Battery Serial/QR, pick a DB-configured Battery Type, and enter SOC %.<br>
+          • <b>4 Battery Statuses (Toggle Anytime):</b><br>
+          &nbsp;&nbsp;1. <b>Active:</b> Visible to drivers and assignable during swaps.<br>
+          &nbsp;&nbsp;2. <b>Inactive:</b> Hidden from drivers and cannot be assigned.<br>
+          &nbsp;&nbsp;3. <b>Charging:</b> Hidden from drivers while charging.<br>
+          &nbsp;&nbsp;4. <b>Out of Order:</b> Hidden from drivers and blocked from assignment.
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">⚡ 5-Step Swap Desk Workflow (Swap Desk Tab)</div>
+        <div class="muted" style="line-height:1.6;">
+          <b>Step 1 — Validate Driver:</b> Search by Driver phone, name, or ID.<br>
+          <b>Step 2 — Scan Battery QRs:</b> Confirm the returning Depleted Battery QR (empty for first-time pickup) and the Active Charged Battery to issue.<br>
+          <b>Step 3 — Verify Driver's Swap OTP:</b> Enter the 6-digit <b>Swap OTP</b> shown on the Driver's Scan &amp; Pay screen and tap <b>Verify OTP</b>.<br>
+          <b>Step 4 — Collect Payment &amp; Execute Swap:</b> On OTP verification, the exact <b>Cash Collected (₹)</b> and full Fare Breakup unlock. Collect Cash and tap <b>Confirm Swap &amp; Collect Payment</b> to complete the Driver's request.<br>
+          <b>Step 5 — Publish Bill:</b> Send the GST invoice summary across WhatsApp, SMS, or Email.
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">💰 Earnings &amp; Profile</div>
+        <div class="muted" style="line-height:1.6;">
+          • <b>Partner Commission Wallet:</b> Starts at ₹0.00. Every completed swap credits your commission instantly to the <b>Earnings</b> ledger.<br>
+          • <b>Profile:</b> Edit Name, Business Name, Email, UPI ID, and Bank Account, or change your phone number via OTP.
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- DRIVER BOTTOM NAV -->
@@ -961,6 +1044,7 @@
     <div class="nav-item" data-tab="wallet" onclick="switchDriverTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
     <div class="nav-item" data-tab="history" onclick="switchDriverTab('history')"><span class="nav-icon">🧾</span>Bills</div>
     <div class="nav-item" data-tab="profile" onclick="switchDriverTab('profile')"><span class="nav-icon">👤</span>Profile</div>
+    <div class="nav-item" data-tab="help" onclick="switchDriverTab('help')"><span class="nav-icon">❓</span>Help</div>
   </div>
 
   <!-- VENDOR BOTTOM NAV -->
@@ -969,6 +1053,7 @@
     <div class="nav-item" data-tab="stores" onclick="switchVendorTab('stores')"><span class="nav-icon">🔋</span>Stores</div>
     <div class="nav-item" data-tab="earnings" onclick="switchVendorTab('earnings')"><span class="nav-icon">💰</span>Earnings</div>
     <div class="nav-item" data-tab="profile" onclick="switchVendorTab('profile')"><span class="nav-icon">👤</span>Profile</div>
+    <div class="nav-item" data-tab="help" onclick="switchVendorTab('help')"><span class="nav-icon">❓</span>Help</div>
   </div>
 
   <!-- BILL MODAL -->
@@ -1194,7 +1279,7 @@ async function refreshDriverViews() {
 }
 
 function switchDriverTab(tab) {
-  ['home', 'scan', 'wallet', 'history', 'profile'].forEach(t => {
+  ['home', 'scan', 'wallet', 'history', 'profile', 'help'].forEach(t => {
     document.getElementById(`view-driver-${t}`).classList.toggle('hidden', t !== tab);
   });
   document.querySelectorAll('#navDriver .nav-item').forEach(el => {
@@ -1739,7 +1824,7 @@ async function refreshVendorViews() {
 }
 
 function switchVendorTab(tab) {
-  ['desk', 'stores', 'earnings', 'profile'].forEach(t => {
+  ['desk', 'stores', 'earnings', 'profile', 'help'].forEach(t => {
     document.getElementById(`view-vendor-${t}`).classList.toggle('hidden', t !== tab);
   });
   document.querySelectorAll('#navVendor .nav-item').forEach(el => {
