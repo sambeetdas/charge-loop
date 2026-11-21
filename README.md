@@ -150,8 +150,9 @@ flutter run -d chrome
    - **Reset PIN**: Use **Reset PIN** with mobile number, **New PIN**, and **Confirm New PIN** (`POST /api/v1/auth/vendor/reset-pin`).
    - Initial Partner Commission Wallet starts at **₹0.00** (same phone number can be registered as both Driver and Partner with separate profiles and wallets).
 2. **Store & Battery Inventory Management (4-Status Lifecycle)**:
-   - Add one or more Stations/Hubs (`POST /api/v1/stations`). New stores start with **0** batteries (no dummy batteries are auto-seeded).
-   - Register individual batteries at a store — Serial/QR, Model Type, and SOC % (`POST /api/v1/stations/{stationId}/batteries`). Batteries with SOC ≥ 80% start as **Active**; batteries with SOC < 80% start as **Charging**.
+   - View **📥 Active Swap Requests (Your Stores)** (`GET /api/v1/swaps/partner/{partnerId}/pending`) and click **Go to Swap Desk →** to jump directly to Swap Desk with the driver & store pre-selected.
+   - Add one or more Stations/Hubs (`POST /api/v1/stations`) using **📍 Find** address geocoding (`GET /api/v1/config/geocode`, Google Maps API with Nominatim fallback). New stores start with **0** batteries.
+   - Register individual batteries at a store — Serial/QR, DB-driven Battery Type (`GET /api/v1/config/battery-types`), and SOC % (`POST /api/v1/stations/{stationId}/batteries`). Batteries with SOC ≥ 80% start as **Active**; batteries with SOC < 80% start as **Charging**.
    - View **all** store batteries (`GET /api/v1/stations/{stationId}/batteries?includeAll=true`).
    - Change any battery's status with the 4-way toggle (`PATCH /api/v1/stations/{stationId}/batteries/{batteryId}/status`):
      - **Active** (`AvailableCharged = 0`): Visible to drivers and eligible for reservation/assignment.
@@ -159,9 +160,10 @@ flutter run -d chrome
      - **Charging** (`ChargingInStation = 1`): Hidden from drivers and cannot be assigned while charging.
      - **Out of Order** (`MaintenanceFaulty = 3`): Hidden from drivers and blocked from assignment.
    - **Rule**: Only **Active** batteries can be shown to drivers or assigned during a swap.
-3. **Partner Profile & Phone Number Change (OTP)**:
+3. **Partner Profile & Phone Number Change (PIN)**:
    - Edit Full Name, Business Name, Email, UPI ID, and Bank Account Number (`PUT /api/v1/auth/vendor/profile/{vendorId}`).
-   - Change phone number securely with 2-step OTP verification (`POST /api/v1/auth/send-otp` &rarr; `POST /api/v1/auth/vendor/profile/{vendorId}/change-phone`).
+   - Change phone number securely using your current PIN (`POST /api/v1/auth/vendor/profile/{vendorId}/change-phone`).
+   - Access the in-app **❓ Help** tab anytime for a complete Partner workflow guide.
 4. **Step 1 — Validate Driver Before Swap**:
    - Enter Driver phone, name, or ID and click **Validate** (`GET /api/v1/swaps/validate-driver?query=...`).
 5. **Step 2 — 2-Step Battery QR Scan**:
@@ -194,15 +196,15 @@ flutter run -d chrome
    - **First Battery vs Replacement**:
      - First battery pickup: the depleted battery field stays **empty**.
      - Replacement swap: the depleted battery field automatically displays your currently assigned battery QR/Serial.
-   - Select an Active battery to receive, review the **read-only** Cash amount (**₹118.00**) with its complete **Fare Breakup** (**Base Swap & Energy Fee** `₹100.00` + **GST 18%** `₹18.00` = `₹118.00`), and tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate`).
+   - Select an Active battery to receive, review the **read-only** Cash amount with its complete DB-driven **Fare Breakup** (`GET /api/v1/config/pricing`: Base Swap & Energy Fee + GST), and tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate`).
    - This submits a **Swap Request** (Pending Vendor Confirmation) and generates a **6-digit Swap OTP** on screen. You can tap **🔄 Regenerate OTP** (`POST /api/v1/swaps/{swapId}/regenerate-otp`) at any time before the vendor confirms.
    - Once the Vendor verifies your Swap OTP and clicks **Confirm Swap**, your request is marked **Completed**.
 4. **Wallet, Cash Top-Up & Referral**:
    - View wallet balance and recent transactions (`GET /api/v1/wallet/balance/{driverId}?accountType=0`), record a **Cash Top-Up** (`POST /api/v1/wallet/topup` with `CorrelationId` idempotency), or claim a friend's `CL-...` referral code (`POST /api/v1/auth/referral/claim`) for **₹50** bonus.
 5. **Billing & Swap History**:
    - View GST invoices (`INV-CL-YYYYMMDD-XXXXXX`), tax breakdown, payment mode, and published channels (`GET /api/v1/swaps/history/{driverId}`).
-6. **Profile, KYC & Phone Number Change (OTP)**:
-   - Edit Full Name, Email, and Language (`PUT /api/v1/auth/profile/{driverId}`), complete KYC (`POST /api/v1/auth/kyc`), subscribe to Weekly Plans, and change your phone number via 2-step OTP (`POST /api/v1/auth/send-otp` &rarr; `POST /api/v1/auth/profile/{driverId}/change-phone`).
+6. **Profile, KYC, Help & Phone Number Change (PIN)**:
+   - Edit Full Name, Email, and Language (`PUT /api/v1/auth/profile/{driverId}`), complete KYC (`POST /api/v1/auth/kyc`), subscribe to Weekly Plans, change your phone number using your current PIN (`POST /api/v1/auth/profile/{driverId}/change-phone`), and view the in-app **❓ Help** tab.
 
 > [!WARNING]
 > **Backlog Items**:

@@ -59,7 +59,7 @@
 
 ---
 
-## 4. Phase 4: Partner & Driver Workflow Enhancements (PLANNED 📋)
+## 4. Phase 4: Partner & Driver Workflow Enhancements (COMPLETED ✅)
 
 ### 4.1 Partner (Vendor) Workflow Tasks
 - [x] **TASK-PA07 (Driver Validation before Swap)**: Add `GET /api/v1/swaps/validate-driver?query=...` endpoint and Partner Swap Desk UI to validate Driver KYC, active vehicle, currently mounted battery, subscription pass, and wallet balance before unlocking the Swap button.
@@ -76,7 +76,11 @@
 
 ---
 
-## 5. Phase 5: Production Hardening & Backlog
+## 5. Phase 5: MVP Hardening, PIN Auth, DB-Driven Config & Reliability (COMPLETED ✅)
+- [x] **TASK-H01**: PIN-based Sign Up / Sign In / Reset PIN (`Driver` & `Partner`) with PBKDF2 hashing and PIN-verified Change Phone Number.
+- [x] **TASK-H02**: 4-status Battery Lifecycle (`Active`, `Inactive`, `Charging`, `Out of Order`), Swap OTP request/regenerate flow, Vendor 4-step Swap Desk OTP verification, and Active Swap Requests list (`Go to Swap Desk →`).
+- [x] **TASK-H03**: DB-driven `pricing_configs`, `battery_types`, GPS station discovery, and Google Geocoding API (`/api/v1/config/geocode`).
+- [x] **TASK-H04**: PostgreSQL `xmin` concurrency tokens, transactional reservations/swaps, `MaintenanceBackgroundService` cleanup worker, `/health` & `/health/live`, structured correlation logging, in-app **❓ Help** tab, and 18/18 passing unit tests.
 
 ### 5.1 Completed Security, Ledger & Mobile Parity
 - [x] **TASK-SEC01 (JWT Authentication)**: Issue signed HMAC-SHA256 JWT tokens on Driver & Partner sign-in, enforce `JwtBearer` authentication in `Program.cs`, and attach `Authorization: Bearer <token>` in Web & Flutter clients.
