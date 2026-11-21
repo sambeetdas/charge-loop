@@ -9,48 +9,47 @@
 
 ```mermaid
 flowchart TD
-    subgraph Clients["Client Layer"]
-        DA["Driver Mobile App (Flutter: Android / iOS)"]
-        PA["Partner Mobile App (Flutter: Android / macOS)"]
-        WebAdmin["Admin & Operations Console (Web)"]
+    subgraph Clients["Client Layer (Single Frontend: wwwroot/index.html)"]
+        WebApp["Web Browser App (Driver & Vendor UI)"]
+        MobileShell["Android / iOS Flutter WebView Shell (mobile/lib/main.dart)"]
     end
 
-    subgraph API["Backend Service Layer (ASP.NET Core .NET 11)"]
-        Gateway["Reverse Proxy & Rate Limiter (Kestrel / YARP)"]
+    subgraph API["Backend Service Layer (ASP.NET Core .NET 11, JWT Bearer Auth)"]
+        Gateway["Reverse Proxy & Kestrel (Nginx / ASP.NET Core)"]
+        Health["Health Checks (/health, /health/live) - Anonymous"]
         Hub["SignalR Hub (/hubs/stations) - Live Real-Time Push"]
         
         subgraph Controllers["WebApi REST Controllers"]
-            AuthCtrl["AuthController (OTP, KYC, Vehicle Link)"]
-            StationCtrl["StationsController (Nearby, Availability)"]
-            SwapCtrl["SwapsController (Initiate, Confirm, History)"]
-            WalletCtrl["WalletController (Balance, UPI Top-Up)"]
-            TelemCtrl["TelemetryController (SOC, Temp, GPS)"]
+            AuthCtrl["AuthController (Signup, Signin, Reset PIN, Profile, KYC, Vehicle)"]
+            StationCtrl["StationsController (Nearby, Store CRUD, Battery Inventory)"]
+            SwapCtrl["SwapsController (Validate, Initiate, Verify OTP, Confirm, History)"]
+            WalletCtrl["WalletController (Balance, Top-Up, Withdraw, Transactions)"]
+            SubCtrl["SubscriptionsController (Plans, Subscribe, Driver Pass)"]
+            ConfigCtrl["ConfigController (Pricing, Battery Types, Geocode & Autocomplete)"]
+            SupportCtrl["SupportController (Tickets & Dispute Resolution)"]
         end
 
         subgraph CoreServices["Domain & Application Services"]
-            StationSvc["StationService (Haversine Spatial Search)"]
-            SwapSvc["SwapService (Validation & 2-Min Engine)"]
-            WalletSvc["WalletService (Double-entry Ledger)"]
-            DriverSvc["DriverService (Identity & Verification)"]
+            StationSvc["StationService (Haversine Search, Battery Ownership & Custody)"]
+            SwapSvc["SwapService (OTP Validation, Reservation Guard, Fare Calculator)"]
+            WalletSvc["WalletService (Double-Entry Ledger & Partner Commission)"]
+            DriverSvc["DriverService (Identity, KYC & Vehicle Link)"]
+            ResSvc["ReservationService (Atomic Hold & Concurrency Retry)"]
         end
     end
 
-    subgraph DataTier["Data & Cache Tier"]
-        PG[("PostgreSQL Database (Localhost / RDS)\nTables: drivers, vehicles, stations, batteries, swaps, wallets")]
-        Redis[("Redis 7 (In-Memory Cache & Distributed Lock)")]
+    subgraph DataTier["Data Tier"]
+        PG[("PostgreSQL Database (Localhost / Lightsail) - EF Core Npgsql, xmin Optimistic Concurrency, Partial Unique Indexes")]
     end
 
-    DA -->|HTTPS REST| Gateway
-    PA -->|HTTPS REST| Gateway
-    WebAdmin -->|HTTPS REST| Gateway
-    
-    DA -.->|WebSocket SignalR| Hub
-    PA -.->|WebSocket SignalR| Hub
-
+    MobileShell -->|Loads Single Frontend| WebApp
+    WebApp -->|HTTPS/HTTP REST + JWT| Gateway
+    Gateway --> Health
     Gateway --> Controllers
+    WebApp -.->|WebSocket SignalR| Hub
+
     Controllers --> CoreServices
-    CoreServices -->|Entity Framework Core (Npgsql)| PG
-    CoreServices -.->|Cache & Lock| Redis
+    CoreServices -->|Entity Framework Core| PG
 ```
 
 ---
@@ -75,7 +74,7 @@ backend/
 └── ChargeLoop.WebApi/            # Interface Adapters & HTTP Pipeline
     ├── Controllers/              # RESTful API controllers
     ├── Hubs/                     # StationHub (SignalR bi-directional push)
-    ├── wwwroot/                  # Web app static assets
+    ├── wwwroot/                  # Single frontend (index.html) for Web & Mobile WebView
     └── Program.cs                # Kestrel configuration, CORS, and middleware pipeline
 ```
 

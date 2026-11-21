@@ -37,14 +37,12 @@ ChargeLoop/
 │   ├── ChargeLoop.Application/           # DTOs, Service Interfaces
 │   ├── ChargeLoop.Infrastructure/        # PostgreSQL EF Core DbContext, Services, SignalR event bridge
 │   └── ChargeLoop.WebApi/                # Controllers (Auth, Stations, Swaps, Wallet, Support), SignalR Hubs
-├── mobile/                               # Flutter Multiplatform Driver & Vendor App
-│   ├── pubspec.yaml
+├── mobile/                               # Single-Frontend Flutter WebView Shell (loads wwwroot/index.html)
+│   ├── pubspec.yaml                      # webview_flutter dependency
+│   ├── android/                          # Android manifest, ChargeLoop launcher icons & Gradle config
 │   └── lib/
-│       ├── core/theme/                   # High-contrast electric UI theme
-│       ├── core/network/                 # REST & SignalR API client
-│       ├── models/                       # Data models (Driver, Vendor, Station, Battery)
-│       ├── widgets/                      # Custom Battery Gauge (SOC %), status badges
-│       └── screens/                      # Auth, Stations Map, Battery Swap, Wallet, Vendor Operations & Profiles
+│       └── main.dart                     # WebView shell pointing to APP_URL (e.g. http://13.233.63.106/?app=1)
+├── android-pack.ps1                      # PowerShell script to build release APK pointing to server
 └── docker-compose.yml                    # PostgreSQL + PostGIS & Redis services
 ```
 

@@ -1,17 +1,15 @@
 # chargeloop_mobile
 
-A new Flutter project.
+Single-frontend Flutter WebView shell for **ChargeLoop** (Android / iOS).
 
-## Getting Started
+It renders the live web UI (`backend/ChargeLoop.WebApi/wwwroot/index.html`) inside a full-screen `WebView` (`webview_flutter`), ensuring zero UI drift between web and mobile.
 
-This project is a starting point for a Flutter application.
+## Build Android APK
 
-A few resources to get you started if this is your first Flutter project:
+From the repository root:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+.\android-pack.ps1
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This builds `dist/app-release.apk` pointing to `http://13.233.63.106/?app=1` (override with `-ServerUrl`).
