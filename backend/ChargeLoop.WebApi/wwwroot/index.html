@@ -542,7 +542,6 @@
         <div class="role-tabs" style="margin-bottom:12px;">
           <button id="modeTabSignIn" class="role-tab active" onclick="selectAuthMode('signin')">Sign In</button>
           <button id="modeTabSignUp" class="role-tab" onclick="selectAuthMode('signup')">Sign Up</button>
-          <button id="modeTabReset" class="role-tab" onclick="selectAuthMode('reset')">Reset PIN</button>
         </div>
 
         <!-- Driver PIN Auth -->
@@ -1050,7 +1049,6 @@ function selectAuthRole(role) {
 function selectAuthMode(mode) {
   document.getElementById('modeTabSignIn').classList.toggle('active', mode === 'signin');
   document.getElementById('modeTabSignUp').classList.toggle('active', mode === 'signup');
-  document.getElementById('modeTabReset').classList.toggle('active', mode === 'reset');
   document.getElementById('driverSignInFields').classList.toggle('hidden', mode !== 'signin');
   document.getElementById('driverSignUpFields').classList.toggle('hidden', mode !== 'signup');
   document.getElementById('driverResetFields').classList.toggle('hidden', mode !== 'reset');
