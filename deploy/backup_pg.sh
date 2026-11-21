@@ -13,8 +13,10 @@ pg_dump -h localhost -U "${DB_USER}" -d "${DB_NAME}" | gzip > "${FILE}"
 # Keep last 14 days locally
 find "${BACKUP_DIR}" -type f -name "*.sql.gz" -mtime +14 -delete
 
-# Optional: Upload to Cloudflare R2 / AWS S3 using rclone (configure `rclone config` remote named `r2`)
-if command -v rclone >/dev/null 2>&1; then
+# Upload to AWS S3 (set S3_BUCKET env var, e.g. s3://chargeloop-backups-mumbai) or Cloudflare R2 via rclone
+if [ -n "${S3_BUCKET:-}" ] && command -v aws >/dev/null 2>&1; then
+  aws s3 cp "${FILE}" "${S3_BUCKET}/" --only-show-errors
+elif command -v rclone >/dev/null 2>&1; then
   rclone copy "${FILE}" r2:chargeloop-backups/
 fi
 

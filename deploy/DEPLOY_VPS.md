@@ -1,13 +1,20 @@
-# ChargeLoop — Single-VPS Deployment Guide (Option B)
+# ChargeLoop — AWS Lightsail Deployment Guide (Single-VPS)
 
-**Target Specs:** 1 Ubuntu 24.04 VPS (2 vCPU, 4 GB RAM, 40 GB SSD) running **.NET 11 WebApi + Caddy (HTTPS) + PostgreSQL 18 + Daily `pg_dump` Backups**.
+**Target Specs:** AWS Lightsail **Ubuntu 24.04** instance (**Mumbai `ap-south-1`**, 2 vCPU, 4 GB RAM, 80 GB SSD) running **.NET 11 WebApi + Caddy (HTTPS) + PostgreSQL 18 + Daily `pg_dump` to AWS S3**.
 
 ---
 
-## 1. Point Your Domain DNS
-In Cloudflare (or your DNS provider), create an `A` record pointing your domain (e.g. `chargeloopsln.in` and `www`) to your VPS public IPv4 address.
+## 1. Create AWS Lightsail Instance & Networking
+1. In **AWS Lightsail Console** → **Create instance**:
+   - **Region**: `Mumbai (ap-south-1)`
+   - **Platform**: `Linux/Unix` → **OS Only** → `Ubuntu 24.04 LTS`
+   - **Plan**: `2 vCPU, 4 GB RAM, 80 GB SSD`
+2. Go to **Networking** tab on your instance:
+   - Click **Attach static IP** (so your IP never changes on reboot).
+   - Under **IPv4 Firewall**, add rules for **HTTP (TCP 80)** and **HTTPS (TCP 443)** (keep **SSH TCP 22**).
+3. In Cloudflare / your DNS provider, point your domain's `A` record (e.g. `chargeloopsln.in` and `www`) to the **Lightsail Static IP**.
 
-## 2. Firewall Setup
+## 2. Connect via SSH & Configure OS Firewall
 ```bash
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
@@ -56,11 +63,13 @@ sudo systemctl reload caddy
 ```
 Verify: `https://chargeloopsln.in/health` should return `Healthy`.
 
-## 6. Daily `pg_dump` Backup to Cloudflare R2 / S3
+## 6. Daily `pg_dump` Backup to AWS S3 (Mumbai)
 ```bash
+sudo apt install -y awscli
+# Run `aws configure` with an IAM user that has s3:PutObject on your bucket (e.g. s3://chargeloop-backups-mumbai)
 sudo cp deploy/backup_pg.sh /usr/local/bin/chargeloop_backup.sh
 sudo chmod +x /usr/local/bin/chargeloop_backup.sh
-# Configure ~/.pgpass for passwordless cron pg_dump and `rclone config` for R2/S3
+# Configure ~/.pgpass for passwordless cron pg_dump
 # Add daily 2:00 AM UTC cron:
-(crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/chargeloop_backup.sh >> /var/log/chargeloop_backup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * S3_BUCKET=s3://chargeloop-backups-mumbai /usr/local/bin/chargeloop_backup.sh >> /var/log/chargeloop_backup.log 2>&1") | crontab -
 ```
