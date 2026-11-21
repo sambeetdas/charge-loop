@@ -361,13 +361,8 @@ public class DriverService : IDriverService
         if (string.IsNullOrWhiteSpace(newPhone))
             throw new ArgumentException("Valid phone number is required.");
 
-        var otpEntry = await _context.OtpVerifications
-            .Where(o => o.PhoneNumber == newPhone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
-            .OrderByDescending(o => o.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (otpEntry == null || otpEntry.OtpCode != request.OtpCode.Trim())
-            throw new InvalidOperationException("Invalid or expired OTP code.");
+        if (string.IsNullOrWhiteSpace(driver.PinHash) || !PinHasher.Verify(request.Pin, driver.PinHash))
+            throw new InvalidOperationException("Invalid PIN.");
 
         var last10 = newPhone.Length >= 10 ? newPhone[^10..] : newPhone;
         var conflict = await _context.Drivers.AnyAsync(d => d.Id != driverId &&
@@ -375,7 +370,6 @@ public class DriverService : IDriverService
         if (conflict)
             throw new InvalidOperationException("This phone number is already registered to another driver.");
 
-        otpEntry.IsUsed = true;
         driver.PhoneNumber = newPhone;
         await _context.SaveChangesAsync();
 

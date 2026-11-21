@@ -26,7 +26,7 @@ public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, str
 
 public record UpdateDriverProfileRequest(string? FullName, string? Email, string? LanguageCode);
 public record UpdateVendorProfileRequest(string? FullName, string? BusinessName, string? Email, string? UpiId, string? BankAccountNumber);
-public record ChangePhoneRequest(string NewPhoneNumber, string OtpCode);
+public record ChangePhoneRequest(string NewPhoneNumber, string Pin);
 public record ToggleBatteryVisibilityRequest(bool IsVisibleToDriver);
 public record UpdateBatteryChargeRequest(int StateOfChargePercent);
 public record UpdateBatteryStatusRequest(BatteryStatus Status);

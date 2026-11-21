@@ -263,13 +263,8 @@ public class VendorService : IVendorService
         if (string.IsNullOrWhiteSpace(newPhone))
             throw new ArgumentException("Valid phone number is required.");
 
-        var otpEntry = await _context.OtpVerifications
-            .Where(o => o.PhoneNumber == newPhone && !o.IsUsed && o.ExpiresAt >= DateTime.UtcNow)
-            .OrderByDescending(o => o.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (otpEntry == null || otpEntry.OtpCode != request.OtpCode.Trim())
-            throw new InvalidOperationException("Invalid or expired OTP code.");
+        if (string.IsNullOrWhiteSpace(partner.PinHash) || !PinHasher.Verify(request.Pin, partner.PinHash))
+            throw new InvalidOperationException("Invalid PIN.");
 
         var last10 = newPhone.Length >= 10 ? newPhone[^10..] : newPhone;
         var conflict = await _context.Partners.AnyAsync(p => p.Id != vendorId &&
@@ -277,7 +272,6 @@ public class VendorService : IVendorService
         if (conflict)
             throw new InvalidOperationException("This phone number is already registered to another partner.");
 
-        otpEntry.IsUsed = true;
         partner.PhoneNumber = newPhone;
         await _context.SaveChangesAsync();
 

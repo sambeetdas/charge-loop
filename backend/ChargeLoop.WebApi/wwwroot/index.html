@@ -755,18 +755,10 @@
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (OTP)</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="chgDriverPhone" class="input-field" placeholder="New 10-digit Phone" style="margin-bottom:0;">
-          <button class="btn btn-secondary btn-sm" onclick="sendDriverChangePhoneOtp()">Send OTP</button>
-        </div>
-        <div id="chgDriverOtpStep2" class="hidden">
-          <div id="chgDriverOtpBanner" class="card-elevated" style="margin-bottom:8px;font-size:12px;color:var(--mint-text);"></div>
-          <div style="display:flex;gap:8px;">
-            <input id="chgDriverOtp" class="input-field" placeholder="Enter 6-digit OTP" style="margin-bottom:0;">
-            <button class="btn btn-primary btn-sm" onclick="confirmDriverChangePhone()">Verify &amp; Update</button>
-          </div>
-        </div>
+        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (PIN)</div>
+        <input id="chgDriverPhone" class="input-field" type="tel" placeholder="New 10-digit Phone">
+        <input id="chgDriverPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN (4-6 digits)">
+        <button class="btn btn-primary" onclick="confirmDriverChangePhone()">Update Phone Number</button>
       </div>
 
       <div class="card">
@@ -936,18 +928,10 @@
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (OTP)</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="chgVendorPhone" class="input-field" placeholder="New 10-digit Phone" style="margin-bottom:0;">
-          <button class="btn btn-secondary btn-sm" onclick="sendVendorChangePhoneOtp()">Send OTP</button>
-        </div>
-        <div id="chgVendorOtpStep2" class="hidden">
-          <div id="chgVendorOtpBanner" class="card-elevated" style="margin-bottom:8px;font-size:12px;color:var(--mint-text);"></div>
-          <div style="display:flex;gap:8px;">
-            <input id="chgVendorOtp" class="input-field" placeholder="Enter 6-digit OTP" style="margin-bottom:0;">
-            <button class="btn btn-primary btn-sm" onclick="confirmVendorChangePhone()">Verify &amp; Update</button>
-          </div>
-        </div>
+        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (PIN)</div>
+        <input id="chgVendorPhone" class="input-field" type="tel" placeholder="New 10-digit Phone">
+        <input id="chgVendorPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN (4-6 digits)">
+        <button class="btn btn-primary" onclick="confirmVendorChangePhone()">Update Phone Number</button>
       </div>
 
       <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
@@ -988,7 +972,7 @@
         <div style="font-weight:800;margin-bottom:6px;">👤 Profile, PIN &amp; KYC</div>
         <div class="muted" style="line-height:1.6;">
           • Edit your Full Name, Email, and Language in <b>Profile</b>.<br>
-          • Update your mobile number anytime via OTP in <b>Change Phone Number</b>.<br>
+          • Update your mobile number anytime using your PIN in <b>Change Phone Number</b>.<br>
           • Complete KYC (Driving License &amp; Aadhaar) and subscribe to Weekly Plans from <b>Profile</b>.<br>
           • Use <b>Forgot / Reset PIN?</b> on the Sign In screen if you ever forget your 4–6 digit PIN.
         </div>
@@ -1031,7 +1015,7 @@
         <div style="font-weight:800;margin-bottom:6px;">💰 Earnings &amp; Profile</div>
         <div class="muted" style="line-height:1.6;">
           • <b>Partner Commission Wallet:</b> Starts at ₹0.00. Every completed swap credits your commission instantly to the <b>Earnings</b> ledger.<br>
-          • <b>Profile:</b> Edit Name, Business Name, Email, UPI ID, and Bank Account, or change your phone number via OTP.
+          • <b>Profile:</b> Edit Name, Business Name, Email, UPI ID, and Bank Account, or change your phone number using your PIN.
         </div>
       </div>
     </div>
@@ -1741,32 +1725,17 @@ async function saveDriverProfile() {
   } catch (e) { showToast(e.message, true); }
 }
 
-async function sendDriverChangePhoneOtp() {
-  const newPhoneNumber = document.getElementById('chgDriverPhone').value.trim();
-  if (!newPhoneNumber) return showToast('Enter new phone number', true);
-  try {
-    const res = await apiFetch('/auth/send-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber: newPhoneNumber })
-    });
-    document.getElementById('chgDriverOtpStep2').classList.remove('hidden');
-    document.getElementById('chgDriverOtpBanner').textContent = `Demo OTP for ${res.phoneNumber}: ${res.demoOtp}`;
-    showToast('OTP sent to ' + res.phoneNumber);
-  } catch (e) { showToast(e.message, true); }
-}
-
 async function confirmDriverChangePhone() {
   const newPhoneNumber = document.getElementById('chgDriverPhone').value.trim();
-  const otpCode = document.getElementById('chgDriverOtp').value.trim();
-  if (!newPhoneNumber || !otpCode) return showToast('Enter phone and OTP', true);
+  const pin = document.getElementById('chgDriverPin').value.trim();
+  if (!newPhoneNumber || !pin) return showToast('Enter new phone number and current PIN', true);
   try {
     await apiFetch(`/auth/profile/${state.driver.id}/change-phone`, {
       method: 'POST',
-      body: JSON.stringify({ newPhoneNumber, otpCode })
+      body: JSON.stringify({ newPhoneNumber, pin })
     });
-    document.getElementById('chgDriverOtpStep2').classList.add('hidden');
     document.getElementById('chgDriverPhone').value = '';
-    document.getElementById('chgDriverOtp').value = '';
+    document.getElementById('chgDriverPin').value = '';
     await refreshDriverViews();
     showToast('Phone number updated!');
   } catch (e) { showToast(e.message, true); }
@@ -2083,32 +2052,17 @@ async function saveVendorProfile() {
   } catch (e) { showToast(e.message, true); }
 }
 
-async function sendVendorChangePhoneOtp() {
-  const newPhoneNumber = document.getElementById('chgVendorPhone').value.trim();
-  if (!newPhoneNumber) return showToast('Enter new phone number', true);
-  try {
-    const res = await apiFetch('/auth/send-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber: newPhoneNumber })
-    });
-    document.getElementById('chgVendorOtpStep2').classList.remove('hidden');
-    document.getElementById('chgVendorOtpBanner').textContent = `Demo OTP for ${res.phoneNumber}: ${res.demoOtp}`;
-    showToast('OTP sent to ' + res.phoneNumber);
-  } catch (e) { showToast(e.message, true); }
-}
-
 async function confirmVendorChangePhone() {
   const newPhoneNumber = document.getElementById('chgVendorPhone').value.trim();
-  const otpCode = document.getElementById('chgVendorOtp').value.trim();
-  if (!newPhoneNumber || !otpCode) return showToast('Enter phone and OTP', true);
+  const pin = document.getElementById('chgVendorPin').value.trim();
+  if (!newPhoneNumber || !pin) return showToast('Enter new phone number and current PIN', true);
   try {
     await apiFetch(`/auth/vendor/profile/${state.vendor.id}/change-phone`, {
       method: 'POST',
-      body: JSON.stringify({ newPhoneNumber, otpCode })
+      body: JSON.stringify({ newPhoneNumber, pin })
     });
-    document.getElementById('chgVendorOtpStep2').classList.add('hidden');
     document.getElementById('chgVendorPhone').value = '';
-    document.getElementById('chgVendorOtp').value = '';
+    document.getElementById('chgVendorPin').value = '';
     await refreshVendorViews();
     showToast('Partner phone number updated!');
   } catch (e) { showToast(e.message, true); }

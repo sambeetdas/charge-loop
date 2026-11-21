@@ -67,29 +67,28 @@ public class AuthAndRoleTests
     }
 
     [Fact]
-    public async Task DriverAndVendorProfile_UpdateAndChangePhoneWithOtp()
+    public async Task DriverAndVendorProfile_UpdateAndChangePhoneWithPin()
     {
         var context = CreateInMemoryDbContext();
         var driverService = new DriverService(context);
         var vendorService = new VendorService(context);
 
-        // Driver profile edit & phone change
-        var dAuth = await driverService.AuthenticateWithPhoneAsync(new AuthRequest("9111111111", "Old Driver", "en"));
+        // Driver profile edit & phone change with PIN
+        var dAuth = await driverService.SignUpWithPinAsync(new DriverPinSignUpRequest("9111111111", "1234", "1234", "Old Driver"));
         var dUpdated = await driverService.UpdateProfileAsync(dAuth.DriverId, new UpdateDriverProfileRequest("New Driver", "driver@test.com", "hi"));
         Assert.NotNull(dUpdated);
         Assert.Equal("New Driver", dUpdated!.FullName);
         Assert.Equal("driver@test.com", dUpdated.Email);
         Assert.Equal("hi", dUpdated.LanguageCode);
 
-        var dOtp = await driverService.SendOtpAsync(new SendOtpRequest("9222222222"));
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            driverService.ChangePhoneAsync(dAuth.DriverId, new ChangePhoneRequest("9222222222", "000000")));
+            driverService.ChangePhoneAsync(dAuth.DriverId, new ChangePhoneRequest("9222222222", "0000")));
 
-        var dPhoneChanged = await driverService.ChangePhoneAsync(dAuth.DriverId, new ChangePhoneRequest("9222222222", dOtp.DemoOtp));
+        var dPhoneChanged = await driverService.ChangePhoneAsync(dAuth.DriverId, new ChangePhoneRequest("9222222222", "1234"));
         Assert.Equal("+919222222222", dPhoneChanged.PhoneNumber);
 
-        // Vendor profile edit & phone change
-        var vAuth = await vendorService.AuthenticateWithPhoneAsync(new VendorAuthRequest("9333333333", "Old Vendor", "Old Biz"));
+        // Vendor profile edit & phone change with PIN
+        var vAuth = await vendorService.SignUpWithPinAsync(new VendorPinSignUpRequest("9333333333", "4321", "4321", "Old Vendor", "Old Biz"));
         var vUpdated = await vendorService.UpdateProfileAsync(vAuth.VendorId,
             new UpdateVendorProfileRequest("New Vendor", "XYZ Mall Hub", "vendor@test.com", "vendor@upi", "1234567890"));
         Assert.NotNull(vUpdated);
@@ -98,8 +97,10 @@ public class AuthAndRoleTests
         Assert.Equal("vendor@test.com", vUpdated.Email);
         Assert.Equal("vendor@upi", vUpdated.UpiId);
 
-        var vOtp = await driverService.SendOtpAsync(new SendOtpRequest("9444444444"));
-        var vPhoneChanged = await vendorService.ChangePhoneAsync(vAuth.VendorId, new ChangePhoneRequest("9444444444", vOtp.DemoOtp));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            vendorService.ChangePhoneAsync(vAuth.VendorId, new ChangePhoneRequest("9444444444", "0000")));
+
+        var vPhoneChanged = await vendorService.ChangePhoneAsync(vAuth.VendorId, new ChangePhoneRequest("9444444444", "4321"));
         Assert.Equal("+919444444444", vPhoneChanged.PhoneNumber);
     }
 
