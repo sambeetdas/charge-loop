@@ -137,13 +137,33 @@ app.UseAuthorization();
 app.UseMiddleware<CorrelationAndAuditMiddleware>();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (ctx, report) =>
+    {
+        ctx.Response.ContentType = "application/json";
+        var payload = new
+        {
+            status = report.Status.ToString(),
+            totalDurationMs = report.TotalDuration.TotalMilliseconds,
+            checks = report.Entries.ToDictionary(
+                e => e.Key,
+                e => new
+                {
+                    status = e.Value.Status.ToString(),
+                    description = e.Value.Description,
+                    data = e.Value.Data
+                })
+        };
+        await ctx.Response.WriteAsJsonAsync(payload);
+    }
+}).AllowAnonymous();
 app.MapGet("/health/live", () => Results.Ok(new
 {
     status = "Healthy",
     service = "ChargeLoop.WebApi",
     timestampUtc = DateTime.UtcNow
-}));
+})).AllowAnonymous();
 app.MapHub<StationHub>("/hubs/stations");
 
 // Wire RealTimeNotificationService events to SignalR clients
