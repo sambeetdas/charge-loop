@@ -644,7 +644,7 @@
         <div class="step-header"><span class="step-badge">1</span> Scan Station &amp; Battery QR</div>
         <select id="scanStationSelect" class="input-field" onchange="loadStationChargedBatteries()"></select>
         <input id="scanDepletedSerial" class="input-field" placeholder="Your Depleted Battery QR / Serial (e.g. BAT-LFP-1001)">
-        <select id="scanIssuedSelect" class="input-field"></select>
+        <select id="scanIssuedSelect" class="input-field" onchange="updateDriverFareVisibility()"></select>
       </div>
 
       <div class="card">
@@ -656,7 +656,8 @@
           <div class="pay-chip" onclick="showOnlinePaymentWip()">📱 UPI (WIP)</div>
         </div>
 
-        <div id="driverCashFields" class="card-elevated" style="margin-bottom:12px;">
+        <div id="driverFareWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;">Select a reserved station and battery in Step 1 to view fare.</div>
+        <div id="driverCashFields" class="card-elevated hidden" style="margin-bottom:12px;">
           <div style="font-weight:800;font-size:13px;margin-bottom:8px;">🧾 Fare Breakup</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
             <span>Base Swap &amp; Energy Fee</span>
@@ -1444,12 +1445,16 @@ async function loadStations() {
       sel.innerHTML = '<option value="">No reserved station — reserve a station on Home first</option>';
       document.getElementById('scanIssuedSelect').innerHTML = '<option value="">Reserve a station first to see batteries</option>';
     }
+    updateDriverFareVisibility();
   } catch (e) { console.error(e); }
 }
 
 async function loadStationChargedBatteries() {
   const stationId = document.getElementById('scanStationSelect').value;
-  if (!stationId) return;
+  if (!stationId) {
+    updateDriverFareVisibility();
+    return;
+  }
   const bats = await apiFetch(`/stations/${stationId}/batteries`);
   const sel = document.getElementById('scanIssuedSelect');
   sel.innerHTML = bats.length
@@ -1458,6 +1463,15 @@ async function loadStationChargedBatteries() {
   if (state.activeReservation?.batterySerial) {
     sel.value = state.activeReservation.batterySerial;
   }
+  updateDriverFareVisibility();
+}
+
+function updateDriverFareVisibility() {
+  const stationId = document.getElementById('scanStationSelect').value;
+  const issuedSerial = document.getElementById('scanIssuedSelect').value;
+  const ready = Boolean(stationId && issuedSerial && state.driverPayMethod === 3);
+  document.getElementById('driverCashFields').classList.toggle('hidden', !ready);
+  document.getElementById('driverFareWaitingMsg').classList.toggle('hidden', ready);
 }
 
 async function reserveAtStation(stationId) {
@@ -1477,7 +1491,7 @@ function selectDriverPayMethod(pm, el) {
   state.driverPayMethod = pm;
   document.querySelectorAll('#view-driver-scan .pay-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('driverCashFields').classList.toggle('hidden', pm !== 3);
+  updateDriverFareVisibility();
 }
 
 async function loadPendingDriverSwap() {
