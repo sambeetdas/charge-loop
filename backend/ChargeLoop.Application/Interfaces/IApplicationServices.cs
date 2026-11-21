@@ -43,6 +43,7 @@ public interface ISwapService
     Task<SwapResponse> RegenerateSwapOtpAsync(Guid swapId);
     Task<SwapResponse> ValidateSwapOtpAsync(Guid? driverId, string otpCode);
     Task<SwapResponse?> GetPendingSwapForDriverAsync(Guid driverId);
+    Task<IReadOnlyList<VendorPendingSwapDto>> GetPendingSwapsForPartnerAsync(Guid partnerId);
     Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request);
     Task<PublishBillResponse> PublishSwapBillAsync(Guid swapId, PublishBillRequest request);
     Task<IReadOnlyList<SwapResponse>> GetDriverSwapHistoryAsync(Guid driverId);

@@ -149,6 +149,21 @@ public record SwapResponse(
     string? SwapOtp = null
 );
 
+public record VendorPendingSwapDto(
+    Guid SwapId,
+    Guid DriverId,
+    string DriverName,
+    string DriverPhone,
+    Guid StationId,
+    string StationName,
+    string DepletedBatterySerial,
+    string IssuedBatterySerial,
+    int IssuedBatterySoc,
+    decimal TotalAmount,
+    PaymentMethod PaymentMethod,
+    DateTime InitiatedAt
+);
+
 public record PublishBillRequest(List<string> Channels, string? RecipientEmail = null, string? RecipientPhone = null);
 public record PublishBillResponse(Guid SwapId, string InvoiceNumber, List<string> SentChannels, DateTime PublishedAt, string Message);
 

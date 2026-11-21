@@ -247,6 +247,40 @@ public class SwapService : ISwapService
         return MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued?.SerialNumber ?? "BAT-ISSUED", "Pending vendor confirmation.");
     }
 
+    public async Task<IReadOnlyList<VendorPendingSwapDto>> GetPendingSwapsForPartnerAsync(Guid partnerId)
+    {
+        var swaps = await _context.Swaps
+            .AsNoTracking()
+            .Where(s => s.PartnerId == partnerId && (s.Status == SwapStatus.Validated || s.Status == SwapStatus.Initiated))
+            .OrderByDescending(s => s.InitiatedAt)
+            .ToListAsync();
+
+        var result = new List<VendorPendingSwapDto>();
+        foreach (var s in swaps)
+        {
+            var driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == s.DriverId);
+            var station = await _context.Stations.AsNoTracking().FirstOrDefaultAsync(st => st.Id == s.StationId);
+            var depleted = s.DepletedBatteryId.HasValue ? await _context.Batteries.AsNoTracking().FirstOrDefaultAsync(b => b.Id == s.DepletedBatteryId.Value) : null;
+            var issued = await _context.Batteries.AsNoTracking().FirstOrDefaultAsync(b => b.Id == s.IssuedBatteryId);
+
+            result.Add(new VendorPendingSwapDto(
+                s.Id,
+                s.DriverId,
+                driver?.FullName ?? "Driver",
+                driver?.PhoneNumber ?? "",
+                s.StationId,
+                station?.Name ?? "Store",
+                depleted?.SerialNumber ?? "FIRST-PICKUP",
+                issued?.SerialNumber ?? "BAT-ISSUED",
+                s.IssuedBatterySoc,
+                s.TotalAmount,
+                s.PaymentMethod,
+                s.InitiatedAt
+            ));
+        }
+        return result;
+    }
+
     public async Task<SwapResponse> ConfirmSwapAsync(ConfirmSwapRequest request)
     {
         var correlationId = request.CorrelationId ?? Guid.NewGuid();

@@ -257,6 +257,12 @@ public class SwapServiceTests
         Assert.NotNull(regen.SwapOtp);
         Assert.Equal(6, regen.SwapOtp!.Length);
 
+        // Partner sees active swap request for their stores
+        var partnerPending = await swapService.GetPendingSwapsForPartnerAsync(partner.Id);
+        Assert.Single(partnerPending);
+        Assert.Equal(init.SwapId, partnerPending[0].SwapId);
+        Assert.Equal(driver.PhoneNumber, partnerPending[0].DriverPhone);
+
         // Vendor validates wrong OTP -> throws
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             swapService.ValidateSwapOtpAsync(driver.Id, "000000"));

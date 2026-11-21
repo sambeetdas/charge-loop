@@ -70,6 +70,13 @@ public class SwapsController : ControllerBase
         return Ok(pending);
     }
 
+    [HttpGet("partner/{partnerId:guid}/pending")]
+    public async Task<ActionResult<IReadOnlyList<VendorPendingSwapDto>>> GetPendingSwapsForPartner(Guid partnerId)
+    {
+        var list = await _swapService.GetPendingSwapsForPartnerAsync(partnerId);
+        return Ok(list);
+    }
+
     [HttpPost("initiate")]
     public async Task<ActionResult<SwapResponse>> InitiateSwap([FromBody] InitiateSwapRequest request)
     {

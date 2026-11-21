@@ -864,6 +864,12 @@
 
     <!-- VENDOR STORES & BATTERIES -->
     <div id="view-vendor-stores" class="hidden">
+      <div class="section-title">
+        <span>📥 Active Swap Requests (Your Stores)</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadVendorPendingRequests()">Refresh</button>
+      </div>
+      <div id="vendorPendingRequestsList" style="margin-bottom:14px;"></div>
+
       <div class="card">
         <div style="font-weight:800;margin-bottom:10px;">🔋 Register Battery with Store Details</div>
         <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
@@ -1803,7 +1809,45 @@ async function refreshVendorViews() {
     </div>
   `).join('') || '<div class="muted">No stores added yet.</div>';
 
-  await Promise.all([loadBatteryTypes(), loadVendorDeskBatteries(), loadSelectedStoreBatteries(), loadVendorEarnings()]);
+  await Promise.all([loadBatteryTypes(), loadVendorPendingRequests(), loadVendorDeskBatteries(), loadSelectedStoreBatteries(), loadVendorEarnings()]);
+}
+
+async function loadVendorPendingRequests() {
+  if (!state.vendor?.id) return;
+  try {
+    const items = await apiFetch(`/swaps/partner/${state.vendor.id}/pending`);
+    const list = document.getElementById('vendorPendingRequestsList');
+    const pmNames = { 0: 'Weekly Pass', 1: 'Wallet', 2: 'UPI', 3: 'Cash', 4: 'Card' };
+    list.innerHTML = (items || []).map(r => `
+      <div class="card">
+        <div class="row-between" style="margin-bottom:6px;">
+          <div style="font-weight:800;">${r.stationName}</div>
+          <span class="amber-pill">⏳ Pending • ₹${Number(r.totalAmount).toFixed(2)} (${pmNames[r.paymentMethod] || 'Cash'})</span>
+        </div>
+        <div class="muted">${r.driverName} (${r.driverPhone})</div>
+        <div class="muted" style="margin-bottom:8px;">Issued: <b>${r.issuedBatterySerial}</b> (${r.issuedBatterySoc}%) • Return: <b>${r.depletedBatterySerial}</b></div>
+        <button class="btn btn-primary btn-sm" onclick="goToSwapDeskFromRequest('${r.stationId}', '${r.driverPhone}', '${r.depletedBatterySerial}', '${r.issuedBatterySerial}')">Go to Swap Desk →</button>
+      </div>
+    `).join('') || '<div class="muted">No active swap requests for your stores right now.</div>';
+  } catch (e) { console.error(e); }
+}
+
+async function goToSwapDeskFromRequest(stationId, driverPhone, depletedSerial, issuedSerial) {
+  switchVendorTab('desk');
+  const deskSel = document.getElementById('vendorDeskStationSelect');
+  if (stationId) {
+    deskSel.value = stationId;
+    await loadVendorDeskBatteries();
+  }
+  document.getElementById('vendorValidateQuery').value = driverPhone || '';
+  await validateDriverForPartner();
+  if (depletedSerial && depletedSerial !== 'FIRST-PICKUP') {
+    document.getElementById('vendorDepletedQr').value = depletedSerial;
+  }
+  if (issuedSerial) {
+    document.getElementById('vendorIssuedQrSelect').value = issuedSerial;
+  }
+  document.getElementById('vendorSwapOtpInput').focus();
 }
 
 function switchVendorTab(tab) {
