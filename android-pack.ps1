@@ -27,15 +27,15 @@ if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
     throw "Flutter CLI not found in PATH. Install Flutter and Android SDK first."
 }
 
-# Normalize server URL to end with /api/v1
-$normalizedUrl = $ServerUrl.TrimEnd("/")
-if (-not $normalizedUrl.EndsWith("/api/v1")) {
-    $normalizedUrl = "$normalizedUrl/api/v1"
-}
+# Normalize server URL and derive frontend WebView URL
+$baseHostUrl = $ServerUrl.TrimEnd("/") -replace '/api/v1$', ''
+$normalizedUrl = "$baseHostUrl/api/v1"
+$appUrl = "$baseHostUrl/?app=1"
 
 Write-Host "==> ChargeLoop Android APK Packager" -ForegroundColor Cyan
-Write-Host "    Server API URL : $normalizedUrl"
-Write-Host "    Build Mode     : $BuildMode"
+Write-Host "    Frontend App URL : $appUrl"
+Write-Host "    Server API URL   : $normalizedUrl"
+Write-Host "    Build Mode       : $BuildMode"
 
 Push-Location $mobileDir
 try {
@@ -74,6 +74,7 @@ try {
     $buildArgs = @(
         "build", "apk",
         "--$BuildMode",
+        "--dart-define=APP_URL=$appUrl",
         "--dart-define=API_BASE_URL=$normalizedUrl"
     )
     if ($SplitPerAbi) {
