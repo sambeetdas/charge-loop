@@ -57,7 +57,7 @@ class _StationsMapScreenState extends State<StationsMapScreen> {
                   // High-Contrast Quick Search Banner
                   Container(
                     padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.bottom(16),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [

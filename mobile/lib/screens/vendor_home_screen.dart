@@ -17,8 +17,8 @@ class VendorHomeScreen extends StatefulWidget {
 class _VendorHomeScreenState extends State<VendorHomeScreen> {
   int _currentIndex = 0;
   int _stationStatus = 0; // 0=Open, 1=Closed, 2=Maintenance
-  List<StationModel> _stations = [];
-  StationModel? _selectedStation;
+  List<Station> _stations = [];
+  Station? _selectedStation;
   bool _isLoadingStations = true;
 
   // Partner Swap Desk State
@@ -330,12 +330,12 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
               border: Border.all(color: AppColors.border),
             ),
             child: DropdownButtonHideUnderline(
-              child: DropdownButton<StationModel>(
+              child: DropdownButton<Station>(
                 value: _selectedStation,
                 isExpanded: true,
                 dropdownColor: AppColors.surfaceElevated,
                 items: _stations.map((s) {
-                  return DropdownMenuItem<StationModel>(
+                  return DropdownMenuItem<Station>(
                     value: s,
                     child: Text('${s.name} (${s.city})', style: const TextStyle(color: Colors.white, fontSize: 14)),
                   );

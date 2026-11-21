@@ -29,7 +29,7 @@ class AppTheme {
         surface: AppColors.surface,
         error: AppColors.dangerRed,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 2,
         shape: RoundedRectangleBorder(

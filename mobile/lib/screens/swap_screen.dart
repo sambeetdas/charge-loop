@@ -48,7 +48,7 @@ class _SwapScreenState extends State<SwapScreen> {
           _selectedStation = widget.initialStation ?? (list.isNotEmpty ? list.first : null);
           if (driverDetails.activeBattery != null) {
             _depletedSerialController.text = driverDetails.activeBattery!.serialNumber;
-            _depletedSoc = driverDetails.activeBattery!.stateOfChargePercent;
+            _depletedSoc = driverDetails.activeBattery!.stateOfCharge;
           }
         });
         if (_selectedStation != null) {
@@ -295,7 +295,7 @@ class _SwapScreenState extends State<SwapScreen> {
                       items: _readyBatteries.map((b) {
                         return DropdownMenuItem(
                           value: b,
-                          child: Text('${b.serialNumber} (${b.stateOfChargePercent}% Full, ${b.modelType})', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                          child: Text('${b.serialNumber} (${b.stateOfCharge}% Full, ${b.modelType})', style: const TextStyle(color: Colors.white, fontSize: 14)),
                         );
                       }).toList(),
                       onChanged: (val) {

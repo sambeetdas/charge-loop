@@ -10,6 +10,7 @@ class Station {
   final int charging;
   final int waitTimeMinutes;
   final double distanceKm;
+  final int status;
 
   Station({
     required this.id,
@@ -23,6 +24,7 @@ class Station {
     required this.charging,
     required this.waitTimeMinutes,
     required this.distanceKm,
+    this.status = 0,
   });
 
   factory Station.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class Station {
       charging: json['chargingBatteries'] ?? 0,
       waitTimeMinutes: json['estimatedWaitMinutes'] ?? 0,
       distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0.0,
+      status: json['status'] ?? 0,
     );
   }
 }

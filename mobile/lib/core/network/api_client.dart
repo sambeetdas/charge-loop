@@ -361,7 +361,7 @@ class ApiClient {
   }
 
   // 8. Create & Register Station (Vendor Hub)
-  Future<StationModel> createStation({
+  Future<Station> createStation({
     required String partnerId,
     required String name,
     required String address,
@@ -373,7 +373,7 @@ class ApiClient {
     int initialCharging = 4,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/v1/stations'),
+      Uri.parse('$baseUrl/stations'),
       headers: _headers(),
       body: jsonEncode({
         'partnerId': partnerId,
@@ -389,21 +389,22 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return StationModel.fromJson(jsonDecode(response.body));
+      return Station.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to register station: ${response.body}');
     }
   }
 
   // 9. Fetch Vendor Stations
-  Future<List<StationModel>> getVendorStations(String partnerId) async {
+  Future<List<Station>> getVendorStations(String partnerId) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/api/v1/stations/partner/$partnerId'),
+      Uri.parse('$baseUrl/stations/partner/$partnerId'),
+      headers: _headers(),
     ).timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200) {
       final List list = jsonDecode(response.body);
-      return list.map((item) => StationModel.fromJson(item)).toList();
+      return list.map((item) => Station.fromJson(item)).toList();
     } else {
       return [];
     }
