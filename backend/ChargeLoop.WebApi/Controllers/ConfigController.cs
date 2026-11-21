@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ChargeLoop.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/config")]
 public class ConfigController : ControllerBase
 {
@@ -22,7 +23,6 @@ public class ConfigController : ControllerBase
         _configuration = configuration;
     }
 
-    [AllowAnonymous]
     [HttpGet("pricing")]
     public async Task<ActionResult<PricingConfigDto>> GetPricing([FromQuery] int paymentMethod = 3)
     {
@@ -78,7 +78,6 @@ public class ConfigController : ControllerBase
             next.UpdatedAt));
     }
 
-    [AllowAnonymous]
     [HttpGet("battery-types")]
     public async Task<ActionResult<IReadOnlyList<BatteryTypeDto>>> GetBatteryTypes()
     {
@@ -92,7 +91,6 @@ public class ConfigController : ControllerBase
         return Ok(types);
     }
 
-    [AllowAnonymous]
     [HttpGet("geocode")]
     public async Task<ActionResult<GeocodeResultDto>> GeocodeAddress([FromQuery] string address)
     {

@@ -17,7 +17,6 @@ public class SubscriptionsController : ControllerBase
         _subscriptionService = subscriptionService;
     }
 
-    [AllowAnonymous]
     [HttpGet("plans")]
     public async Task<ActionResult<IReadOnlyList<SubscriptionPlanDto>>> GetPlans()
     {
