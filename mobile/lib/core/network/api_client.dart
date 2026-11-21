@@ -24,26 +24,7 @@ class ApiClient {
     };
   }
 
-  // 1. Driver Authentication (Reads and registers directly in PostgreSQL)
-  Future<DriverProfile> authenticate(String phone, {String? name}) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl${ApiConstants.authPhone}'),
-      headers: _headers(),
-      body: jsonEncode({
-        'phoneNumber': phone.trim(),
-        'fullName': name?.trim(),
-        'languageCode': 'en',
-      }),
-    ).timeout(const Duration(seconds: 8));
-
-    if (response.statusCode == 200) {
-      final profile = DriverProfile.fromJson(jsonDecode(response.body));
-      authToken = profile.token;
-      return profile;
-    } else {
-      throw Exception('Authentication failed: ${response.body}');
-    }
-  }
+  // 1. Driver PIN Authentication (Reads and registers directly in PostgreSQL)
 
   Future<DriverProfile> signUpDriverWithPin({
     required String phone,
@@ -178,7 +159,6 @@ class ApiClient {
     }
   }
 
-  // 1a. OTP Send & Verify
   Future<Map<String, dynamic>> sendOtp(String phone) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/send-otp'),
@@ -187,32 +167,6 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) return jsonDecode(response.body);
     throw Exception('Failed to send OTP: ${response.body}');
-  }
-
-  Future<DriverProfile> verifyOtp({
-    required String phone,
-    required String otpCode,
-    String? fullName,
-    String? email,
-    String? referralCode,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/verify-otp'),
-      headers: _headers(),
-      body: jsonEncode({
-        'phoneNumber': phone.trim(),
-        'otpCode': otpCode.trim(),
-        'fullName': fullName?.trim(),
-        'email': email?.trim(),
-        'referralCode': referralCode?.trim(),
-      }),
-    ).timeout(const Duration(seconds: 8));
-    if (response.statusCode == 200) {
-      final profile = DriverProfile.fromJson(jsonDecode(response.body));
-      authToken = profile.token;
-      return profile;
-    }
-    throw Exception('OTP verification failed: ${response.body}');
   }
 
   Future<Map<String, dynamic>> claimReferral(String driverId, String referralCode) async {
@@ -262,52 +216,6 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) return jsonDecode(response.body);
     throw Exception('Bill publish failed: ${response.body}');
-  }
-
-  // 1b. Vendor Authentication
-  Future<VendorProfile> authenticateVendor(String phone, {String? name, String? businessName}) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/vendor/phone'),
-      headers: _headers(),
-      body: jsonEncode({
-        'phoneNumber': phone.trim(),
-        'fullName': name?.trim(),
-        'businessName': businessName?.trim(),
-      }),
-    ).timeout(const Duration(seconds: 8));
-
-    if (response.statusCode == 200) {
-      final vendor = VendorProfile.fromJson(jsonDecode(response.body));
-      authToken = vendor.token;
-      return vendor;
-    } else {
-      throw Exception('Vendor authentication failed: ${response.body}');
-    }
-  }
-
-  Future<VendorProfile> verifyVendorOtp({
-    required String phone,
-    required String otpCode,
-    String? fullName,
-    String? businessName,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/vendor/verify-otp'),
-      headers: _headers(),
-      body: jsonEncode({
-        'phoneNumber': phone.trim(),
-        'otpCode': otpCode.trim(),
-        'fullName': fullName?.trim(),
-        'businessName': businessName?.trim(),
-      }),
-    ).timeout(const Duration(seconds: 8));
-    if (response.statusCode == 200) {
-      final vendor = VendorProfile.fromJson(jsonDecode(response.body));
-      authToken = vendor.token;
-      return vendor;
-    } else {
-      throw Exception('Vendor OTP verification failed: ${response.body}');
-    }
   }
 
   // 2. Fetch Driver Details (Vehicles, active battery, balance directly from PostgreSQL)

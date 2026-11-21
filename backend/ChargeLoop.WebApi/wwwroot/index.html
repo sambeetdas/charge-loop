@@ -1147,17 +1147,6 @@ async function resetVendorPin() {
   } catch (e) { showToast(e.message, true); }
 }
 
-async function quickSignInDriver(phoneNumber, fullName) {
-  try {
-    const auth = await apiFetch('/auth/phone', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber, fullName, languageCode: 'en' })
-    });
-    state.token = auth.token;
-    await enterDriverApp(auth.driverId);
-  } catch (e) { showToast(e.message, true); }
-}
-
 async function enterDriverApp(driverId) {
   state.role = 'driver';
   state.driver = await apiFetch(`/auth/profile/${driverId}`);
@@ -1609,37 +1598,6 @@ async function submitDriverKyc() {
 }
 
 // VENDOR FLOWS
-async function sendVendorOtp() {
-  const phone = document.getElementById('authVendorPhone').value.trim();
-  if (!phone) return showToast('Enter partner phone number first', true);
-  try {
-    const res = await apiFetch('/auth/send-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber: phone })
-    });
-    document.getElementById('vendorOtpStep1').classList.add('hidden');
-    document.getElementById('vendorOtpStep2').classList.remove('hidden');
-    document.getElementById('demoVendorOtpBanner').textContent = `Demo OTP sent: ${res.demoOtp} (valid 5m)`;
-    document.getElementById('authVendorOtp').value = res.demoOtp;
-    showToast('OTP sent to ' + phone);
-  } catch (e) { showToast(e.message, true); }
-}
-
-async function verifyVendorOtp() {
-  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
-  const otpCode = document.getElementById('authVendorOtp').value.trim();
-  const fullName = document.getElementById('authVendorName').value.trim() || null;
-  const businessName = document.getElementById('authVendorBiz').value.trim() || null;
-  if (!phoneNumber || !otpCode) return showToast('Enter phone number and OTP', true);
-  try {
-    const auth = await apiFetch('/auth/vendor/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber, otpCode, fullName, businessName })
-    });
-    await enterVendorApp(auth);
-  } catch (e) { showToast(e.message, true); }
-}
-
 async function saveDriverProfile() {
   const fullName = document.getElementById('editDriverName').value.trim();
   const email = document.getElementById('editDriverEmail').value.trim();

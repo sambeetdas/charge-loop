@@ -18,19 +18,7 @@ public class AuthController : ControllerBase
         _vendorService = vendorService;
     }
 
-    // Driver Endpoints
-    [HttpPost("phone")]
-    public async Task<ActionResult<AuthResponse>> AuthenticatePhone([FromBody] AuthRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-        {
-            return BadRequest("Phone number is required");
-        }
-
-        var response = await _driverService.AuthenticateWithPhoneAsync(request);
-        return Ok(response);
-    }
-
+    // Driver Endpoints (PIN-based Sign Up / Sign In / Reset PIN)
     [HttpPost("send-otp")]
     public async Task<ActionResult<SendOtpResponse>> SendOtp([FromBody] SendOtpRequest request)
     {
@@ -39,23 +27,6 @@ public class AuthController : ControllerBase
 
         var response = await _driverService.SendOtpAsync(request);
         return Ok(response);
-    }
-
-    [HttpPost("verify-otp")]
-    public async Task<ActionResult<AuthResponse>> VerifyOtp([FromBody] VerifyOtpRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.OtpCode))
-            return BadRequest(new { Error = "Phone number and OTP code are required" });
-
-        try
-        {
-            var response = await _driverService.VerifyOtpAndAuthenticateAsync(request);
-            return Ok(response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
     }
 
     [HttpPost("signup")]
@@ -182,36 +153,7 @@ public class AuthController : ControllerBase
         return Ok(vehicle);
     }
 
-    // Vendor Endpoints
-    [HttpPost("vendor/phone")]
-    public async Task<ActionResult<VendorAuthResponse>> AuthenticateVendor([FromBody] VendorAuthRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-        {
-            return BadRequest("Phone number is required");
-        }
-
-        var response = await _vendorService.AuthenticateWithPhoneAsync(request);
-        return Ok(response);
-    }
-
-    [HttpPost("vendor/verify-otp")]
-    public async Task<ActionResult<VendorAuthResponse>> VerifyVendorOtp([FromBody] VerifyVendorOtpRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.OtpCode))
-            return BadRequest(new { Error = "Phone number and OTP code are required" });
-
-        try
-        {
-            var response = await _vendorService.VerifyOtpAndAuthenticateAsync(request);
-            return Ok(response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
-    }
-
+    // Vendor Endpoints (PIN-based Sign Up / Sign In / Reset PIN)
     [HttpPost("vendor/signup")]
     public async Task<ActionResult<VendorAuthResponse>> SignUpVendor([FromBody] VendorPinSignUpRequest request)
     {

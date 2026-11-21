@@ -205,7 +205,9 @@ flutter run -d chrome
    - Edit Full Name, Email, and Language (`PUT /api/v1/auth/profile/{driverId}`), complete KYC (`POST /api/v1/auth/kyc`), subscribe to Weekly Plans, and change your phone number via 2-step OTP (`POST /api/v1/auth/send-otp` &rarr; `POST /api/v1/auth/profile/{driverId}/change-phone`).
 
 > [!WARNING]
-> **Online Payments (Card / UPI / Wallet Checkout)**: Online payment gateway integration is currently in progress. Selecting **Wallet**, **Card**, or **UPI** in the Web or Mobile UI displays: *"Work in progress to integrate online payment. Please wait for few days."*
+> **Backlog Items**:
+> - **Online Payments (Card / UPI / Wallet Checkout)**: Online payment gateway integration is currently in progress. Selecting **Wallet**, **Card**, or **UPI** in the Web or Mobile UI displays: *"Work in progress to integrate online payment. Please wait for few days."*
+> - **Passwordless & SMS OTP Authentication**: Legacy passwordless (`/auth/phone`, `/auth/vendor/phone`) and demo OTP (`/auth/verify-otp`, `/auth/vendor/verify-otp`) login endpoints have been removed in favor of PIN-based auth (`signup` / `signin` / `reset-pin`) and are kept in the backlog for future SMS gateway (MSG91 / Twilio) integration.
 
 ---
 
