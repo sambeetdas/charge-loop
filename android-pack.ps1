@@ -46,14 +46,23 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "flutter create --platforms=android failed." }
     }
 
-    # Ensure cleartext HTTP is allowed on Android 9+ when using an http:// server URL
+    # Ensure INTERNET permission and cleartext HTTP are allowed on Android 9+ in release builds
     $manifestPath = Join-Path $androidDir "app\src\main\AndroidManifest.xml"
-    if ((Test-Path $manifestPath) -and ($normalizedUrl -like "http://*")) {
+    if (Test-Path $manifestPath) {
         $manifest = Get-Content $manifestPath -Raw
-        if ($manifest -notmatch 'android:usesCleartextTraffic') {
+        $manifestChanged = $false
+        if ($manifest -notmatch 'android\.permission\.INTERNET') {
+            $manifest = $manifest -replace '(<manifest[^>]*>)', "`$1`n    <uses-permission android:name=`"android.permission.INTERNET`" />"
+            $manifestChanged = $true
+            Write-Host "==> Added android.permission.INTERNET to AndroidManifest.xml." -ForegroundColor Yellow
+        }
+        if (($normalizedUrl -like "http://*") -and ($manifest -notmatch 'android:usesCleartextTraffic')) {
             $manifest = $manifest -replace '<application\b', '<application android:usesCleartextTraffic="true"'
-            Set-Content -Path $manifestPath -Value $manifest -Encoding UTF8
+            $manifestChanged = $true
             Write-Host "==> Enabled android:usesCleartextTraffic=true in AndroidManifest.xml for HTTP server." -ForegroundColor Yellow
+        }
+        if ($manifestChanged) {
+            Set-Content -Path $manifestPath -Value $manifest -Encoding UTF8
         }
     }
 
