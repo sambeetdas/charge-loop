@@ -1425,7 +1425,7 @@ async function loadPricingConfig() {
   try {
     const p = await apiFetch(`/config/pricing?paymentMethod=${state.driverPayMethod || 3}`);
     document.getElementById('driverBreakupBase').textContent = `₹${Number(p.baseSwapFee).toFixed(2)}`;
-    document.getElementById('driverBreakupPlatformLabel').textContent = `Platform Fee (${Number(p.platformFeePercent).toFixed(0)}% of ₹${Number(p.baseSwapFee).toFixed(0)})`;
+    document.getElementById('driverBreakupPlatformLabel').textContent = 'Platform Fee';
     document.getElementById('driverBreakupPlatform').textContent = `₹${Number(p.platformFee).toFixed(2)}`;
     document.getElementById('driverBreakupConv').textContent = `₹${Number(p.convenienceFee).toFixed(2)}`;
     document.getElementById('driverBreakupGw').textContent = `₹${Number(p.paymentGatewayFee).toFixed(2)}`;
@@ -1959,7 +1959,7 @@ async function verifyVendorSwapOtp() {
     }
 
     document.getElementById('vendorBreakupBase').textContent = `₹${Number(swap.baseFee).toFixed(2)}`;
-    document.getElementById('vendorBreakupPlatformLabel').textContent = `Platform Fee (${Number(swap.platformFeePercent || 0).toFixed(0)}%)`;
+    document.getElementById('vendorBreakupPlatformLabel').textContent = 'Platform Fee';
     document.getElementById('vendorBreakupPlatform').textContent = `₹${Number(swap.platformFee || 0).toFixed(2)}`;
     document.getElementById('vendorBreakupConv').textContent = `₹${Number(swap.convenienceFee || 0).toFixed(2)}`;
     document.getElementById('vendorBreakupGw').textContent = `₹${Number(swap.paymentGatewayFee || 0).toFixed(2)}`;
