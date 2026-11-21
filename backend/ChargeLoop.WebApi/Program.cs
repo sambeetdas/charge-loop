@@ -89,6 +89,32 @@ using (var scope = app.Services.CreateScope())
             UPDATE drivers d SET wallet_balance = 0.00
             WHERE d.wallet_balance = 200.00
               AND NOT EXISTS (SELECT 1 FROM wallet_transactions wt WHERE wt.account_id = d.id AND wt.account_type = 0);
+
+            CREATE TABLE IF NOT EXISTS pricing_configs (
+                id UUID PRIMARY KEY,
+                base_swap_fee NUMERIC(10,2) NOT NULL DEFAULT 100.00,
+                gst_percent NUMERIC(5,2) NOT NULL DEFAULT 18.00,
+                partner_commission NUMERIC(10,2) NOT NULL DEFAULT 25.00,
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+            INSERT INTO pricing_configs (id, base_swap_fee, gst_percent, partner_commission, is_active, updated_at)
+            SELECT '99999999-9999-9999-9999-999999999999', 100.00, 18.00, 25.00, TRUE, NOW()
+            WHERE NOT EXISTS (SELECT 1 FROM pricing_configs WHERE is_active = TRUE);
+
+            CREATE TABLE IF NOT EXISTS battery_types (
+                id UUID PRIMARY KEY,
+                code VARCHAR(60) NOT NULL UNIQUE,
+                display_name VARCHAR(150) NOT NULL,
+                voltage INT NOT NULL DEFAULT 48,
+                capacity_ah INT NOT NULL DEFAULT 30,
+                is_active BOOLEAN NOT NULL DEFAULT TRUE
+            );
+            INSERT INTO battery_types (id, code, display_name, voltage, capacity_ah, is_active) VALUES
+                ('88888888-8888-8888-8888-888888888801', 'LFP-48V-30Ah', '2W LFP 48V 30Ah (Standard)', 48, 30, TRUE),
+                ('88888888-8888-8888-8888-888888888802', '2W_48V', '2W NMC 48V 28Ah', 48, 28, TRUE),
+                ('88888888-8888-8888-8888-888888888803', '3W_60V', '3W High-Capacity 60V 45Ah', 60, 45, TRUE)
+            ON CONFLICT (code) DO NOTHING;
         ");
     }
 }

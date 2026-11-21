@@ -273,4 +273,32 @@ public class SwapServiceTests
         Assert.Equal(SwapStatus.Completed, confirmed.Status);
         Assert.Null(await swapService.GetPendingSwapForDriverAsync(driver.Id));
     }
+
+    [Fact]
+    public async Task InitiateSwapAsync_UsesDbDrivenPricingConfig_WhenConfigured()
+    {
+        var context = CreateInMemoryDbContext();
+        var walletService = new WalletService(context);
+        var swapService = new SwapService(context, walletService, new MockNotificationService());
+
+        await context.PricingConfigs.AddAsync(new PricingConfig
+        {
+            BaseSwapFee = 200.00m,
+            GstPercent = 12.00m,
+            PartnerCommission = 40.00m,
+            IsActive = true,
+            UpdatedAt = DateTime.UtcNow
+        });
+        var station = new Station { PartnerId = Guid.NewGuid(), Name = "Dynamic Hub" };
+        var bat = new Battery { SerialNumber = "BAT-DYN-1", StateOfChargePercent = 100, Status = BatteryStatus.AvailableCharged, IsVisibleToDriver = true, CurrentStationId = station.Id };
+        await context.Stations.AddAsync(station);
+        await context.Batteries.AddAsync(bat);
+        await context.SaveChangesAsync();
+
+        var init = await swapService.InitiateSwapAsync(new InitiateSwapRequest(Guid.NewGuid(), station.Id, station.PartnerId, "", bat.SerialNumber, PaymentMethod.Cash));
+        Assert.Equal(200.00m, init.BaseFee);
+        Assert.Equal(24.00m, init.TaxAmount);
+        Assert.Equal(224.00m, init.TotalAmount);
+        Assert.Equal(40.00m, init.PartnerCommission);
+    }
 }

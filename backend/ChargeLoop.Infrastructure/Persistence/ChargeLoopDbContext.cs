@@ -21,6 +21,8 @@ public class ChargeLoopDbContext : DbContext
     public DbSet<OtpVerification> OtpVerifications => Set<OtpVerification>();
     public DbSet<PaymentTransaction> Transactions => Set<PaymentTransaction>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<PricingConfig> PricingConfigs => Set<PricingConfig>();
+    public DbSet<BatteryTypeConfig> BatteryTypes => Set<BatteryTypeConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -285,6 +287,30 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.DurationMs).HasColumnName("duration_ms");
             b.Property(x => x.Details).HasColumnName("details");
             b.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        modelBuilder.Entity<PricingConfig>(b =>
+        {
+            b.ToTable("pricing_configs");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.BaseSwapFee).HasColumnName("base_swap_fee").HasColumnType("numeric(10,2)");
+            b.Property(x => x.GstPercent).HasColumnName("gst_percent").HasColumnType("numeric(5,2)");
+            b.Property(x => x.PartnerCommission).HasColumnName("partner_commission").HasColumnType("numeric(10,2)");
+            b.Property(x => x.IsActive).HasColumnName("is_active");
+            b.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<BatteryTypeConfig>(b =>
+        {
+            b.ToTable("battery_types");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.Code).HasColumnName("code");
+            b.Property(x => x.DisplayName).HasColumnName("display_name");
+            b.Property(x => x.Voltage).HasColumnName("voltage");
+            b.Property(x => x.CapacityAh).HasColumnName("capacity_ah");
+            b.Property(x => x.IsActive).HasColumnName("is_active");
         });
 
         // PostgreSQL optimistic concurrency (xmin) when running on Npgsql

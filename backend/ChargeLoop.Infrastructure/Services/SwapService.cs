@@ -153,6 +153,18 @@ public class SwapService : ISwapService
             throw new InvalidOperationException($"Issued battery has insufficient charge ({issued.StateOfChargePercent}%). Minimum required is 90%.");
         }
 
+        var pricing = await _context.PricingConfigs
+            .AsNoTracking()
+            .Where(p => p.IsActive)
+            .OrderByDescending(p => p.UpdatedAt)
+            .FirstOrDefaultAsync();
+
+        var baseFee = pricing?.BaseSwapFee ?? 100.00m;
+        var gstPercent = pricing?.GstPercent ?? 18.00m;
+        var taxAmount = Math.Round(baseFee * (gstPercent / 100m), 2);
+        var totalAmount = baseFee + taxAmount;
+        var partnerCommission = pricing?.PartnerCommission ?? 25.00m;
+
         var swapOtp = Random.Shared.Next(100000, 999999).ToString();
 
         var swap = new SwapTransaction
@@ -164,10 +176,10 @@ public class SwapService : ISwapService
             DepletedBatterySoc = depleted?.StateOfChargePercent ?? 0,
             IssuedBatteryId = issued.Id,
             IssuedBatterySoc = issued.StateOfChargePercent,
-            BaseFee = 100.00m,
-            TaxAmount = 18.00m,
-            TotalAmount = 118.00m,
-            PartnerCommissionEarned = 25.00m,
+            BaseFee = baseFee,
+            TaxAmount = taxAmount,
+            TotalAmount = totalAmount,
+            PartnerCommissionEarned = partnerCommission,
             PaymentMethod = request.PaymentMethod,
             SwapOtp = swapOtp,
             Status = SwapStatus.Validated,
@@ -308,8 +320,16 @@ public class SwapService : ISwapService
         }
         else if (request.PaymentMethod == PaymentMethod.Cash && request.CashAmount.HasValue && request.CashAmount.Value > 0)
         {
+            var pricing = await _context.PricingConfigs
+                .AsNoTracking()
+                .Where(p => p.IsActive)
+                .OrderByDescending(p => p.UpdatedAt)
+                .FirstOrDefaultAsync();
+            var gstPercent = pricing?.GstPercent ?? 18.00m;
+            var divisor = 1.00m + (gstPercent / 100m);
+
             swap.TotalAmount = request.CashAmount.Value;
-            swap.BaseFee = Math.Round(swap.TotalAmount / 1.18m, 2);
+            swap.BaseFee = Math.Round(swap.TotalAmount / divisor, 2);
             swap.TaxAmount = swap.TotalAmount - swap.BaseFee;
         }
 

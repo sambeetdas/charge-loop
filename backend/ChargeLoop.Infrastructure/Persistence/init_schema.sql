@@ -146,6 +146,24 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS pricing_configs (
+    id UUID PRIMARY KEY,
+    base_swap_fee NUMERIC(10, 2) NOT NULL DEFAULT 100.00,
+    gst_percent NUMERIC(5, 2) NOT NULL DEFAULT 18.00,
+    partner_commission NUMERIC(10, 2) NOT NULL DEFAULT 25.00,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS battery_types (
+    id UUID PRIMARY KEY,
+    code VARCHAR(60) NOT NULL UNIQUE,
+    display_name VARCHAR(150) NOT NULL,
+    voltage INT NOT NULL DEFAULT 48,
+    capacity_ah INT NOT NULL DEFAULT 30,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 -- Seed Initial Partners
 INSERT INTO partners (id, full_name, business_name, phone_number, upi_id, wallet_balance)
 VALUES 

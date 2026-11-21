@@ -253,3 +253,18 @@ public record SupportTicketDto(
     TicketStatus Status,
     DateTime CreatedAt
 );
+
+public record PricingConfigDto(
+    decimal BaseSwapFee,
+    decimal GstPercent,
+    decimal TaxAmount,
+    decimal TotalAmount,
+    decimal PartnerCommission,
+    DateTime UpdatedAt
+);
+
+public record UpdatePricingConfigRequest(decimal BaseSwapFee, decimal GstPercent, decimal PartnerCommission);
+
+public record BatteryTypeDto(Guid Id, string Code, string DisplayName, int Voltage, int CapacityAh, bool IsActive);
+
+public record GeocodeResultDto(string FormattedAddress, string City, double Latitude, double Longitude, string Provider);

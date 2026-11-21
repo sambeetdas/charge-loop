@@ -661,18 +661,18 @@
           <div style="font-weight:800;font-size:13px;margin-bottom:8px;">🧾 Fare Breakup</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
             <span>Base Swap &amp; Energy Fee</span>
-            <span>₹100.00</span>
+            <span id="driverBreakupBase">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span>GST (18% on ₹100.00)</span>
-            <span>₹18.00</span>
+            <span id="driverBreakupGstLabel">GST (18%)</span>
+            <span id="driverBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
             <span>Total Payable (Cash)</span>
-            <span style="color:var(--mint);">₹118.00</span>
+            <span id="driverBreakupTotal" style="color:var(--mint);">₹0.00</span>
           </div>
-          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Amount (₹) — Fixed System Fare (Read-Only)</div>
-          <input id="driverCashAmount" class="input-field" type="number" value="118.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
+          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Amount (₹) — DB-Driven System Fare (Read-Only)</div>
+          <input id="driverCashAmount" class="input-field" type="number" value="0.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
         </div>
 
         <button class="btn btn-primary" onclick="executeDriverScanAndPay()">Confirm Swap &amp; Record Payment</button>
@@ -877,7 +877,7 @@
         <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
         <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <input id="regBatModel" class="input-field" value="LFP-48V-30Ah" placeholder="Model Type">
+          <select id="regBatModel" class="input-field"></select>
           <input id="regBatSoc" class="input-field" type="number" value="100" placeholder="SOC % (0-100)">
         </div>
         <button class="btn btn-primary" onclick="registerBatteryForStore()">Register Battery at Store</button>
@@ -890,8 +890,15 @@
 
       <div id="addStoreForm" class="card hidden">
         <input id="newStoreName" class="input-field" placeholder="Store / Hub Name">
-        <input id="newStoreAddress" class="input-field" placeholder="Full Street Address">
-        <input id="newStoreCity" class="input-field" value="Bengaluru" placeholder="City">
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="newStoreAddress" class="input-field" placeholder="Full Street Address" style="margin-bottom:0;">
+          <button class="btn btn-secondary btn-sm" type="button" onclick="lookupStoreAddress()">📍 Find</button>
+        </div>
+        <input id="newStoreCity" class="input-field" placeholder="City">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input id="newStoreLat" class="input-field" type="number" step="any" placeholder="Latitude (auto)">
+          <input id="newStoreLng" class="input-field" type="number" step="any" placeholder="Longitude (auto)">
+        </div>
         <button class="btn btn-primary" onclick="createVendorStore()">Save Store / Hub</button>
       </div>
 
@@ -1185,7 +1192,7 @@ async function refreshDriverViews() {
   }
 
   await loadActiveReservation();
-  await Promise.all([loadStations(), loadPendingDriverSwap(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
+  await Promise.all([loadPricingConfig(), loadStations(), loadPendingDriverSwap(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
 }
 
 function switchDriverTab(tab) {
@@ -1293,11 +1300,49 @@ async function toggleStationBatteriesPreview(stationId) {
   } catch (e) { showToast(e.message, true); }
 }
 
+async function getBrowserCoordinates() {
+  if (!navigator.geolocation) return { latitude: 0, longitude: 0, hasFix: false };
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, hasFix: true }),
+      () => resolve({ latitude: 0, longitude: 0, hasFix: false }),
+      { timeout: 3000 }
+    );
+  });
+}
+
+async function loadPricingConfig() {
+  try {
+    const p = await apiFetch('/config/pricing');
+    document.getElementById('driverBreakupBase').textContent = `₹${Number(p.baseSwapFee).toFixed(2)}`;
+    document.getElementById('driverBreakupGstLabel').textContent = `GST (${Number(p.gstPercent).toFixed(0)}% on ₹${Number(p.baseSwapFee).toFixed(2)})`;
+    document.getElementById('driverBreakupTax').textContent = `₹${Number(p.taxAmount).toFixed(2)}`;
+    document.getElementById('driverBreakupTotal').textContent = `₹${Number(p.totalAmount).toFixed(2)}`;
+    document.getElementById('driverCashAmount').value = Number(p.totalAmount).toFixed(2);
+  } catch (e) { console.error(e); }
+}
+
+async function loadBatteryTypes() {
+  try {
+    const types = await apiFetch('/config/battery-types');
+    const sel = document.getElementById('regBatModel');
+    const prev = sel.value;
+    sel.innerHTML = (types || []).map(t => `<option value="${t.code}">${t.displayName} (${t.code})</option>`).join('')
+      || '<option value="LFP-48V-30Ah">LFP-48V-30Ah</option>';
+    if (prev && (types || []).some(t => t.code === prev)) sel.value = prev;
+  } catch (e) { console.error(e); }
+}
+
 async function loadStations() {
   try {
+    const coords = await getBrowserCoordinates();
     state.stations = await apiFetch('/stations/nearby', {
       method: 'POST',
-      body: JSON.stringify({ latitude: 12.9716, longitude: 77.5946, radiusKm: 50 })
+      body: JSON.stringify({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        radiusKm: coords.hasFix ? 50 : 25000
+      })
     });
     const list = document.getElementById('driverStationsList');
     list.innerHTML = state.stations.map(s => `
@@ -1692,7 +1737,7 @@ async function refreshVendorViews() {
     </div>
   `).join('') || '<div class="muted">No stores added yet.</div>';
 
-  await Promise.all([loadVendorDeskBatteries(), loadSelectedStoreBatteries(), loadVendorEarnings()]);
+  await Promise.all([loadBatteryTypes(), loadVendorDeskBatteries(), loadSelectedStoreBatteries(), loadVendorEarnings()]);
 }
 
 function switchVendorTab(tab) {
@@ -1990,11 +2035,45 @@ function toggleAddStoreForm() {
   document.getElementById('addStoreForm').classList.toggle('hidden');
 }
 
+async function lookupStoreAddress() {
+  const address = document.getElementById('newStoreAddress').value.trim();
+  if (!address) return showToast('Enter street address first', true);
+  try {
+    const geo = await apiFetch(`/config/geocode?address=${encodeURIComponent(address)}`);
+    if (geo.formattedAddress) document.getElementById('newStoreAddress').value = geo.formattedAddress;
+    if (geo.city && !document.getElementById('newStoreCity').value.trim()) {
+      document.getElementById('newStoreCity').value = geo.city;
+    }
+    document.getElementById('newStoreLat').value = Number(geo.latitude).toFixed(6);
+    document.getElementById('newStoreLng').value = Number(geo.longitude).toFixed(6);
+    showToast(`Address located (${geo.provider})`);
+  } catch (e) { showToast(e.message, true); }
+}
+
 async function createVendorStore() {
   const name = document.getElementById('newStoreName').value.trim();
-  const address = document.getElementById('newStoreAddress').value.trim();
-  const city = document.getElementById('newStoreCity').value.trim() || 'Bengaluru';
+  let address = document.getElementById('newStoreAddress').value.trim();
+  let city = document.getElementById('newStoreCity').value.trim();
+  let latitude = parseFloat(document.getElementById('newStoreLat').value);
+  let longitude = parseFloat(document.getElementById('newStoreLng').value);
   if (!name || !address) return showToast('Name and address are required', true);
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    try {
+      const geo = await apiFetch(`/config/geocode?address=${encodeURIComponent(city ? `${address}, ${city}` : address)}`);
+      latitude = geo.latitude;
+      longitude = geo.longitude;
+      if (!city && geo.city) city = geo.city;
+      document.getElementById('newStoreLat').value = Number(latitude).toFixed(6);
+      document.getElementById('newStoreLng').value = Number(longitude).toFixed(6);
+    } catch {
+      const gps = await getBrowserCoordinates();
+      latitude = gps.latitude;
+      longitude = gps.longitude;
+    }
+  }
+  if (!city) city = 'Unknown';
+
   try {
     await apiFetch('/stations', {
       method: 'POST',
@@ -2003,8 +2082,8 @@ async function createVendorStore() {
         name,
         address,
         city,
-        latitude: 12.9716,
-        longitude: 77.5946
+        latitude,
+        longitude
       })
     });
     document.getElementById('addStoreForm').classList.add('hidden');
