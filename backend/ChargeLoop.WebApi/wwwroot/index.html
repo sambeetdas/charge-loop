@@ -862,14 +862,17 @@
       </div>
     </div>
 
-    <!-- VENDOR STORES & BATTERIES -->
-    <div id="view-vendor-stores" class="hidden">
+    <!-- VENDOR REQUESTS -->
+    <div id="view-vendor-requests" class="hidden">
       <div class="section-title">
         <span>📥 Active Swap Requests (Your Stores)</span>
         <button class="btn btn-secondary btn-sm" onclick="loadVendorPendingRequests()">Refresh</button>
       </div>
-      <div id="vendorPendingRequestsList" style="margin-bottom:14px;"></div>
+      <div id="vendorPendingRequestsList"></div>
+    </div>
 
+    <!-- VENDOR STORES & BATTERIES -->
+    <div id="view-vendor-stores" class="hidden">
       <div class="card">
         <div style="font-weight:800;margin-bottom:10px;">🔋 Register Battery with Store Details</div>
         <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
@@ -1041,6 +1044,7 @@
   <!-- VENDOR BOTTOM NAV -->
   <div id="navVendor" class="bottom-nav hidden">
     <div class="nav-item active" data-tab="desk" onclick="switchVendorTab('desk')"><span class="nav-icon">⚡</span>Swap Desk</div>
+    <div class="nav-item" data-tab="requests" onclick="switchVendorTab('requests')"><span class="nav-icon">📥</span>Requests</div>
     <div class="nav-item" data-tab="stores" onclick="switchVendorTab('stores')"><span class="nav-icon">🔋</span>Stores</div>
     <div class="nav-item" data-tab="earnings" onclick="switchVendorTab('earnings')"><span class="nav-icon">💰</span>Earnings</div>
     <div class="nav-item" data-tab="profile" onclick="switchVendorTab('profile')"><span class="nav-icon">👤</span>Profile</div>
@@ -1851,7 +1855,7 @@ async function goToSwapDeskFromRequest(stationId, driverPhone, depletedSerial, i
 }
 
 function switchVendorTab(tab) {
-  ['desk', 'stores', 'earnings', 'profile', 'help'].forEach(t => {
+  ['desk', 'requests', 'stores', 'earnings', 'profile', 'help'].forEach(t => {
     document.getElementById(`view-vendor-${t}`).classList.toggle('hidden', t !== tab);
   });
   document.querySelectorAll('#navVendor .nav-item').forEach(el => {
