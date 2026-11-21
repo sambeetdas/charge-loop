@@ -30,6 +30,7 @@ builder.Services.AddSignalR();
 
 // Application & Infrastructure Services
 builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddHealthChecks().AddCheck<ChargeLoop.WebApi.DatabaseHealthCheck>("database");
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "ChargeLoop_SuperSecret_JWT_Signing_Key_2026_Min32Chars!";
@@ -110,6 +111,13 @@ app.UseAuthorization();
 app.UseMiddleware<CorrelationAndAuditMiddleware>();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
+app.MapGet("/health/live", () => Results.Ok(new
+{
+    status = "Healthy",
+    service = "ChargeLoop.WebApi",
+    timestampUtc = DateTime.UtcNow
+}));
 app.MapHub<StationHub>("/hubs/stations");
 
 // Wire RealTimeNotificationService events to SignalR clients

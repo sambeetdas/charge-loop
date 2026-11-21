@@ -8,11 +8,13 @@ namespace ChargeLoop.WebApi.Middleware;
 public class CorrelationAndAuditMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<CorrelationAndAuditMiddleware> _logger;
     private const string HeaderName = "X-Correlation-Id";
 
-    public CorrelationAndAuditMiddleware(RequestDelegate next)
+    public CorrelationAndAuditMiddleware(RequestDelegate next, ILogger<CorrelationAndAuditMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context, ChargeLoopDbContext dbContext)
@@ -56,10 +58,18 @@ public class CorrelationAndAuditMiddleware
                     CreatedAt = DateTime.UtcNow
                 });
                 await dbContext.SaveChangesAsync();
+                _logger.LogInformation(
+                    "HTTP {Method} {Path} responded {StatusCode} in {DurationMs}ms (CorrelationId={CorrelationId}, ActorRole={ActorRole})",
+                    context.Request.Method,
+                    context.Request.Path.Value,
+                    context.Response.StatusCode,
+                    sw.ElapsedMilliseconds,
+                    correlationId,
+                    actorRole ?? "Anonymous");
             }
-            catch
+            catch (Exception ex)
             {
-                // Avoid breaking request flow if audit logging fails
+                _logger.LogWarning(ex, "Audit logging failed for {Path} (CorrelationId={CorrelationId})", context.Request.Path.Value, correlationId);
             }
         }
     }

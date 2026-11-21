@@ -263,8 +263,20 @@ public class SwapService : ISwapService
             throw new InvalidOperationException("Work in progress to integrate online payment. Please wait for few days.");
         }
 
+        await using var tx = _context.Database.IsRelational()
+            ? await _context.Database.BeginTransactionAsync()
+            : null;
+
         var swap = await _context.Swaps.FindAsync(request.SwapId);
         if (swap == null) throw new ArgumentException("Swap transaction not found");
+
+        if (swap.Status == SwapStatus.Completed)
+        {
+            var dDone = swap.DepletedBatteryId.HasValue ? await _context.Batteries.FindAsync(swap.DepletedBatteryId.Value) : null;
+            var iDone = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
+            return MapToResponse(swap, dDone?.SerialNumber ?? "FIRST-PICKUP", iDone?.SerialNumber ?? "BAT-ISSUED",
+                "Swap already confirmed.");
+        }
 
         // 1. Process Driver payment / balance deduction / subscription quota
         if (request.PaymentMethod == PaymentMethod.Wallet)
@@ -321,6 +333,10 @@ public class SwapService : ISwapService
         var issued = await _context.Batteries.FindAsync(swap.IssuedBatteryId);
         if (issued != null)
         {
+            if (issued.Status != BatteryStatus.AvailableCharged || !issued.IsVisibleToDriver)
+            {
+                throw new InvalidOperationException("Selected battery is no longer Active for assignment.");
+            }
             issued.Status = BatteryStatus.InUseByDriver;
             issued.CurrentStationId = null;
             issued.CurrentDriverId = swap.DriverId;
@@ -390,6 +406,7 @@ public class SwapService : ISwapService
         });
 
         await _context.SaveChangesAsync();
+        if (tx != null) await tx.CommitAsync();
 
         var depletedSerial = depleted?.SerialNumber ?? "FIRST-PICKUP";
         var issuedSerial = issued?.SerialNumber ?? "BAT-ISSUED";

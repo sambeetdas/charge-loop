@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IReservationService, ReservationService>();
         services.AddScoped<ISupportService, SupportService>();
         services.AddScoped<IVendorService, VendorService>();
+        services.AddHostedService<MaintenanceBackgroundService>();
 
         return services;
     }

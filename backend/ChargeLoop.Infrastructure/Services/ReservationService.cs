@@ -18,13 +18,17 @@ public class ReservationService : IReservationService
 
     public async Task<ReservationDto> CreateReservationAsync(ReservationRequest request)
     {
+        await using var tx = _context.Database.IsRelational()
+            ? await _context.Database.BeginTransactionAsync()
+            : null;
+
         var station = await _context.Stations.FindAsync(request.StationId);
         if (station == null) throw new ArgumentException("Station not found");
 
         var driver = await _context.Drivers.FindAsync(request.DriverId);
         if (driver == null) throw new ArgumentException("Driver not found");
 
-        // Expire any existing active reservations for this driver
+        // Cancel any existing active reservations for this driver
         var existing = await _context.Reservations
             .Where(r => r.DriverId == request.DriverId && r.Status == ReservationStatus.Active)
             .ToListAsync();
@@ -32,39 +36,51 @@ public class ReservationService : IReservationService
         {
             r.Status = ReservationStatus.Cancelled;
         }
+        await _context.SaveChangesAsync();
 
-        // Find an available charged & visible battery at the station to hold
+        var now = DateTime.UtcNow;
+        var heldBatteryIds = await _context.Reservations
+            .Where(r => r.StationId == station.Id
+                && r.Status == ReservationStatus.Active
+                && r.ExpiresAt > now
+                && r.ReservedBatteryId != null)
+            .Select(r => r.ReservedBatteryId!.Value)
+            .ToListAsync();
+
+        // Find an available charged & visible battery not currently held by another active reservation
         var battery = await _context.Batteries
             .FirstOrDefaultAsync(b => b.CurrentStationId == station.Id
                 && b.Status == BatteryStatus.AvailableCharged
-                && b.IsVisibleToDriver);
+                && b.IsVisibleToDriver
+                && !heldBatteryIds.Contains(b.Id));
 
-        if (battery == null && station.AvailableChargedBatteriesCount <= 0)
+        if (battery == null)
         {
-            throw new InvalidOperationException("No charged batteries available at this station right now.");
+            throw new InvalidOperationException("No unreserved active batteries available at this station right now.");
         }
 
         var reservation = new Reservation
         {
             DriverId = request.DriverId,
             StationId = request.StationId,
-            ReservedBatteryId = battery?.Id,
+            ReservedBatteryId = battery.Id,
             OtpCode = string.Empty,
-            ReservedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddHours(2),
+            ReservedAt = now,
+            ExpiresAt = now.AddHours(2),
             Status = ReservationStatus.Active
         };
 
         await _context.Reservations.AddAsync(reservation);
         await _context.SaveChangesAsync();
+        if (tx != null) await tx.CommitAsync();
 
         return new ReservationDto(
             reservation.Id,
             reservation.DriverId,
             reservation.StationId,
             station.Name,
-            battery?.Id,
-            battery?.SerialNumber,
+            battery.Id,
+            battery.SerialNumber,
             reservation.ReservedAt,
             reservation.ExpiresAt,
             reservation.Status,

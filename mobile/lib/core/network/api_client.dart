@@ -2,11 +2,26 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
+import '../storage/secure_token_storage.dart';
 import '../../models/models.dart';
 
 class ApiClient {
   final String baseUrl;
   static String? authToken;
+
+  static Future<void> setAuthToken(String? token) async {
+    authToken = token;
+    if (token != null && token.isNotEmpty) {
+      await SecureTokenStorage.saveToken(token);
+    } else {
+      await SecureTokenStorage.clearToken();
+    }
+  }
+
+  static Future<String?> restoreAuthToken() async {
+    authToken ??= await SecureTokenStorage.readToken();
+    return authToken;
+  }
 
   ApiClient({this.baseUrl = ApiConstants.localhostUrl});
 
@@ -49,7 +64,7 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) {
       final profile = DriverProfile.fromJson(jsonDecode(response.body));
-      authToken = profile.token;
+      await setAuthToken(profile.token);
       return profile;
     }
     throw Exception('Sign up failed: ${response.body}');
@@ -69,7 +84,7 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) {
       final profile = DriverProfile.fromJson(jsonDecode(response.body));
-      authToken = profile.token;
+      await setAuthToken(profile.token);
       return profile;
     }
     throw Exception('Sign in failed: ${response.body}');
@@ -114,7 +129,7 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) {
       final vendor = VendorProfile.fromJson(jsonDecode(response.body));
-      authToken = vendor.token;
+      await setAuthToken(vendor.token);
       return vendor;
     }
     throw Exception('Partner sign up failed: ${response.body}');
@@ -134,7 +149,7 @@ class ApiClient {
     ).timeout(const Duration(seconds: 8));
     if (response.statusCode == 200) {
       final vendor = VendorProfile.fromJson(jsonDecode(response.body));
-      authToken = vendor.token;
+      await setAuthToken(vendor.token);
       return vendor;
     }
     throw Exception('Partner sign in failed: ${response.body}');

@@ -286,5 +286,15 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.Details).HasColumnName("details");
             b.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
+
+        // PostgreSQL optimistic concurrency (xmin) when running on Npgsql
+        if (Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            modelBuilder.Entity<Battery>().Property<uint>("xmin").IsRowVersion();
+            modelBuilder.Entity<Reservation>().Property<uint>("xmin").IsRowVersion();
+            modelBuilder.Entity<SwapTransaction>().Property<uint>("xmin").IsRowVersion();
+            modelBuilder.Entity<Driver>().Property<uint>("xmin").IsRowVersion();
+            modelBuilder.Entity<Partner>().Property<uint>("xmin").IsRowVersion();
+        }
     }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../core/network/api_client.dart';
 import '../models/models.dart';
+import '../widgets/qr_scanner_sheet.dart';
 import 'auth_screen.dart';
 
 class VendorHomeScreen extends StatefulWidget {
@@ -466,13 +467,33 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
                   TextField(
                     controller: _depletedCtrl,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'Depleted Battery QR (Disconnect)', isDense: true),
+                    decoration: InputDecoration(
+                      labelText: 'Depleted Battery QR (Disconnect)',
+                      isDense: true,
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner, color: AppColors.neonGreen),
+                        onPressed: () async {
+                          final scanned = await QrScannerSheet.scan(context, title: 'Scan Depleted Battery QR');
+                          if (scanned != null && mounted) setState(() => _depletedCtrl.text = scanned);
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _issuedCtrl,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'New Battery QR (Assign)', isDense: true),
+                    decoration: InputDecoration(
+                      labelText: 'New Battery QR (Assign)',
+                      isDense: true,
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner, color: AppColors.neonGreen),
+                        onPressed: () async {
+                          final scanned = await QrScannerSheet.scan(context, title: 'Scan New Charged Battery QR');
+                          if (scanned != null && mounted) setState(() => _issuedCtrl.text = scanned);
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   TextField(

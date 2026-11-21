@@ -4,6 +4,7 @@ import '../core/theme/app_theme.dart';
 import '../core/network/api_client.dart';
 import '../models/models.dart';
 import '../widgets/battery_gauge.dart';
+import '../widgets/qr_scanner_sheet.dart';
 
 class SwapScreen extends StatefulWidget {
   final DriverProfile profile;
@@ -252,12 +253,22 @@ class _SwapScreenState extends State<SwapScreen> {
             child: TextField(
               controller: _depletedSerialController,
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.qr_code_scanner, color: AppColors.warningAmber),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.qr_code, color: AppColors.warningAmber),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.qr_code_scanner, color: AppColors.neonGreen),
+                  tooltip: 'Scan with Camera',
+                  onPressed: () async {
+                    final scanned = await QrScannerSheet.scan(context, title: 'Scan Depleted Battery QR');
+                    if (scanned != null && mounted) {
+                      setState(() => _depletedSerialController.text = scanned);
+                    }
+                  },
+                ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 hintText: 'Enter or scan battery serial',
-                hintStyle: TextStyle(color: AppColors.textSecondary),
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
           ),
