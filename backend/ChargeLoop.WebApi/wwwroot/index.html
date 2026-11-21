@@ -1043,8 +1043,8 @@
 
   <!-- VENDOR BOTTOM NAV -->
   <div id="navVendor" class="bottom-nav hidden">
-    <div class="nav-item active" data-tab="desk" onclick="switchVendorTab('desk')"><span class="nav-icon">⚡</span>Swap Desk</div>
-    <div class="nav-item" data-tab="requests" onclick="switchVendorTab('requests')"><span class="nav-icon">📥</span>Requests</div>
+    <div class="nav-item active" data-tab="requests" onclick="switchVendorTab('requests')"><span class="nav-icon">📥</span>Requests</div>
+    <div class="nav-item" data-tab="desk" onclick="switchVendorTab('desk')"><span class="nav-icon">⚡</span>Swap Desk</div>
     <div class="nav-item" data-tab="stores" onclick="switchVendorTab('stores')"><span class="nav-icon">🔋</span>Stores</div>
     <div class="nav-item" data-tab="earnings" onclick="switchVendorTab('earnings')"><span class="nav-icon">💰</span>Earnings</div>
     <div class="nav-item" data-tab="profile" onclick="switchVendorTab('profile')"><span class="nav-icon">👤</span>Profile</div>
@@ -1773,7 +1773,7 @@ async function enterVendorApp(auth) {
   document.getElementById('navVendor').classList.remove('hidden');
   document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
   await refreshVendorViews();
-  switchVendorTab('desk');
+  switchVendorTab('requests');
   showToast('Partner Desk Ready');
 }
 
