@@ -660,27 +660,27 @@
         <div id="driverCashFields" class="card-elevated hidden" style="margin-bottom:12px;">
           <div style="font-weight:800;font-size:13px;margin-bottom:8px;">🧾 Fare Breakup</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Base Swap &amp; Energy Fee</span>
+            <span>Base Swap &amp; Energy Fee <span style="cursor:pointer;color:var(--mint);" title="Base battery swap &amp; energy charge" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupBase">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span id="driverBreakupPlatformLabel">Platform Fee</span>
+            <span><span id="driverBreakupPlatformLabel">Platform Fee</span> <span id="driverInfoPlatform" style="cursor:pointer;color:var(--mint);" title="Fee charged by ChargeLoop for using its platform" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupPlatform">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Convenience Fee <span style="font-size:10px;">(Transaction)</span></span>
+            <span>Convenience Fee <span style="cursor:pointer;color:var(--mint);" title="Additional fee for facilitating a transaction" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupConv">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Payment Gateway Fee <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span>Payment Gateway Fee <span style="cursor:pointer;color:var(--mint);" title="Fee for processing certain payment methods (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupGw">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Bank Charges <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span>Bank Charges <span style="cursor:pointer;color:var(--mint);" title="Fees imposed by your bank, depending on the transaction (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupBank">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span id="driverBreakupGstLabel">GST (18%)</span>
+            <span><span id="driverBreakupGstLabel">GST</span> <span id="driverInfoGst" style="cursor:pointer;color:var(--mint);" title="Applicable tax on taxable service charges" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
@@ -845,27 +845,27 @@
         <div id="vendorCashFields" class="card-elevated hidden" style="margin-bottom:10px;">
           <div style="font-weight:800;font-size:13px;margin-bottom:6px;">🧾 Fare Breakup &amp; Payment Details</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Base Swap &amp; Energy Fee</span>
+            <span>Base Swap &amp; Energy Fee <span style="cursor:pointer;color:var(--mint);" title="Base battery swap &amp; energy charge" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupBase">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span id="vendorBreakupPlatformLabel">Platform Fee</span>
+            <span><span id="vendorBreakupPlatformLabel">Platform Fee</span> <span id="vendorInfoPlatform" style="cursor:pointer;color:var(--mint);" title="Fee charged by ChargeLoop for using its platform" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupPlatform">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Convenience Fee</span>
+            <span>Convenience Fee <span style="cursor:pointer;color:var(--mint);" title="Additional fee for facilitating a transaction" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupConv">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Payment Gateway Fee <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span>Payment Gateway Fee <span style="cursor:pointer;color:var(--mint);" title="Fee for processing certain payment methods (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupGw">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Bank Charges <span style="font-size:10px;">(N/A for Cash)</span></span>
+            <span>Bank Charges <span style="cursor:pointer;color:var(--mint);" title="Fees imposed by your bank, depending on the transaction (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupBank">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span id="vendorBreakupGstLabel">GST</span>
+            <span><span id="vendorBreakupGstLabel">GST</span> <span id="vendorInfoGst" style="cursor:pointer;color:var(--mint);" title="Applicable tax on taxable service charges" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
@@ -1426,11 +1426,13 @@ async function loadPricingConfig() {
     const p = await apiFetch(`/config/pricing?paymentMethod=${state.driverPayMethod || 3}`);
     document.getElementById('driverBreakupBase').textContent = `₹${Number(p.baseSwapFee).toFixed(2)}`;
     document.getElementById('driverBreakupPlatformLabel').textContent = 'Platform Fee';
+    document.getElementById('driverInfoPlatform').title = `Fee charged by ChargeLoop for using its platform (${Number(p.platformFeePercent).toFixed(0)}% of Base Swap Fee ₹${Number(p.baseSwapFee).toFixed(2)})`;
     document.getElementById('driverBreakupPlatform').textContent = `₹${Number(p.platformFee).toFixed(2)}`;
     document.getElementById('driverBreakupConv').textContent = `₹${Number(p.convenienceFee).toFixed(2)}`;
     document.getElementById('driverBreakupGw').textContent = `₹${Number(p.paymentGatewayFee).toFixed(2)}`;
     document.getElementById('driverBreakupBank').textContent = `₹${Number(p.bankCharges).toFixed(2)}`;
-    document.getElementById('driverBreakupGstLabel').textContent = `GST (${Number(p.gstPercent).toFixed(0)}% on taxable charges)`;
+    document.getElementById('driverBreakupGstLabel').textContent = 'GST';
+    document.getElementById('driverInfoGst').title = `Applicable tax (${Number(p.gstPercent).toFixed(0)}%) on taxable service charges`;
     document.getElementById('driverBreakupTax').textContent = `₹${Number(p.taxAmount).toFixed(2)}`;
     document.getElementById('driverBreakupTotal').textContent = `₹${Number(p.totalAmount).toFixed(2)}`;
     document.getElementById('driverCashAmount').value = Number(p.totalAmount).toFixed(2);
@@ -1960,11 +1962,13 @@ async function verifyVendorSwapOtp() {
 
     document.getElementById('vendorBreakupBase').textContent = `₹${Number(swap.baseFee).toFixed(2)}`;
     document.getElementById('vendorBreakupPlatformLabel').textContent = 'Platform Fee';
+    document.getElementById('vendorInfoPlatform').title = `Fee charged by ChargeLoop for using its platform (${Number(swap.platformFeePercent || 0).toFixed(0)}% of Base Swap Fee ₹${Number(swap.baseFee).toFixed(2)})`;
     document.getElementById('vendorBreakupPlatform').textContent = `₹${Number(swap.platformFee || 0).toFixed(2)}`;
     document.getElementById('vendorBreakupConv').textContent = `₹${Number(swap.convenienceFee || 0).toFixed(2)}`;
     document.getElementById('vendorBreakupGw').textContent = `₹${Number(swap.paymentGatewayFee || 0).toFixed(2)}`;
     document.getElementById('vendorBreakupBank').textContent = `₹${Number(swap.bankCharges || 0).toFixed(2)}`;
-    document.getElementById('vendorBreakupGstLabel').textContent = `GST (${Number(swap.gstPercent || 18).toFixed(0)}%)`;
+    document.getElementById('vendorBreakupGstLabel').textContent = 'GST';
+    document.getElementById('vendorInfoGst').title = `Applicable tax (${Number(swap.gstPercent || 18).toFixed(0)}%) on taxable service charges`;
     document.getElementById('vendorBreakupTax').textContent = `₹${Number(swap.taxAmount).toFixed(2)}`;
     document.getElementById('vendorBreakupTotal').textContent = `₹${Number(swap.totalAmount).toFixed(2)}`;
     document.getElementById('vendorCashAmount').value = Number(swap.totalAmount).toFixed(2);
