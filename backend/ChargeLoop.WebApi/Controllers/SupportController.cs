@@ -1,10 +1,12 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChargeLoop.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/support")]
 public class SupportController : ControllerBase
 {

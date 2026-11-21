@@ -38,6 +38,9 @@ public class StationsController : ControllerBase
     [HttpGet("{id:guid}/batteries")]
     public async Task<ActionResult<IReadOnlyList<BatteryDto>>> GetStationBatteries(Guid id, [FromQuery] bool includeAll = false)
     {
+        if (includeAll && User.Identity?.IsAuthenticated != true)
+            return Unauthorized(new { Error = "Authentication required to view full store inventory." });
+
         var batteries = await _stationService.GetStationBatteriesAsync(id, includeAll);
         return Ok(batteries);
     }

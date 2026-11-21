@@ -42,6 +42,7 @@ public class WalletController : ControllerBase
 }
 
 [ApiController]
+[Authorize]
 [Route("api/v1/telemetry")]
 public class TelemetryController : ControllerBase
 {

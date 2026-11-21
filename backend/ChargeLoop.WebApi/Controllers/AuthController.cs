@@ -19,6 +19,7 @@ public class AuthController : ControllerBase
     }
 
     // Driver Endpoints (PIN-based Sign Up / Sign In / Reset PIN)
+    [Authorize]
     [HttpPost("send-otp")]
     public async Task<ActionResult<SendOtpResponse>> SendOtp([FromBody] SendOtpRequest request)
     {
@@ -129,6 +130,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpGet("drivers")]
     public async Task<ActionResult> GetAllDrivers()
     {
@@ -235,6 +237,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpGet("vendors")]
     public async Task<ActionResult> GetAllVendors()
     {

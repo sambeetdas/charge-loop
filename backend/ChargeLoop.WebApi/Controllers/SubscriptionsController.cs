@@ -1,10 +1,12 @@
 using ChargeLoop.Application.DTOs;
 using ChargeLoop.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChargeLoop.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/subscriptions")]
 public class SubscriptionsController : ControllerBase
 {
@@ -15,6 +17,7 @@ public class SubscriptionsController : ControllerBase
         _subscriptionService = subscriptionService;
     }
 
+    [AllowAnonymous]
     [HttpGet("plans")]
     public async Task<ActionResult<IReadOnlyList<SubscriptionPlanDto>>> GetPlans()
     {
