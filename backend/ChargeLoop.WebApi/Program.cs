@@ -80,6 +80,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE batteries ADD COLUMN IF NOT EXISTS is_visible_to_driver BOOLEAN NOT NULL DEFAULT TRUE;
             ALTER TABLE batteries ADD COLUMN IF NOT EXISTS owner_partner_id UUID;
             ALTER TABLE reservations ADD COLUMN IF NOT EXISTS otp_code VARCHAR(10) NOT NULL DEFAULT '';
+            CREATE UNIQUE INDEX IF NOT EXISTS ux_reservations_active_battery ON reservations (reserved_battery_id) WHERE status = 0 AND reserved_battery_id IS NOT NULL;
             ALTER TABLE swap_transactions ADD COLUMN IF NOT EXISTS swap_otp VARCHAR(10);
             ALTER TABLE swap_transactions ALTER COLUMN depleted_battery_id DROP NOT NULL;
             ALTER TABLE partners ALTER COLUMN wallet_balance SET DEFAULT 0.00;

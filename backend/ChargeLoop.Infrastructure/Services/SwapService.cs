@@ -153,6 +153,18 @@ public class SwapService : ISwapService
             throw new InvalidOperationException($"Issued battery has insufficient charge ({issued.StateOfChargePercent}%). Minimum required is 90%.");
         }
 
+        var nowUtc = DateTime.UtcNow;
+        var reservedByOtherDriver = await _context.Reservations
+            .AsNoTracking()
+            .AnyAsync(r => r.ReservedBatteryId == issued.Id
+                && r.Status == ReservationStatus.Active
+                && r.ExpiresAt > nowUtc
+                && r.DriverId != request.DriverId);
+        if (reservedByOtherDriver)
+        {
+            throw new InvalidOperationException("This battery is currently reserved by another driver.");
+        }
+
         var pricing = await _context.PricingConfigs
             .AsNoTracking()
             .Where(p => p.IsActive)

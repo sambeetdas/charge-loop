@@ -99,6 +99,18 @@ public class StationAndReservationFlowTests
         var active = await reservationService.GetActiveReservationAsync(driver.Id);
         Assert.NotNull(active);
 
+        // Station reports 0 unreserved batteries while Driver 1 holds the only battery,
+        // and a second driver cannot reserve the same battery.
+        var stationSnapshot = await stationService.GetStationByIdAsync(station.Id);
+        Assert.NotNull(stationSnapshot);
+        Assert.Equal(0, stationSnapshot!.AvailableChargedBatteries);
+
+        var driver2 = new Driver { PhoneNumber = "+919999988887", FullName = "Driver Two" };
+        await context.Drivers.AddAsync(driver2);
+        await context.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            reservationService.CreateReservationAsync(new ReservationRequest(driver2.Id, station.Id)));
+
         // Reverse / cancel reserve -> no longer active
         var cancelled = await reservationService.CancelReservationAsync(res.Id);
         Assert.True(cancelled);

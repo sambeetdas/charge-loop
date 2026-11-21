@@ -222,6 +222,10 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.ReservedAt).HasColumnName("reserved_at");
             b.Property(x => x.ExpiresAt).HasColumnName("expires_at");
             b.Property(x => x.Status).HasColumnName("status");
+            b.HasIndex(x => x.ReservedBatteryId)
+                .HasDatabaseName("ux_reservations_active_battery")
+                .HasFilter("status = 0 AND reserved_battery_id IS NOT NULL")
+                .IsUnique();
         });
 
         // Support Tickets mapping

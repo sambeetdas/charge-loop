@@ -22,6 +22,14 @@ public class StationService : IStationService
     {
         // Read directly from PostgreSQL database
         var stations = await _context.Stations.AsNoTracking().ToListAsync();
+        var now = DateTime.UtcNow;
+        var reservedByStation = await _context.Reservations
+            .AsNoTracking()
+            .Where(r => r.Status == ReservationStatus.Active && r.ExpiresAt > now && r.ReservedBatteryId != null)
+            .GroupBy(r => r.StationId)
+            .Select(g => new { StationId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.StationId, x => x.Count);
+
         var result = new List<StationDto>();
 
         foreach (var station in stations)
@@ -29,6 +37,8 @@ public class StationService : IStationService
             var distance = CalculateDistanceKm(request.Latitude, request.Longitude, station.Latitude, station.Longitude);
             if (distance <= request.RadiusKm)
             {
+                var reservedCount = reservedByStation.GetValueOrDefault(station.Id, 0);
+                var unreservedReady = Math.Max(0, station.AvailableChargedBatteriesCount - reservedCount);
                 result.Add(new StationDto(
                     station.Id,
                     station.PartnerId,
@@ -37,7 +47,7 @@ public class StationService : IStationService
                     station.City,
                     station.Latitude,
                     station.Longitude,
-                    station.AvailableChargedBatteriesCount,
+                    unreservedReady,
                     station.ChargingBatteriesCount,
                     station.EstimatedWaitTimeMinutes,
                     station.Status,
@@ -54,6 +64,12 @@ public class StationService : IStationService
         var station = await _context.Stations.AsNoTracking().FirstOrDefaultAsync(s => s.Id == stationId);
         if (station == null) return null;
 
+        var now = DateTime.UtcNow;
+        var reservedCount = await _context.Reservations
+            .AsNoTracking()
+            .CountAsync(r => r.StationId == stationId && r.Status == ReservationStatus.Active && r.ExpiresAt > now && r.ReservedBatteryId != null);
+        var unreservedReady = Math.Max(0, station.AvailableChargedBatteriesCount - reservedCount);
+
         return new StationDto(
             station.Id,
             station.PartnerId,
@@ -62,7 +78,7 @@ public class StationService : IStationService
             station.City,
             station.Latitude,
             station.Longitude,
-            station.AvailableChargedBatteriesCount,
+            unreservedReady,
             station.ChargingBatteriesCount,
             station.EstimatedWaitTimeMinutes,
             station.Status,
