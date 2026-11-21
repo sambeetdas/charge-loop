@@ -920,20 +920,9 @@
 
     <!-- VENDOR STORES & BATTERIES -->
     <div id="view-vendor-stores" class="hidden">
-      <div class="card">
-        <div style="font-weight:800;margin-bottom:10px;">🔋 Register Battery with Store Details</div>
-        <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
-        <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <select id="regBatModel" class="input-field"></select>
-          <input id="regBatSoc" class="input-field" type="number" value="100" placeholder="SOC % (0-100)">
-        </div>
-        <button class="btn btn-primary" onclick="registerBatteryForStore()">Register Battery at Store</button>
-      </div>
-
       <div class="section-title">
-        <span>Your Stores &amp; Charged Inventory</span>
-        <button class="btn btn-secondary btn-sm" onclick="toggleAddStoreForm()">+ Add Store</button>
+        <span>My Stores</span>
+        <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="toggleAddStoreForm()">+ Add Store</button>
       </div>
 
       <div id="addStoreForm" class="card hidden">
@@ -951,7 +940,24 @@
       </div>
 
       <div id="vendorStoresList"></div>
-      <div class="section-title"><span>Store Battery Inventory</span></div>
+
+      <div class="section-title">
+        <span>My Battery Inventory</span>
+        <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="toggleRegisterBatteryForm()">+ Add Battery</button>
+      </div>
+
+      <div id="registerBatteryForm" class="card hidden">
+        <div style="font-weight:800;margin-bottom:10px;">🔋 Add Battery to Store</div>
+        <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
+        <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <select id="regBatModel" class="input-field"></select>
+          <input id="regBatSoc" class="input-field" type="number" value="100" placeholder="SOC % (0-100)">
+        </div>
+        <button class="btn btn-primary" onclick="registerBatteryForStore()">Add Battery</button>
+      </div>
+
+      <div id="vendorBatteryFilterBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
       <div id="vendorStoreBatteriesList"></div>
     </div>
 
@@ -2093,13 +2099,30 @@ async function registerBatteryForStore() {
   } catch (e) { showToast(e.message, true); }
 }
 
+let _vendorBatteryFilter = 'all';
+let _vendorBatteryCache = [];
+let _vendorBatteryStationId = null;
+
+function setVendorBatteryFilter(filterKey) {
+  _vendorBatteryFilter = filterKey;
+  renderVendorStoreBatteries();
+}
+
 async function loadSelectedStoreBatteries() {
   const sid = document.getElementById('regBatStationSelect').value;
   if (!sid) return;
-  const bats = await apiFetch(`/stations/${sid}/batteries?includeAll=true`);
+  _vendorBatteryStationId = sid;
+  _vendorBatteryCache = await apiFetch(`/stations/${sid}/batteries?includeAll=true`);
+  renderVendorStoreBatteries();
+}
+
+function renderVendorStoreBatteries() {
+  const sid = _vendorBatteryStationId;
+  const bats = _vendorBatteryCache || [];
   const statusMap = {
     0: { label: 'Active', cls: 'mint-pill' },
     1: { label: 'Charging', cls: 'amber-pill' },
+    2: { label: 'Out with Driver', cls: 'amber-pill' },
     3: { label: 'Out of Order', cls: 'amber-pill' },
     4: { label: 'Inactive', cls: 'amber-pill' }
   };
@@ -2109,11 +2132,57 @@ async function loadSelectedStoreBatteries() {
     { code: 1, label: 'Charging' },
     { code: 3, label: 'Out of Order' }
   ];
-  document.getElementById('vendorStoreBatteriesList').innerHTML = bats.map(b => {
-    const st = statusMap[b.status] || { label: 'Unknown', cls: 'amber-pill' };
-    const buttons = statuses.map(s => `
-      <button class="btn btn-sm ${b.status === s.code ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 8px;font-size:11px;" onclick="setBatteryStatus('${sid}', '${b.id}', ${s.code})">${s.label}</button>
-    `).join('');
+
+  const isAway = b => (b.currentStationId && b.currentStationId.toLowerCase() !== sid.toLowerCase()) || b.status === 2 || !!b.locationNote;
+  const counts = {
+    all: bats.length,
+    active: bats.filter(b => !isAway(b) && b.status === 0).length,
+    charging: bats.filter(b => !isAway(b) && b.status === 1).length,
+    away: bats.filter(b => isAway(b)).length,
+    other: bats.filter(b => !isAway(b) && (b.status === 3 || b.status === 4)).length
+  };
+
+  const filterDefs = [
+    { key: 'all', label: `All (${counts.all})` },
+    { key: 'active', label: `Active (${counts.active})` },
+    { key: 'charging', label: `Charging (${counts.charging})` },
+    { key: 'away', label: `Out / Away (${counts.away})` },
+    { key: 'other', label: `Inactive / OOO (${counts.other})` }
+  ];
+
+  document.getElementById('vendorBatteryFilterBar').innerHTML = filterDefs.map(f => `
+    <button class="btn btn-sm ${_vendorBatteryFilter === f.key ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 10px;font-size:11px;" onclick="setVendorBatteryFilter('${f.key}')">${f.label}</button>
+  `).join('');
+
+  const filtered = bats.filter(b => {
+    if (_vendorBatteryFilter === 'active') return !isAway(b) && b.status === 0;
+    if (_vendorBatteryFilter === 'charging') return !isAway(b) && b.status === 1;
+    if (_vendorBatteryFilter === 'away') return isAway(b);
+    if (_vendorBatteryFilter === 'other') return !isAway(b) && (b.status === 3 || b.status === 4);
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    document.getElementById('vendorStoreBatteriesList').innerHTML = '<div class="muted">No batteries in this view.</div>';
+    return;
+  }
+
+  document.getElementById('vendorStoreBatteriesList').innerHTML = filtered.map(b => {
+    const away = isAway(b);
+    const st = away && b.locationNote
+      ? { label: b.locationNote, cls: 'amber-pill' }
+      : (statusMap[b.status] || { label: 'Unknown', cls: 'amber-pill' });
+
+    const buttons = away
+      ? `<div class="muted" style="font-size:11px;">🔒 ${b.status === 2 ? '🚗 Currently out with a driver' : `🏪 ${b.locationNote || 'At another store'}`} (read-only)</div>`
+      : statuses.map(s => `
+          <button class="btn btn-sm ${b.status === s.code ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 8px;font-size:11px;" onclick="setBatteryStatus('${sid}', '${b.id}', ${s.code})">${s.label}</button>
+        `).join('');
+
+    const visibilityLine = away
+      ? `<div class="muted" style="font-size:11px;margin-bottom:6px;">📍 ${b.locationNote || 'Away from this store'}</div>`
+      : `<div class="muted" style="font-size:11px;margin-bottom:6px;">${b.status === 0 ? '👁️ Visible & assignable to drivers' : '🙈 Hidden from drivers'}</div>`;
+
     return `
       <div class="card">
         <div class="row-between" style="margin-bottom:8px;">
@@ -2123,13 +2192,13 @@ async function loadSelectedStoreBatteries() {
           </div>
           <span class="${st.cls}">${st.label}</span>
         </div>
-        <div class="muted" style="font-size:11px;margin-bottom:6px;">${b.status === 0 ? '👁️ Visible & assignable to drivers' : '🙈 Hidden from drivers'}</div>
+        ${visibilityLine}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           ${buttons}
         </div>
       </div>
     `;
-  }).join('') || '<div class="muted">No batteries in this store yet.</div>';
+  }).join('');
 }
 
 async function setBatteryStatus(stationId, batteryId, status) {
@@ -2199,8 +2268,18 @@ async function confirmVendorChangePhone() {
   } catch (e) { showToast(e.message, true); }
 }
 
+function toggleRegisterBatteryForm() {
+  const form = document.getElementById('registerBatteryForm');
+  const willOpen = form.classList.contains('hidden');
+  form.classList.toggle('hidden');
+  if (willOpen) document.getElementById('addStoreForm').classList.add('hidden');
+}
+
 function toggleAddStoreForm() {
-  document.getElementById('addStoreForm').classList.toggle('hidden');
+  const form = document.getElementById('addStoreForm');
+  const willOpen = form.classList.contains('hidden');
+  form.classList.toggle('hidden');
+  if (willOpen) document.getElementById('registerBatteryForm').classList.add('hidden');
 }
 
 let _storeAddrTimer = null;

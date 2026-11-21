@@ -131,6 +131,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.CycleCount).HasColumnName("cycle_count");
             b.Property(x => x.Status).HasColumnName("status");
             b.Property(x => x.CurrentStationId).HasColumnName("current_station_id");
+            b.Property(x => x.OwnerPartnerId).HasColumnName("owner_partner_id");
             b.Property(x => x.CurrentDriverId).HasColumnName("current_driver_id");
             b.Property(x => x.IsVisibleToDriver).HasColumnName("is_visible_to_driver");
             b.Property(x => x.LastTelemetryTimestamp).HasColumnName("last_telemetry_timestamp");

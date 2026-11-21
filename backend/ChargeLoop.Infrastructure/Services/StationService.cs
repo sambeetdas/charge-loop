@@ -72,22 +72,84 @@ public class StationService : IStationService
 
     public async Task<IReadOnlyList<BatteryDto>> GetStationBatteriesAsync(Guid stationId, bool includeAll = false)
     {
-        var query = _context.Batteries
+        if (!includeAll)
+        {
+            return await _context.Batteries
+                .AsNoTracking()
+                .Where(b => b.CurrentStationId == stationId && b.Status == BatteryStatus.AvailableCharged && b.IsVisibleToDriver)
+                .OrderBy(b => b.SerialNumber)
+                .Select(b => new BatteryDto(
+                    b.Id,
+                    b.SerialNumber,
+                    b.ModelType,
+                    b.StateOfChargePercent,
+                    b.StateOfHealthPercent,
+                    b.CellTemperatureCelsius,
+                    b.Status,
+                    b.IsVisibleToDriver,
+                    b.CurrentStationId,
+                    b.OwnerPartnerId,
+                    null
+                ))
+                .ToListAsync();
+        }
+
+        var station = await _context.Stations
             .AsNoTracking()
-            .Where(b => b.CurrentStationId == stationId);
+            .FirstOrDefaultAsync(s => s.Id == stationId);
+        var partnerId = station?.PartnerId;
 
-        if (includeAll)
-        {
-            query = query.Where(b => b.Status != BatteryStatus.InUseByDriver);
-        }
-        else
-        {
-            query = query.Where(b => b.Status == BatteryStatus.AvailableCharged && b.IsVisibleToDriver);
-        }
+        // Include batteries physically at this store, owned by this vendor (even if at another store or with a driver),
+        // or currently out with a driver whose latest completed swap was from this store.
+        var lastIssuedFromHereIds = await _context.Swaps
+            .AsNoTracking()
+            .Where(s => s.Status == SwapStatus.Completed && s.IssuedBatteryId != Guid.Empty)
+            .GroupBy(s => s.IssuedBatteryId)
+            .Select(g => new
+            {
+                BatteryId = g.Key,
+                LatestStationId = g.OrderByDescending(x => x.CompletedAt ?? x.InitiatedAt).Select(x => x.StationId).FirstOrDefault()
+            })
+            .Where(x => x.LatestStationId == stationId)
+            .Select(x => x.BatteryId)
+            .ToListAsync();
 
-        return await query
+        var batteries = await _context.Batteries
+            .AsNoTracking()
+            .Where(b =>
+                b.CurrentStationId == stationId ||
+                (partnerId != null && b.OwnerPartnerId == partnerId) ||
+                (b.Status == BatteryStatus.InUseByDriver && lastIssuedFromHereIds.Contains(b.Id)))
             .OrderBy(b => b.SerialNumber)
-            .Select(b => new BatteryDto(
+            .ToListAsync();
+
+        var otherStationIds = batteries
+            .Where(b => b.CurrentStationId.HasValue && b.CurrentStationId.Value != stationId)
+            .Select(b => b.CurrentStationId!.Value)
+            .Distinct()
+            .ToList();
+
+        var stationNames = otherStationIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await _context.Stations
+                .AsNoTracking()
+                .Where(s => otherStationIds.Contains(s.Id))
+                .ToDictionaryAsync(s => s.Id, s => s.Name);
+
+        return batteries.Select(b =>
+        {
+            string? locationNote = null;
+            if (b.CurrentStationId != stationId)
+            {
+                if (b.Status == BatteryStatus.InUseByDriver)
+                    locationNote = "Out with Driver";
+                else if (b.CurrentStationId.HasValue && stationNames.TryGetValue(b.CurrentStationId.Value, out var otherName))
+                    locationNote = $"At {otherName}";
+                else
+                    locationNote = "Away from store";
+            }
+
+            return new BatteryDto(
                 b.Id,
                 b.SerialNumber,
                 b.ModelType,
@@ -95,9 +157,12 @@ public class StationService : IStationService
                 b.StateOfHealthPercent,
                 b.CellTemperatureCelsius,
                 b.Status,
-                b.IsVisibleToDriver
-            ))
-            .ToListAsync();
+                b.IsVisibleToDriver,
+                b.CurrentStationId,
+                b.OwnerPartnerId,
+                locationNote
+            );
+        }).ToList();
     }
 
     public async Task<BatteryDto> RegisterBatteryAtStationAsync(RegisterBatteryRequest request)
@@ -126,6 +191,7 @@ public class StationService : IStationService
             CellTemperatureCelsius = request.CellTemperatureCelsius,
             Status = status,
             CurrentStationId = station.Id,
+            OwnerPartnerId = station.PartnerId,
             CurrentDriverId = null,
             IsVisibleToDriver = status == BatteryStatus.AvailableCharged
         };

@@ -71,7 +71,10 @@ public record BatteryDto(
     int StateOfHealthPercent,
     double CellTemperatureCelsius,
     BatteryStatus Status,
-    bool IsVisibleToDriver = true
+    bool IsVisibleToDriver = true,
+    Guid? CurrentStationId = null,
+    Guid? OwnerPartnerId = null,
+    string? LocationNote = null
 );
 
 public record DriverDetailDto(

@@ -13,6 +13,7 @@ public class Battery
     public int CycleCount { get; set; } = 120;
     public BatteryStatus Status { get; set; } = BatteryStatus.AvailableCharged;
     public Guid? CurrentStationId { get; set; }
+    public Guid? OwnerPartnerId { get; set; }
     public Guid? CurrentDriverId { get; set; }
     public bool IsVisibleToDriver { get; set; } = true;
     public DateTime LastTelemetryTimestamp { get; set; } = DateTime.UtcNow;
