@@ -39,6 +39,13 @@ public class StationsController : ControllerBase
         return Ok(batteries);
     }
 
+    [HttpGet("partner/{partnerId:guid}/batteries")]
+    public async Task<ActionResult<IReadOnlyList<BatteryDto>>> GetPartnerBatteries(Guid partnerId)
+    {
+        var batteries = await _stationService.GetPartnerBatteriesAsync(partnerId);
+        return Ok(batteries);
+    }
+
     [HttpPatch("{id:guid}/batteries/{batteryId:guid}/visibility")]
     public async Task<ActionResult<BatteryDto>> ToggleBatteryVisibility(Guid id, Guid batteryId, [FromBody] ToggleBatteryVisibilityRequest request)
     {

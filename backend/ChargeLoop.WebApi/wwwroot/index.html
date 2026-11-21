@@ -948,7 +948,7 @@
 
       <div id="registerBatteryForm" class="card hidden">
         <div style="font-weight:800;margin-bottom:10px;">🔋 Add Battery to Store</div>
-        <select id="regBatStationSelect" class="input-field" onchange="loadSelectedStoreBatteries()"></select>
+        <select id="regBatStationSelect" class="input-field"></select>
         <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <select id="regBatModel" class="input-field"></select>
@@ -957,6 +957,7 @@
         <button class="btn btn-primary" onclick="registerBatteryForStore()">Add Battery</button>
       </div>
 
+      <select id="invStationSelect" class="input-field" style="margin-bottom:8px;" onchange="loadSelectedStoreBatteries()"></select>
       <div id="vendorBatteryFilterBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
       <div id="vendorStoreBatteriesList"></div>
     </div>
@@ -1861,14 +1862,24 @@ async function refreshVendorViews() {
 
   const prevDeskSid = document.getElementById('vendorDeskStationSelect').value;
   const prevRegSid = document.getElementById('regBatStationSelect').value;
+  const prevInvSid = document.getElementById('invStationSelect').value;
   const opts = state.vendorStations.map(s => `<option value="${s.id}">${s.name} (${s.availableChargedBatteries} charged)</option>`).join('')
     || '<option value="">No stores yet — add one in Stores tab</option>';
   const deskSel = document.getElementById('vendorDeskStationSelect');
   const regSel = document.getElementById('regBatStationSelect');
+  const invSel = document.getElementById('invStationSelect');
   deskSel.innerHTML = opts;
   regSel.innerHTML = opts;
+  invSel.innerHTML = state.vendorStations.length > 0
+    ? `<option value="ALL">All My Stores (${state.vendorStations.length})</option>${opts}`
+    : opts;
   if (prevDeskSid && state.vendorStations.some(s => s.id === prevDeskSid)) deskSel.value = prevDeskSid;
   if (prevRegSid && state.vendorStations.some(s => s.id === prevRegSid)) regSel.value = prevRegSid;
+  if (prevInvSid && (prevInvSid === 'ALL' || state.vendorStations.some(s => s.id === prevInvSid))) {
+    invSel.value = prevInvSid;
+  } else if (state.vendorStations.length > 0) {
+    invSel.value = 'ALL';
+  }
 
   document.getElementById('vendorStoresList').innerHTML = state.vendorStations.map(s => `
     <div class="card row-between">
@@ -2109,16 +2120,21 @@ function setVendorBatteryFilter(filterKey) {
 }
 
 async function loadSelectedStoreBatteries() {
-  const sid = document.getElementById('regBatStationSelect').value;
+  const sid = document.getElementById('invStationSelect').value || document.getElementById('regBatStationSelect').value;
   if (!sid) return;
   _vendorBatteryStationId = sid;
-  _vendorBatteryCache = await apiFetch(`/stations/${sid}/batteries?includeAll=true`);
+  if (sid === 'ALL' && state.vendor?.id) {
+    _vendorBatteryCache = await apiFetch(`/stations/partner/${state.vendor.id}/batteries`);
+  } else {
+    _vendorBatteryCache = await apiFetch(`/stations/${sid}/batteries?includeAll=true`);
+  }
   renderVendorStoreBatteries();
 }
 
 function renderVendorStoreBatteries() {
   const sid = _vendorBatteryStationId;
   const bats = _vendorBatteryCache || [];
+  const myStationIds = new Set((state.vendorStations || []).map(s => (s.id || '').toLowerCase()));
   const statusMap = {
     0: { label: 'Active', cls: 'mint-pill' },
     1: { label: 'Charging', cls: 'amber-pill' },
@@ -2133,7 +2149,13 @@ function renderVendorStoreBatteries() {
     { code: 3, label: 'Out of Order' }
   ];
 
-  const isAway = b => (b.currentStationId && b.currentStationId.toLowerCase() !== sid.toLowerCase()) || b.status === 2 || !!b.locationNote;
+  const isAway = b => {
+    if (b.status === 2) return true;
+    const curSid = (b.currentStationId || '').toLowerCase();
+    if (!curSid) return true;
+    if (sid === 'ALL') return !myStationIds.has(curSid);
+    return curSid !== (sid || '').toLowerCase();
+  };
   const counts = {
     all: bats.length,
     active: bats.filter(b => !isAway(b) && b.status === 0).length,
@@ -2174,14 +2196,14 @@ function renderVendorStoreBatteries() {
       : (statusMap[b.status] || { label: 'Unknown', cls: 'amber-pill' });
 
     const buttons = away
-      ? `<div class="muted" style="font-size:11px;">🔒 ${b.status === 2 ? '🚗 Currently out with a driver' : `🏪 ${b.locationNote || 'At another store'}`} (read-only)</div>`
+      ? `<div class="muted" style="font-size:11px;">🔒 ${b.status === 2 ? `🚗 ${b.locationNote || 'Currently out with a driver'}` : `🏪 ${b.locationNote || 'At another store'}`} (read-only)</div>`
       : statuses.map(s => `
-          <button class="btn btn-sm ${b.status === s.code ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 8px;font-size:11px;" onclick="setBatteryStatus('${sid}', '${b.id}', ${s.code})">${s.label}</button>
+          <button class="btn btn-sm ${b.status === s.code ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 8px;font-size:11px;" onclick="setBatteryStatus('${b.currentStationId || sid}', '${b.id}', ${s.code})">${s.label}</button>
         `).join('');
 
     const visibilityLine = away
       ? `<div class="muted" style="font-size:11px;margin-bottom:6px;">📍 ${b.locationNote || 'Away from this store'}</div>`
-      : `<div class="muted" style="font-size:11px;margin-bottom:6px;">${b.status === 0 ? '👁️ Visible & assignable to drivers' : '🙈 Hidden from drivers'}</div>`;
+      : `<div class="muted" style="font-size:11px;margin-bottom:6px;">${b.locationNote ? `📍 ${b.locationNote} • ` : ''}${b.status === 0 ? '👁️ Visible & assignable to drivers' : '🙈 Hidden from drivers'}</div>`;
 
     return `
       <div class="card">

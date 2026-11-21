@@ -139,30 +139,90 @@ public class StationService : IStationService
             .OrderBy(b => b.SerialNumber)
             .ToListAsync();
 
-        var otherStationIds = batteries
-            .Where(b => b.CurrentStationId.HasValue && b.CurrentStationId.Value != stationId)
+        return await MapVendorBatteriesAsync(batteries, stationId);
+    }
+
+    public async Task<IReadOnlyList<BatteryDto>> GetPartnerBatteriesAsync(Guid partnerId)
+    {
+        var partnerStationIds = await _context.Stations
+            .AsNoTracking()
+            .Where(s => s.PartnerId == partnerId)
+            .Select(s => s.Id)
+            .ToListAsync();
+
+        var lastIssuedFromPartnerIds = await _context.Swaps
+            .AsNoTracking()
+            .Where(s => s.Status == SwapStatus.Completed && s.IssuedBatteryId != Guid.Empty)
+            .GroupBy(s => s.IssuedBatteryId)
+            .Select(g => new
+            {
+                BatteryId = g.Key,
+                LatestPartnerId = g.OrderByDescending(x => x.CompletedAt ?? x.InitiatedAt).Select(x => x.PartnerId).FirstOrDefault()
+            })
+            .Where(x => x.LatestPartnerId == partnerId)
+            .Select(x => x.BatteryId)
+            .ToListAsync();
+
+        var batteries = await _context.Batteries
+            .AsNoTracking()
+            .Where(b =>
+                (b.CurrentStationId != null && partnerStationIds.Contains(b.CurrentStationId.Value)) ||
+                b.OwnerPartnerId == partnerId ||
+                (b.Status == BatteryStatus.InUseByDriver && lastIssuedFromPartnerIds.Contains(b.Id)))
+            .OrderBy(b => b.SerialNumber)
+            .ToListAsync();
+
+        return await MapVendorBatteriesAsync(batteries, null);
+    }
+
+    private async Task<IReadOnlyList<BatteryDto>> MapVendorBatteriesAsync(List<Battery> batteries, Guid? scopedStationId)
+    {
+        var stationIdsToLookup = batteries
+            .Where(b => b.CurrentStationId.HasValue && (scopedStationId == null || b.CurrentStationId.Value != scopedStationId.Value))
             .Select(b => b.CurrentStationId!.Value)
             .Distinct()
             .ToList();
 
-        var stationNames = otherStationIds.Count == 0
+        var stationNames = stationIdsToLookup.Count == 0
             ? new Dictionary<Guid, string>()
             : await _context.Stations
                 .AsNoTracking()
-                .Where(s => otherStationIds.Contains(s.Id))
+                .Where(s => stationIdsToLookup.Contains(s.Id))
                 .ToDictionaryAsync(s => s.Id, s => s.Name);
+
+        var driverIds = batteries
+            .Where(b => b.Status == BatteryStatus.InUseByDriver && b.CurrentDriverId.HasValue)
+            .Select(b => b.CurrentDriverId!.Value)
+            .Distinct()
+            .ToList();
+
+        var driverLabels = driverIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await _context.Drivers
+                .AsNoTracking()
+                .Where(d => driverIds.Contains(d.Id))
+                .ToDictionaryAsync(
+                    d => d.Id,
+                    d => string.IsNullOrWhiteSpace(d.FullName) ? d.PhoneNumber : $"{d.FullName} ({d.PhoneNumber})");
 
         return batteries.Select(b =>
         {
             string? locationNote = null;
-            if (b.CurrentStationId != stationId)
+            if (b.Status == BatteryStatus.InUseByDriver)
             {
-                if (b.Status == BatteryStatus.InUseByDriver)
-                    locationNote = "Out with Driver";
-                else if (b.CurrentStationId.HasValue && stationNames.TryGetValue(b.CurrentStationId.Value, out var otherName))
-                    locationNote = $"At {otherName}";
-                else
-                    locationNote = "Away from store";
+                locationNote = b.CurrentDriverId.HasValue && driverLabels.TryGetValue(b.CurrentDriverId.Value, out var driverInfo)
+                    ? $"Out with {driverInfo}"
+                    : "Out with Driver";
+            }
+            else if (b.CurrentStationId.HasValue && (scopedStationId == null || b.CurrentStationId.Value != scopedStationId.Value))
+            {
+                locationNote = stationNames.TryGetValue(b.CurrentStationId.Value, out var storeName)
+                    ? $"At {storeName}"
+                    : "At store";
+            }
+            else if (scopedStationId != null && b.CurrentStationId != scopedStationId)
+            {
+                locationNote = "Away from store";
             }
 
             return new BatteryDto(

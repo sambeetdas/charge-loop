@@ -79,6 +79,19 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE drivers ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(200);
             ALTER TABLE batteries ADD COLUMN IF NOT EXISTS is_visible_to_driver BOOLEAN NOT NULL DEFAULT TRUE;
             ALTER TABLE batteries ADD COLUMN IF NOT EXISTS owner_partner_id UUID;
+            UPDATE batteries b
+            SET owner_partner_id = s.partner_id
+            FROM stations s
+            WHERE b.current_station_id = s.id AND b.owner_partner_id IS NULL;
+            UPDATE batteries b
+            SET owner_partner_id = sub.partner_id
+            FROM (
+                SELECT DISTINCT ON (issued_battery_id) issued_battery_id, partner_id
+                FROM swap_transactions
+                WHERE status = 3 AND issued_battery_id IS NOT NULL
+                ORDER BY issued_battery_id, COALESCE(completed_at, initiated_at) DESC
+            ) sub
+            WHERE b.id = sub.issued_battery_id AND b.owner_partner_id IS NULL;
             ALTER TABLE reservations ADD COLUMN IF NOT EXISTS otp_code VARCHAR(10) NOT NULL DEFAULT '';
             CREATE UNIQUE INDEX IF NOT EXISTS ux_reservations_active_battery ON reservations (reserved_battery_id) WHERE status = 0 AND reserved_battery_id IS NOT NULL;
             ALTER TABLE swap_transactions ADD COLUMN IF NOT EXISTS swap_otp VARCHAR(10);
