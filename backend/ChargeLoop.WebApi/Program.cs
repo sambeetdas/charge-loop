@@ -74,6 +74,8 @@ using (var scope = app.Services.CreateScope())
     {
         await db.Database.ExecuteSqlRawAsync(@"
             ALTER TABLE partners ADD COLUMN IF NOT EXISTS email VARCHAR(150);
+            ALTER TABLE partners ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(200);
+            ALTER TABLE drivers ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(200);
             ALTER TABLE batteries ADD COLUMN IF NOT EXISTS is_visible_to_driver BOOLEAN NOT NULL DEFAULT TRUE;
             ALTER TABLE reservations ADD COLUMN IF NOT EXISTS otp_code VARCHAR(10) NOT NULL DEFAULT '';
             ALTER TABLE swap_transactions ADD COLUMN IF NOT EXISTS swap_otp VARCHAR(10);

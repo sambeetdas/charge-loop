@@ -539,40 +539,54 @@
           <button id="roleTabVendor" class="role-tab" onclick="selectAuthRole('vendor')">🏪 Partner / Vendor</button>
         </div>
 
-        <!-- Driver OTP Auth -->
+        <div class="role-tabs" style="margin-bottom:12px;">
+          <button id="modeTabSignIn" class="role-tab active" onclick="selectAuthMode('signin')">Sign In</button>
+          <button id="modeTabSignUp" class="role-tab" onclick="selectAuthMode('signup')">Sign Up</button>
+          <button id="modeTabReset" class="role-tab" onclick="selectAuthMode('reset')">Reset PIN</button>
+        </div>
+
+        <!-- Driver PIN Auth -->
         <div id="authDriverBox">
           <input id="authDriverPhone" class="input-field" type="tel" placeholder="Mobile Number (e.g. +919811223344)">
-          <div id="driverOtpStep1">
-            <button class="btn btn-primary" onclick="sendDriverOtp()">Send OTP to Phone</button>
+          <div id="driverSignInFields">
+            <input id="authDriverPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN">
+            <button class="btn btn-primary" onclick="signInDriverWithPin()">Sign In as Driver</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="selectAuthMode('reset')">Forgot / Reset PIN?</button>
           </div>
-          <div id="driverOtpStep2" class="hidden">
-            <div id="demoOtpBanner" class="mint-pill" style="display:block;margin-bottom:10px;text-align:center;"></div>
-            <input id="authDriverOtp" class="input-field" type="text" placeholder="Enter 6-digit OTP">
-            <input id="authDriverName" class="input-field" type="text" placeholder="Full Name (for new signup)">
+          <div id="driverSignUpFields" class="hidden">
+            <input id="authDriverSignUpPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Create PIN (4-6 digits)">
+            <input id="authDriverConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN">
+            <input id="authDriverName" class="input-field" type="text" placeholder="Full Name (optional)">
             <input id="authDriverEmail" class="input-field" type="email" placeholder="Email for Invoices (optional)">
             <input id="authDriverRef" class="input-field" type="text" placeholder="Referral Code (optional, get ₹50)">
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-primary" onclick="verifyDriverOtp()">Verify &amp; Sign In</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendDriverOtp()">Resend</button>
-            </div>
+            <button class="btn btn-primary" onclick="signUpDriverWithPin()">Sign Up as Driver</button>
+          </div>
+          <div id="driverResetFields" class="hidden">
+            <input id="authDriverNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)">
+            <input id="authDriverConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN">
+            <button class="btn btn-primary" onclick="resetDriverPin()">Reset Driver PIN</button>
           </div>
         </div>
 
-        <!-- Vendor Auth -->
+        <!-- Vendor PIN Auth -->
         <div id="authVendorBox" class="hidden">
           <input id="authVendorPhone" class="input-field" type="tel" placeholder="Partner Mobile Number (e.g. +919900112233)">
-          <div id="vendorOtpStep1">
-            <button class="btn btn-primary" onclick="sendVendorOtp()">Send OTP to Phone</button>
+          <div id="vendorSignInFields">
+            <input id="authVendorPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN">
+            <button class="btn btn-primary" onclick="signInVendorWithPin()">Sign In as Partner</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="selectAuthMode('reset')">Forgot / Reset PIN?</button>
           </div>
-          <div id="vendorOtpStep2" class="hidden">
-            <div id="demoVendorOtpBanner" class="mint-pill" style="display:block;margin-bottom:10px;text-align:center;"></div>
-            <input id="authVendorOtp" class="input-field" type="text" placeholder="Enter 6-digit OTP">
+          <div id="vendorSignUpFields" class="hidden">
+            <input id="authVendorSignUpPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Create PIN (4-6 digits)">
+            <input id="authVendorConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN">
             <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)">
             <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)">
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-primary" onclick="verifyVendorOtp()">Verify &amp; Sign In</button>
-              <button class="btn btn-secondary btn-sm" onclick="sendVendorOtp()">Resend</button>
-            </div>
+            <button class="btn btn-primary" onclick="signUpVendorWithPin()">Sign Up as Partner</button>
+          </div>
+          <div id="vendorResetFields" class="hidden">
+            <input id="authVendorNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)">
+            <input id="authVendorConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN">
+            <button class="btn btn-primary" onclick="resetVendorPin()">Reset Partner PIN</button>
           </div>
         </div>
       </div>
@@ -1026,35 +1040,110 @@ function selectAuthRole(role) {
   document.getElementById('authVendorBox').classList.toggle('hidden', role !== 'vendor');
 }
 
-async function sendDriverOtp() {
-  const phone = document.getElementById('authDriverPhone').value.trim();
-  if (!phone) return showToast('Enter your mobile number first', true);
-  try {
-    const res = await apiFetch('/auth/send-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phoneNumber: phone })
-    });
-    document.getElementById('driverOtpStep1').classList.add('hidden');
-    document.getElementById('driverOtpStep2').classList.remove('hidden');
-    document.getElementById('demoOtpBanner').textContent = `Demo OTP sent: ${res.demoOtp} (valid 5m)`;
-    document.getElementById('authDriverOtp').value = res.demoOtp;
-    showToast('OTP sent to ' + phone);
-  } catch (e) { showToast(e.message, true); }
+function selectAuthMode(mode) {
+  document.getElementById('modeTabSignIn').classList.toggle('active', mode === 'signin');
+  document.getElementById('modeTabSignUp').classList.toggle('active', mode === 'signup');
+  document.getElementById('modeTabReset').classList.toggle('active', mode === 'reset');
+  document.getElementById('driverSignInFields').classList.toggle('hidden', mode !== 'signin');
+  document.getElementById('driverSignUpFields').classList.toggle('hidden', mode !== 'signup');
+  document.getElementById('driverResetFields').classList.toggle('hidden', mode !== 'reset');
+  document.getElementById('vendorSignInFields').classList.toggle('hidden', mode !== 'signin');
+  document.getElementById('vendorSignUpFields').classList.toggle('hidden', mode !== 'signup');
+  document.getElementById('vendorResetFields').classList.toggle('hidden', mode !== 'reset');
 }
 
-async function verifyDriverOtp() {
+async function signInDriverWithPin() {
   const phoneNumber = document.getElementById('authDriverPhone').value.trim();
-  const otpCode = document.getElementById('authDriverOtp').value.trim();
-  const fullName = document.getElementById('authDriverName').value.trim() || null;
-  const email = document.getElementById('authDriverEmail').value.trim() || null;
-  const referralCode = document.getElementById('authDriverRef').value.trim() || null;
+  const pin = document.getElementById('authDriverPin').value.trim();
+  if (!phoneNumber || !pin) return showToast('Enter phone number and PIN', true);
   try {
-    const auth = await apiFetch('/auth/verify-otp', {
+    const auth = await apiFetch('/auth/signin', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, otpCode, fullName, email, referralCode })
+      body: JSON.stringify({ phoneNumber, pin })
     });
     state.token = auth.token;
     await enterDriverApp(auth.driverId);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function signUpDriverWithPin() {
+  const phoneNumber = document.getElementById('authDriverPhone').value.trim();
+  const pin = document.getElementById('authDriverSignUpPin').value.trim();
+  const confirmPin = document.getElementById('authDriverConfirmPin').value.trim();
+  const fullName = document.getElementById('authDriverName').value.trim() || null;
+  const email = document.getElementById('authDriverEmail').value.trim() || null;
+  const referralCode = document.getElementById('authDriverRef').value.trim() || null;
+  if (!phoneNumber || !pin || !confirmPin) return showToast('Enter phone number, PIN, and Confirm PIN', true);
+  try {
+    const auth = await apiFetch('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, email, languageCode: 'en', referralCode })
+    });
+    state.token = auth.token;
+    await enterDriverApp(auth.driverId);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function resetDriverPin() {
+  const phoneNumber = document.getElementById('authDriverPhone').value.trim();
+  const newPin = document.getElementById('authDriverNewPin').value.trim();
+  const confirmNewPin = document.getElementById('authDriverConfirmNewPin').value.trim();
+  if (!phoneNumber || !newPin || !confirmNewPin) return showToast('Enter phone number, New PIN, and Confirm New PIN', true);
+  try {
+    const res = await apiFetch('/auth/reset-pin', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, newPin, confirmNewPin })
+    });
+    document.getElementById('authDriverNewPin').value = '';
+    document.getElementById('authDriverConfirmNewPin').value = '';
+    selectAuthMode('signin');
+    showToast(res.message || 'Driver PIN reset! Please Sign In.');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function signInVendorWithPin() {
+  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
+  const pin = document.getElementById('authVendorPin').value.trim();
+  if (!phoneNumber || !pin) return showToast('Enter phone number and PIN', true);
+  try {
+    const auth = await apiFetch('/auth/vendor/signin', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, pin })
+    });
+    await enterVendorApp(auth);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function signUpVendorWithPin() {
+  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
+  const pin = document.getElementById('authVendorSignUpPin').value.trim();
+  const confirmPin = document.getElementById('authVendorConfirmPin').value.trim();
+  const fullName = document.getElementById('authVendorName').value.trim() || null;
+  const businessName = document.getElementById('authVendorBiz').value.trim() || null;
+  if (!phoneNumber || !pin || !confirmPin) return showToast('Enter phone number, PIN, and Confirm PIN', true);
+  try {
+    const auth = await apiFetch('/auth/vendor/signup', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, businessName })
+    });
+    await enterVendorApp(auth);
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function resetVendorPin() {
+  const phoneNumber = document.getElementById('authVendorPhone').value.trim();
+  const newPin = document.getElementById('authVendorNewPin').value.trim();
+  const confirmNewPin = document.getElementById('authVendorConfirmNewPin').value.trim();
+  if (!phoneNumber || !newPin || !confirmNewPin) return showToast('Enter phone number, New PIN, and Confirm New PIN', true);
+  try {
+    const res = await apiFetch('/auth/vendor/reset-pin', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, newPin, confirmNewPin })
+    });
+    document.getElementById('authVendorNewPin').value = '';
+    document.getElementById('authVendorConfirmNewPin').value = '';
+    selectAuthMode('signin');
+    showToast(res.message || 'Partner PIN reset! Please Sign In.');
   } catch (e) { showToast(e.message, true); }
 }
 
@@ -1998,12 +2087,10 @@ function signOut() {
   document.getElementById('view-auth').classList.remove('hidden');
   document.getElementById('navDriver').classList.add('hidden');
   document.getElementById('navVendor').classList.add('hidden');
-  document.getElementById('driverOtpStep1').classList.remove('hidden');
-  document.getElementById('driverOtpStep2').classList.add('hidden');
-  document.getElementById('authDriverOtp').value = '';
-  document.getElementById('vendorOtpStep1').classList.remove('hidden');
-  document.getElementById('vendorOtpStep2').classList.add('hidden');
-  document.getElementById('authVendorOtp').value = '';
+  selectAuthMode('signin');
+  ['authDriverPin', 'authDriverSignUpPin', 'authDriverConfirmPin', 'authDriverNewPin', 'authDriverConfirmNewPin',
+   'authVendorPin', 'authVendorSignUpPin', 'authVendorConfirmPin', 'authVendorNewPin', 'authVendorConfirmNewPin']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('validatedDriverBox').classList.add('hidden');
   document.getElementById('vendorBillCard').classList.add('hidden');
   document.getElementById('driverSwapReceipt').classList.add('hidden');

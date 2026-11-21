@@ -144,9 +144,10 @@ flutter run -d chrome
 > [!TIP]
 > **Multi-Store Support**: A single Partner can operate multiple stations/hubs. Sign in first, then add stores, register batteries, and control which charged batteries are visible to drivers from the **Stores** tab.
 
-1. **Partner Sign In / Sign Up (2-Step OTP)**:
-   - Select **Partner / Vendor**, enter mobile number, and tap **Send OTP to Phone** (`POST /api/v1/auth/send-otp`).
-   - Enter the 6-digit OTP (plus optional Full Name and Business / Hub Name) and tap **Verify & Sign In** (`POST /api/v1/auth/vendor/verify-otp`) to receive a JWT token.
+1. **Partner Sign Up / Sign In / Reset PIN**:
+   - **Sign Up**: Select **Partner / Vendor**, enter mobile number, **PIN** (4-6 digits), and **Confirm PIN** (plus optional Full Name and Business / Hub Name) (`POST /api/v1/auth/vendor/signup`).
+   - **Sign In**: Enter mobile number and **PIN** (`POST /api/v1/auth/vendor/signin`) to receive a JWT token.
+   - **Reset PIN**: Use **Reset PIN** with mobile number, **New PIN**, and **Confirm New PIN** (`POST /api/v1/auth/vendor/reset-pin`).
    - Initial Partner Commission Wallet starts at **₹0.00** (same phone number can be registered as both Driver and Partner with separate profiles and wallets).
 2. **Store & Battery Inventory Management (4-Status Lifecycle)**:
    - Add one or more Stations/Hubs (`POST /api/v1/stations`). New stores start with **0** batteries (no dummy batteries are auto-seeded).
@@ -179,9 +180,10 @@ flutter run -d chrome
 
 ### 🚗 Driver Flow
 
-1. **Phone Registration & OTP Verification**:
-   - Select **Driver** on the Sign In / Sign Up screen, enter a mobile number, and tap **Send OTP to Phone** (`POST /api/v1/auth/send-otp`).
-   - Enter the 6-digit OTP (plus optional Name, Email for invoices, and Referral Code) and tap **Verify & Sign In** (`POST /api/v1/auth/verify-otp`) to receive a JWT token.
+1. **Driver Sign Up / Sign In / Reset PIN**:
+   - **Sign Up**: Select **Driver**, enter mobile number, **PIN** (4-6 digits), and **Confirm PIN** (plus optional Name, Email for invoices, and Referral Code) (`POST /api/v1/auth/signup`).
+   - **Sign In**: Enter mobile number and **PIN** (`POST /api/v1/auth/signin`) to receive a JWT token.
+   - **Reset PIN**: Use **Reset PIN** with mobile number, **New PIN**, and **Confirm New PIN** (`POST /api/v1/auth/reset-pin`).
    - Initial Driver Wallet starts at **₹0.00**.
 2. **Station Locator, Pre-Reserve Battery Preview & 2-Hour Reservation**:
    - Browse nearby swap hubs (`POST /api/v1/stations/nearby`) with live **Active (Charged)** and **Charging** counts.

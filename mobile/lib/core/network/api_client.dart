@@ -45,6 +45,139 @@ class ApiClient {
     }
   }
 
+  Future<DriverProfile> signUpDriverWithPin({
+    required String phone,
+    required String pin,
+    required String confirmPin,
+    String? fullName,
+    String? email,
+    String? referralCode,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/signup'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'pin': pin.trim(),
+        'confirmPin': confirmPin.trim(),
+        'fullName': fullName?.trim(),
+        'email': email?.trim(),
+        'languageCode': 'en',
+        'referralCode': referralCode?.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) {
+      final profile = DriverProfile.fromJson(jsonDecode(response.body));
+      authToken = profile.token;
+      return profile;
+    }
+    throw Exception('Sign up failed: ${response.body}');
+  }
+
+  Future<DriverProfile> signInDriverWithPin({
+    required String phone,
+    required String pin,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/signin'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'pin': pin.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) {
+      final profile = DriverProfile.fromJson(jsonDecode(response.body));
+      authToken = profile.token;
+      return profile;
+    }
+    throw Exception('Sign in failed: ${response.body}');
+  }
+
+  Future<void> resetDriverPin({
+    required String phone,
+    required String newPin,
+    required String confirmNewPin,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/reset-pin'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'newPin': newPin.trim(),
+        'confirmNewPin': confirmNewPin.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode != 200) {
+      throw Exception('Reset PIN failed: ${response.body}');
+    }
+  }
+
+  Future<VendorProfile> signUpVendorWithPin({
+    required String phone,
+    required String pin,
+    required String confirmPin,
+    String? fullName,
+    String? businessName,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/vendor/signup'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'pin': pin.trim(),
+        'confirmPin': confirmPin.trim(),
+        'fullName': fullName?.trim(),
+        'businessName': businessName?.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) {
+      final vendor = VendorProfile.fromJson(jsonDecode(response.body));
+      authToken = vendor.token;
+      return vendor;
+    }
+    throw Exception('Partner sign up failed: ${response.body}');
+  }
+
+  Future<VendorProfile> signInVendorWithPin({
+    required String phone,
+    required String pin,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/vendor/signin'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'pin': pin.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) {
+      final vendor = VendorProfile.fromJson(jsonDecode(response.body));
+      authToken = vendor.token;
+      return vendor;
+    }
+    throw Exception('Partner sign in failed: ${response.body}');
+  }
+
+  Future<void> resetVendorPin({
+    required String phone,
+    required String newPin,
+    required String confirmNewPin,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/vendor/reset-pin'),
+      headers: _headers(),
+      body: jsonEncode({
+        'phoneNumber': phone.trim(),
+        'newPin': newPin.trim(),
+        'confirmNewPin': confirmNewPin.trim(),
+      }),
+    ).timeout(const Duration(seconds: 8));
+    if (response.statusCode != 200) {
+      throw Exception('Partner reset PIN failed: ${response.body}');
+    }
+  }
+
   // 1a. OTP Send & Verify
   Future<Map<String, dynamic>> sendOtp(String phone) async {
     final response = await http.post(

@@ -13,56 +13,39 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
+  final TextEditingController _confirmPinController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _businessController = TextEditingController();
 
   String _selectedRole = 'driver'; // 'driver' or 'vendor'
+  String _authMode = 'signin'; // 'signin' | 'signup' | 'reset'
   bool _isLoading = false;
-  bool _otpSent = false;
-  String? _demoOtp;
 
-  void _sendOtp() async {
+  void _submit() async {
     final phone = _phoneController.text.trim().replaceAll(' ', '');
+    final pin = _pinController.text.trim();
+    final confirmPin = _confirmPinController.text.trim();
+    final name = _nameController.text.trim();
+    final business = _businessController.text.trim();
+
     if (phone.isEmpty || phone.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
       );
       return;
     }
-    setState(() => _isLoading = true);
-    try {
-      final res = await ApiClient().sendOtp(phone);
-      final otp = res['demoOtp']?.toString() ?? '';
-      setState(() {
-        _otpSent = true;
-        _demoOtp = otp;
-        _otpController.text = otp;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(backgroundColor: AppColors.dangerRed, content: Text('Error: $e')),
-        );
-      }
-    }
-  }
 
-  void _login() async {
-    final phone = _phoneController.text.trim().replaceAll(' ', '');
-    final name = _nameController.text.trim();
-    final business = _businessController.text.trim();
-
-    if (!_otpSent) {
-      _sendOtp();
+    if (pin.length < 4 || pin.length > 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PIN must be 4 to 6 digits')),
+      );
       return;
     }
 
-    if (phone.isEmpty || phone.length < 10) {
+    if ((_authMode == 'signup' || _authMode == 'reset') && pin != confirmPin) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
+        const SnackBar(content: Text('PIN and Confirm PIN do not match')),
       );
       return;
     }
@@ -71,12 +54,35 @@ class _AuthScreenState extends State<AuthScreen> {
     final client = ApiClient();
 
     try {
+      if (_authMode == 'reset') {
+        if (_selectedRole == 'driver') {
+          await client.resetDriverPin(phone: phone, newPin: pin, confirmNewPin: confirmPin);
+        } else {
+          await client.resetVendorPin(phone: phone, newPin: pin, confirmNewPin: confirmPin);
+        }
+        setState(() {
+          _isLoading = false;
+          _authMode = 'signin';
+          _pinController.clear();
+          _confirmPinController.clear();
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('PIN reset successfully! Please Sign In.')),
+          );
+        }
+        return;
+      }
+
       if (_selectedRole == 'driver') {
-        final profile = await client.verifyOtp(
-          phone: phone,
-          otpCode: _otpController.text.trim(),
-          fullName: name.isEmpty ? null : name,
-        );
+        final profile = _authMode == 'signup'
+            ? await client.signUpDriverWithPin(
+                phone: phone,
+                pin: pin,
+                confirmPin: confirmPin,
+                fullName: name.isEmpty ? null : name,
+              )
+            : await client.signInDriverWithPin(phone: phone, pin: pin);
         setState(() => _isLoading = false);
 
         if (mounted) {
@@ -86,12 +92,15 @@ class _AuthScreenState extends State<AuthScreen> {
           );
         }
       } else {
-        final vendor = await client.verifyVendorOtp(
-          phone: phone,
-          otpCode: _otpController.text.trim(),
-          fullName: name.isEmpty ? null : name,
-          businessName: business.isEmpty ? null : business,
-        );
+        final vendor = _authMode == 'signup'
+            ? await client.signUpVendorWithPin(
+                phone: phone,
+                pin: pin,
+                confirmPin: confirmPin,
+                fullName: name.isEmpty ? null : name,
+                businessName: business.isEmpty ? null : business,
+              )
+            : await client.signInVendorWithPin(phone: phone, pin: pin);
         setState(() => _isLoading = false);
 
         if (mounted) {
@@ -309,7 +318,46 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // Mode Selector (Sign In | Sign Up | Reset PIN)
+              Row(
+                children: [
+                  for (final m in const [
+                    ('signin', 'Sign In'),
+                    ('signup', 'Sign Up'),
+                    ('reset', 'Reset PIN'),
+                  ])
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _authMode = m.$1),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _authMode == m.$1 ? AppColors.neonGreen.withOpacity(0.16) : AppColors.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _authMode == m.$1 ? AppColors.neonGreen : AppColors.border,
+                              ),
+                            ),
+                            child: Text(
+                              m.$2,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: _authMode == m.$1 ? Colors.white : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 18),
 
               // Mobile Number Input
               Container(
@@ -333,7 +381,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Name Input
+              // PIN Input
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
@@ -341,21 +389,23 @@ class _AuthScreenState extends State<AuthScreen> {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: TextField(
-                  controller: _nameController,
-                  keyboardType: TextInputType.name,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
+                  controller: _pinController,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                    counterText: '',
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.neonGreen),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    hintText: _selectedRole == 'driver' ? 'Full Name (optional for existing)' : 'Contact Person Full Name',
+                    hintText: _authMode == 'reset' ? 'New PIN (4-6 digits)' : 'PIN (4-6 digits)',
                     hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
                   ),
                 ),
               ),
 
-              // Additional Business Name Input for Vendor
-              if (_selectedRole == 'vendor') ...[
+              if (_authMode == 'signup' || _authMode == 'reset') ...[
                 const SizedBox(height: 14),
                 Container(
                   decoration: BoxDecoration(
@@ -364,60 +414,25 @@ class _AuthScreenState extends State<AuthScreen> {
                     border: Border.all(color: AppColors.border),
                   ),
                   child: TextField(
-                    controller: _businessController,
-                    keyboardType: TextInputType.text,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.business, color: AppColors.textSecondary),
+                    controller: _confirmPinController,
+                    obscureText: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      prefixIcon: const Icon(Icons.lock_reset, color: AppColors.neonGreen),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      hintText: 'Vendor / Enterprise Name (e.g. Verma Mobility)',
-                      hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      hintText: _authMode == 'reset' ? 'Confirm New PIN' : 'Confirm PIN',
+                      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.brightCyan.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.brightCyan.withOpacity(0.2)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline, color: AppColors.brightCyan, size: 16),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'One vendor can operate multiple stations. Add & manage stations after sign in.',
-                          style: TextStyle(fontSize: 11, color: AppColors.brightCyan),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
 
-              // OTP Input for Driver & Partner
-              if (_otpSent) ...[
-                const SizedBox(height: 12),
-                if (_demoOtp != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.neonGreen.withOpacity(0.14),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.neonGreen.withOpacity(0.4)),
-                    ),
-                    child: Text(
-                      'Demo OTP: $_demoOtp (valid 5 mins)',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.neonGreen, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                const SizedBox(height: 10),
+              if (_authMode == 'signup') ...[
+                const SizedBox(height: 14),
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -425,23 +440,45 @@ class _AuthScreenState extends State<AuthScreen> {
                     border: Border.all(color: AppColors.border),
                   ),
                   child: TextField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.neonGreen),
+                    controller: _nameController,
+                    keyboardType: TextInputType.name,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      hintText: 'Enter 6-digit OTP',
-                      hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      hintText: _selectedRole == 'driver' ? 'Full Name (optional)' : 'Contact Person Full Name',
+                      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
                     ),
                   ),
                 ),
+                if (_selectedRole == 'vendor') ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: TextField(
+                      controller: _businessController,
+                      keyboardType: TextInputType.text,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.business, color: AppColors.textSecondary),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        hintText: 'Vendor / Enterprise Name (optional)',
+                        hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ],
               ],
 
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _isLoading ? null : _login,
+                onPressed: _isLoading ? null : _submit,
                 child: _isLoading
                     ? const SizedBox(
                         height: 22,
@@ -449,7 +486,11 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
                       )
                     : Text(
-                        _selectedRole == 'driver' ? 'Sign In as Driver' : 'Sign In / Register as Vendor',
+                        _authMode == 'reset'
+                            ? 'Reset PIN'
+                            : (_authMode == 'signup'
+                                ? (_selectedRole == 'driver' ? 'Sign Up as Driver' : 'Sign Up as Vendor')
+                                : (_selectedRole == 'driver' ? 'Sign In as Driver' : 'Sign In as Vendor')),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),

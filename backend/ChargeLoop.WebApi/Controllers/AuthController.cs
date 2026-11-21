@@ -58,6 +58,50 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("signup")]
+    public async Task<ActionResult<AuthResponse>> SignUpDriver([FromBody] DriverPinSignUpRequest request)
+    {
+        try
+        {
+            return Ok(await _driverService.SignUpWithPinAsync(request));
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("signin")]
+    public async Task<ActionResult<AuthResponse>> SignInDriver([FromBody] DriverPinSignInRequest request)
+    {
+        try
+        {
+            return Ok(await _driverService.SignInWithPinAsync(request));
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("reset-pin")]
+    public async Task<ActionResult> ResetDriverPin([FromBody] ResetPinRequest request)
+    {
+        try
+        {
+            await _driverService.ResetPinAsync(request);
+            return Ok(new { Message = "Driver PIN reset successfully. You can now Sign In." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [Authorize]
     [HttpPost("referral/claim")]
     public async Task<ActionResult<ReferralResponse>> ClaimReferral([FromBody] ClaimReferralRequest request)
@@ -163,6 +207,50 @@ public class AuthController : ControllerBase
             return Ok(response);
         }
         catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("vendor/signup")]
+    public async Task<ActionResult<VendorAuthResponse>> SignUpVendor([FromBody] VendorPinSignUpRequest request)
+    {
+        try
+        {
+            return Ok(await _vendorService.SignUpWithPinAsync(request));
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("vendor/signin")]
+    public async Task<ActionResult<VendorAuthResponse>> SignInVendor([FromBody] VendorPinSignInRequest request)
+    {
+        try
+        {
+            return Ok(await _vendorService.SignInWithPinAsync(request));
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPost("vendor/reset-pin")]
+    public async Task<ActionResult> ResetVendorPin([FromBody] ResetPinRequest request)
+    {
+        try
+        {
+            await _vendorService.ResetPinAsync(request);
+            return Ok(new { Message = "Partner PIN reset successfully. You can now Sign In." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
             return BadRequest(new { Error = ex.Message });
         }

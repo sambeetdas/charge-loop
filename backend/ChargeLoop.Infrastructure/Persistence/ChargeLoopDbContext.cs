@@ -41,6 +41,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.WalletBalance).HasColumnName("wallet_balance").HasColumnType("numeric(12,2)");
             b.Property(x => x.ActiveSubscriptionId).HasColumnName("active_subscription_id");
             b.Property(x => x.Email).HasColumnName("email");
+            b.Property(x => x.PinHash).HasColumnName("pin_hash");
             b.Property(x => x.ReferralCode).HasColumnName("referral_code");
             b.Property(x => x.ReferredByCode).HasColumnName("referred_by_code");
             b.Property(x => x.CreatedAt).HasColumnName("created_at");
@@ -80,6 +81,7 @@ public class ChargeLoopDbContext : DbContext
             b.Property(x => x.BusinessName).HasColumnName("business_name");
             b.Property(x => x.PhoneNumber).HasColumnName("phone_number");
             b.Property(x => x.Email).HasColumnName("email");
+            b.Property(x => x.PinHash).HasColumnName("pin_hash");
             b.Property(x => x.UpiId).HasColumnName("upi_id");
             b.Property(x => x.BankAccountNumber).HasColumnName("bank_account_number");
             b.Property(x => x.WalletBalance).HasColumnName("wallet_balance").HasColumnType("numeric(12,2)");

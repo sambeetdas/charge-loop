@@ -109,6 +109,94 @@ public class VendorService : IVendorService
         ));
     }
 
+    public async Task<VendorAuthResponse> SignUpWithPinAsync(VendorPinSignUpRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            throw new ArgumentException("Phone number is required.");
+        PinHasher.ValidatePinPair(request.Pin, request.ConfirmPin);
+
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var existing = await _context.Partners.FirstOrDefaultAsync(p =>
+            p.PhoneNumber == normalized ||
+            p.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && p.PhoneNumber.EndsWith(last10)));
+
+        if (existing != null)
+            throw new InvalidOperationException("Phone number is already registered. Please Sign In or Reset PIN.");
+
+        var suffix = normalized.Length >= 4 ? normalized[^4..] : normalized;
+        var partner = new Partner
+        {
+            PhoneNumber = normalized,
+            FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Vendor " + suffix : request.FullName.Trim(),
+            BusinessName = string.IsNullOrWhiteSpace(request.BusinessName) ? "ChargeLoop Station " + suffix : request.BusinessName.Trim(),
+            Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+            PinHash = PinHasher.Hash(request.Pin),
+            WalletBalance = 0.00m
+        };
+        await _context.Partners.AddAsync(partner);
+        await _context.SaveChangesAsync();
+
+        var token = _jwtTokenService?.GenerateToken(partner.Id, partner.PhoneNumber, "Vendor")
+            ?? $"ey-chargeloop-vendor-jwt-{partner.Id}";
+        if (_auditService != null)
+            await _auditService.LogEventAsync(Guid.NewGuid(), "VENDOR_PIN_SIGNUP", partner.Id, "Vendor", $"Phone={partner.PhoneNumber}");
+
+        return new VendorAuthResponse(partner.Id, partner.PhoneNumber, partner.FullName, partner.BusinessName, token, partner.WalletBalance, partner.Email);
+    }
+
+    public async Task<VendorAuthResponse> SignInWithPinAsync(VendorPinSignInRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.Pin))
+            throw new ArgumentException("Phone number and PIN are required.");
+
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var partner = await _context.Partners.FirstOrDefaultAsync(p =>
+            p.PhoneNumber == normalized ||
+            p.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && p.PhoneNumber.EndsWith(last10)));
+
+        if (partner == null)
+            throw new InvalidOperationException("Partner account not found. Please Sign Up first.");
+        if (string.IsNullOrWhiteSpace(partner.PinHash))
+            throw new InvalidOperationException("PIN is not set for this account. Please use Reset PIN.");
+        if (!PinHasher.Verify(request.Pin, partner.PinHash))
+            throw new InvalidOperationException("Invalid phone number or PIN.");
+
+        var token = _jwtTokenService?.GenerateToken(partner.Id, partner.PhoneNumber, "Vendor")
+            ?? $"ey-chargeloop-vendor-jwt-{partner.Id}";
+        if (_auditService != null)
+            await _auditService.LogEventAsync(Guid.NewGuid(), "VENDOR_PIN_SIGNIN", partner.Id, "Vendor", $"Phone={partner.PhoneNumber}");
+
+        return new VendorAuthResponse(partner.Id, partner.PhoneNumber, partner.FullName, partner.BusinessName, token, partner.WalletBalance, partner.Email);
+    }
+
+    public async Task ResetPinAsync(ResetPinRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            throw new ArgumentException("Phone number is required.");
+        PinHasher.ValidatePinPair(request.NewPin, request.ConfirmNewPin);
+
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var partner = await _context.Partners.FirstOrDefaultAsync(p =>
+            p.PhoneNumber == normalized ||
+            p.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && p.PhoneNumber.EndsWith(last10)))
+            ?? throw new KeyNotFoundException("Partner account not found for this phone number.");
+
+        partner.PinHash = PinHasher.Hash(request.NewPin);
+        await _context.SaveChangesAsync();
+
+        if (_auditService != null)
+            await _auditService.LogEventAsync(Guid.NewGuid(), "VENDOR_PIN_RESET", partner.Id, "Vendor", $"Phone={partner.PhoneNumber}");
+    }
+
     public async Task<VendorProfileDto?> GetProfileAsync(Guid vendorId)
     {
         var partner = await _context.Partners

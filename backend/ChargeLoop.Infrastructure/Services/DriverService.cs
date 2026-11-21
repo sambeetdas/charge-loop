@@ -144,6 +144,101 @@ public class DriverService : IDriverService
         ));
     }
 
+    public async Task<AuthResponse> SignUpWithPinAsync(DriverPinSignUpRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            throw new ArgumentException("Phone number is required.");
+        PinHasher.ValidatePinPair(request.Pin, request.ConfirmPin);
+
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var existing = await _context.Drivers.FirstOrDefaultAsync(d =>
+            d.PhoneNumber == normalized ||
+            d.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && d.PhoneNumber.EndsWith(last10)));
+
+        if (existing != null)
+            throw new InvalidOperationException("Phone number is already registered. Please Sign In or Reset PIN.");
+
+        var suffix = normalized.Length >= 4 ? normalized[^4..] : normalized;
+        var driver = new Driver
+        {
+            PhoneNumber = normalized,
+            FullName = string.IsNullOrWhiteSpace(request.FullName) ? "Driver " + suffix : request.FullName.Trim(),
+            Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+            LanguageCode = string.IsNullOrWhiteSpace(request.LanguageCode) ? "en" : request.LanguageCode.Trim(),
+            PinHash = PinHasher.Hash(request.Pin),
+            WalletBalance = 0.00m,
+            ReferralCode = $"CL-{suffix}{Random.Shared.Next(10, 99)}"
+        };
+        await _context.Drivers.AddAsync(driver);
+        await _context.SaveChangesAsync();
+
+        if (!string.IsNullOrWhiteSpace(request.ReferralCode))
+        {
+            await ClaimReferralCodeAsync(new ClaimReferralRequest(driver.Id, request.ReferralCode));
+            driver = await _context.Drivers.FirstAsync(d => d.Id == driver.Id);
+        }
+
+        var token = _jwtTokenService?.GenerateToken(driver.Id, driver.PhoneNumber, "Driver")
+            ?? $"ey-chargeloop-jwt-{driver.Id}";
+        if (_auditService != null)
+            await _auditService.LogEventAsync(Guid.NewGuid(), "DRIVER_PIN_SIGNUP", driver.Id, "Driver", $"Phone={driver.PhoneNumber}");
+
+        return new AuthResponse(driver.Id, driver.PhoneNumber, driver.FullName, token, driver.KycStatus, driver.WalletBalance, driver.ReferralCode, driver.Email);
+    }
+
+    public async Task<AuthResponse> SignInWithPinAsync(DriverPinSignInRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber) || string.IsNullOrWhiteSpace(request.Pin))
+            throw new ArgumentException("Phone number and PIN are required.");
+
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var driver = await _context.Drivers.FirstOrDefaultAsync(d =>
+            d.PhoneNumber == normalized ||
+            d.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && d.PhoneNumber.EndsWith(last10)));
+
+        if (driver == null)
+            throw new InvalidOperationException("Account not found. Please Sign Up first.");
+        if (string.IsNullOrWhiteSpace(driver.PinHash))
+            throw new InvalidOperationException("PIN is not set for this account. Please use Reset PIN.");
+        if (!PinHasher.Verify(request.Pin, driver.PinHash))
+            throw new InvalidOperationException("Invalid phone number or PIN.");
+
+        var token = _jwtTokenService?.GenerateToken(driver.Id, driver.PhoneNumber, "Driver")
+            ?? $"ey-chargeloop-jwt-{driver.Id}";
+        if (_auditService != null)
+            await _auditService.LogEventAsync(Guid.NewGuid(), "DRIVER_PIN_SIGNIN", driver.Id, "Driver", $"Phone={driver.PhoneNumber}");
+
+        return new AuthResponse(driver.Id, driver.PhoneNumber, driver.FullName, token, driver.KycStatus, driver.WalletBalance, driver.ReferralCode, driver.Email);
+    }
+
+    public async Task ResetPinAsync(ResetPinRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+            throw new ArgumentException("Phone number is required.");
+        PinHasher.ValidatePinPair(request.NewPin, request.ConfirmNewPin);
+
+        var normalized = NormalizePhone(request.PhoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var driver = await _context.Drivers.FirstOrDefaultAsync(d =>
+            d.PhoneNumber == normalized ||
+            d.PhoneNumber == request.PhoneNumber.Trim() ||
+            (last10.Length == 10 && d.PhoneNumber.EndsWith(last10)))
+            ?? throw new KeyNotFoundException("Driver account not found for this phone number.");
+
+        driver.PinHash = PinHasher.Hash(request.NewPin);
+        await _context.SaveChangesAsync();
+
+        if (_auditService != null)
+            await _auditService.LogEventAsync(Guid.NewGuid(), "DRIVER_PIN_RESET", driver.Id, "Driver", $"Phone={driver.PhoneNumber}");
+    }
+
     public async Task<ReferralResponse> ClaimReferralCodeAsync(ClaimReferralRequest request)
     {
         var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.Id == request.DriverId)

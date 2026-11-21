@@ -10,6 +10,12 @@ public record SendOtpRequest(string PhoneNumber);
 public record SendOtpResponse(string PhoneNumber, string DemoOtp, DateTime ExpiresAt, string Message);
 public record VerifyOtpRequest(string PhoneNumber, string OtpCode, string? FullName = null, string? Email = null, string? ReferralCode = null);
 
+public record DriverPinSignUpRequest(string PhoneNumber, string Pin, string ConfirmPin, string? FullName = null, string? Email = null, string? LanguageCode = "en", string? ReferralCode = null);
+public record DriverPinSignInRequest(string PhoneNumber, string Pin);
+public record VendorPinSignUpRequest(string PhoneNumber, string Pin, string ConfirmPin, string? FullName = null, string? BusinessName = null, string? Email = null);
+public record VendorPinSignInRequest(string PhoneNumber, string Pin);
+public record ResetPinRequest(string PhoneNumber, string NewPin, string ConfirmNewPin);
+
 public record ClaimReferralRequest(Guid DriverId, string ReferralCode);
 public record ReferralResponse(bool Success, decimal BonusAmount, decimal NewWalletBalance, string Message);
 
