@@ -1142,11 +1142,18 @@ function showToast(msg, isError = false) {
   setTimeout(() => { el.style.display = 'none'; }, 3500);
 }
 
-async function apiFetch(path, options = {}) {
-  const correlationId = (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+function newUuid() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
     return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  }));
+  });
+}
+
+async function apiFetch(path, options = {}) {
+  const correlationId = newUuid();
   const authHeader = state.token ? { 'Authorization': `Bearer ${state.token}` } : {};
   const res = await fetch(API + path, {
     headers: {
@@ -1651,7 +1658,7 @@ async function topUpDriverWallet() {
         accountType: 0,
         amount,
         paymentReference: `${state.topupMode}-${Date.now()}`,
-        correlationId: crypto.randomUUID()
+        correlationId: newUuid()
       })
     });
     await refreshDriverViews();
@@ -2030,7 +2037,7 @@ async function executePartnerSwap() {
         swapId: state.vendorVerifiedSwap.swapId,
         paymentMethod: state.vendorPayMethod,
         cashAmount,
-        correlationId: crypto.randomUUID()
+        correlationId: newUuid()
       })
     });
     state.lastVendorSwap = done;
