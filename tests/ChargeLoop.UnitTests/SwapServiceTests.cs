@@ -150,8 +150,8 @@ public class SwapServiceTests
         var updatedIssued = await context.Batteries.FindAsync(issued.Id);
         var updatedStation = await context.Stations.FindAsync(station.Id);
 
-        // Wallet calculations: Driver deducted 118, Partner credited 25
-        Assert.Equal(382.00m, updatedDriver!.WalletBalance); // 500 - 118
+        // Wallet calculations: Driver deducted 135.70 (100 base + 10 platform + 5 conv + 20.70 GST), Partner credited 25
+        Assert.Equal(364.30m, updatedDriver!.WalletBalance); // 500 - 135.70
         Assert.Equal(125.00m, updatedPartner!.WalletBalance); // 100 + 25
 
         // Battery state handoff
