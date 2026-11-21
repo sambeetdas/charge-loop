@@ -30,30 +30,22 @@ public class ConfigController : ControllerBase
             .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.UpdatedAt)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync() ?? new PricingConfig();
 
-        var isCash = paymentMethod == (int)Domain.Enums.PaymentMethod.Cash;
-        var baseFee = cfg?.BaseSwapFee ?? 100.00m;
-        var platformFee = cfg?.PlatformFee ?? 10.00m;
-        var convenienceFee = cfg?.ConvenienceFee ?? 5.00m;
-        var gatewayFee = isCash ? 0.00m : (cfg?.PaymentGatewayFee ?? 2.50m);
-        var bankCharges = isCash ? 0.00m : (cfg?.BankCharges ?? 1.50m);
-        var gst = cfg?.GstPercent ?? 18.00m;
-        var taxableSubtotal = baseFee + platformFee + convenienceFee + gatewayFee + bankCharges;
-        var tax = Math.Round(taxableSubtotal * (gst / 100m), 2);
-        var total = taxableSubtotal + tax;
-        var comm = cfg?.PartnerCommission ?? 25.00m;
+        var fare = FareCalculator.Calculate(cfg, (Domain.Enums.PaymentMethod)paymentMethod);
 
         return Ok(new PricingConfigDto(
-            baseFee, platformFee, convenienceFee, gatewayFee, bankCharges,
-            gst, tax, total, comm, cfg?.UpdatedAt ?? DateTime.UtcNow));
+            fare.BaseSwapFee, fare.PlatformFeePercent, fare.PlatformFee,
+            fare.ConvenienceFee, fare.PaymentGatewayFee, fare.BankCharges,
+            fare.GstPercent, fare.TaxAmount, fare.TotalAmount, fare.PartnerCommission,
+            cfg.UpdatedAt));
     }
 
     [Authorize]
     [HttpPut("pricing")]
     public async Task<ActionResult<PricingConfigDto>> UpdatePricing([FromBody] UpdatePricingConfigRequest request)
     {
-        if (request.BaseSwapFee < 0 || request.PlatformFee < 0 || request.ConvenienceFee < 0 ||
+        if (request.BaseSwapFee < 0 || request.PlatformFeePercent < 0 || request.ConvenienceFee < 0 ||
             request.PaymentGatewayFee < 0 || request.BankCharges < 0 || request.GstPercent < 0 || request.PartnerCommission < 0)
             return BadRequest(new { Error = "Pricing values must be non-negative." });
 
@@ -66,7 +58,7 @@ public class ConfigController : ControllerBase
         var next = new PricingConfig
         {
             BaseSwapFee = request.BaseSwapFee,
-            PlatformFee = request.PlatformFee,
+            PlatformFeePercent = request.PlatformFeePercent,
             ConvenienceFee = request.ConvenienceFee,
             PaymentGatewayFee = request.PaymentGatewayFee,
             BankCharges = request.BankCharges,
@@ -78,11 +70,12 @@ public class ConfigController : ControllerBase
         await _context.PricingConfigs.AddAsync(next);
         await _context.SaveChangesAsync();
 
-        var taxable = next.BaseSwapFee + next.PlatformFee + next.ConvenienceFee;
-        var tax = Math.Round(taxable * (next.GstPercent / 100m), 2);
+        var fare = FareCalculator.Calculate(next, Domain.Enums.PaymentMethod.Cash);
         return Ok(new PricingConfigDto(
-            next.BaseSwapFee, next.PlatformFee, next.ConvenienceFee, 0.00m, 0.00m,
-            next.GstPercent, tax, taxable + tax, next.PartnerCommission, next.UpdatedAt));
+            fare.BaseSwapFee, fare.PlatformFeePercent, fare.PlatformFee,
+            fare.ConvenienceFee, fare.PaymentGatewayFee, fare.BankCharges,
+            fare.GstPercent, fare.TaxAmount, fare.TotalAmount, fare.PartnerCommission,
+            next.UpdatedAt));
     }
 
     [AllowAnonymous]

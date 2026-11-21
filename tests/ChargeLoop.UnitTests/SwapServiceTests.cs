@@ -294,7 +294,7 @@ public class SwapServiceTests
         await context.PricingConfigs.AddAsync(new PricingConfig
         {
             BaseSwapFee = 200.00m,
-            PlatformFee = 15.00m,
+            PlatformFeePercent = 7.50m, // 7.5% of 200 = 15.00
             ConvenienceFee = 5.00m,
             PaymentGatewayFee = 4.00m,
             BankCharges = 2.00m,

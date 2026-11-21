@@ -295,7 +295,7 @@ public class ChargeLoopDbContext : DbContext
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.BaseSwapFee).HasColumnName("base_swap_fee").HasColumnType("numeric(10,2)");
-            b.Property(x => x.PlatformFee).HasColumnName("platform_fee").HasColumnType("numeric(10,2)");
+            b.Property(x => x.PlatformFeePercent).HasColumnName("platform_fee_percent").HasColumnType("numeric(5,2)");
             b.Property(x => x.ConvenienceFee).HasColumnName("convenience_fee").HasColumnType("numeric(10,2)");
             b.Property(x => x.PaymentGatewayFee).HasColumnName("payment_gateway_fee").HasColumnType("numeric(10,2)");
             b.Property(x => x.BankCharges).HasColumnName("bank_charges").HasColumnType("numeric(10,2)");

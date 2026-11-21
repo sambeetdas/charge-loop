@@ -79,7 +79,7 @@
 ## 5. Phase 5: MVP Hardening, PIN Auth, DB-Driven Config & Reliability (COMPLETED ✅)
 - [x] **TASK-H01**: PIN-based Sign Up / Sign In / Reset PIN (`Driver` & `Partner`) with PBKDF2 hashing and PIN-verified Change Phone Number.
 - [x] **TASK-H02**: 4-status Battery Lifecycle (`Active`, `Inactive`, `Charging`, `Out of Order`), Swap OTP request/regenerate flow, Vendor 4-step Swap Desk OTP verification, and Active Swap Requests list (`Go to Swap Desk →`).
-- [x] **TASK-H03**: DB-driven `pricing_configs`, `battery_types`, GPS station discovery, and Google Geocoding API (`/api/v1/config/geocode`).
+- [x] **TASK-H03**: DB-driven `pricing_configs` (Base Swap Fee, Platform Fee % of Base Swap Fee, Convenience Fee, Payment Gateway Fee, Bank Charges, GST %, Partner Commission), `battery_types`, GPS station discovery, and Google Geocoding API (`/api/v1/config/geocode`).
 - [x] **TASK-H04**: PostgreSQL `xmin` concurrency tokens, transactional reservations/swaps, `MaintenanceBackgroundService` cleanup worker, `/health` & `/health/live`, structured correlation logging, in-app **❓ Help** tab, and 18/18 passing unit tests.
 
 ### 5.1 Completed Security, Ledger & Mobile Parity

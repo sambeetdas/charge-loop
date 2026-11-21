@@ -196,7 +196,7 @@ flutter run -d chrome
    - **First Battery vs Replacement**:
      - First battery pickup: the depleted battery field stays **empty**.
      - Replacement swap: the depleted battery field automatically displays your currently assigned battery QR/Serial.
-   - Select an Active battery to receive, review the **read-only** Cash amount with its complete DB-driven **Fare Breakup** (`GET /api/v1/config/pricing`: Base Swap & Energy Fee + GST), and tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate`).
+   - Select an Active battery to receive, review the **read-only** Cash amount with its complete DB-driven **Fare Breakup** (`GET /api/v1/config/pricing`: Base Swap Fee + **Platform Fee (% of Base Swap Fee)** + **Convenience Fee** + **Payment Gateway Fee** *(₹0 for Cash)* + **Bank Charges** *(₹0 for Cash)* + **GST %**), and tap **Confirm Swap & Record Payment** (`POST /api/v1/swaps/initiate`).
    - This submits a **Swap Request** (Pending Vendor Confirmation) and generates a **6-digit Swap OTP** on screen. You can tap **🔄 Regenerate OTP** (`POST /api/v1/swaps/{swapId}/regenerate-otp`) at any time before the vendor confirms.
    - Once the Vendor verifies your Swap OTP and clicks **Confirm Swap**, your request is marked **Completed**.
 4. **Wallet, Cash Top-Up & Referral**:

@@ -157,20 +157,9 @@ public class SwapService : ISwapService
             .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.UpdatedAt)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync() ?? new PricingConfig();
 
-        var isCash = request.PaymentMethod == PaymentMethod.Cash;
-        var baseSwapFee = pricing?.BaseSwapFee ?? 100.00m;
-        var platformFee = pricing?.PlatformFee ?? 10.00m;
-        var convenienceFee = pricing?.ConvenienceFee ?? 5.00m;
-        var gatewayFee = isCash ? 0.00m : (pricing?.PaymentGatewayFee ?? 2.50m);
-        var bankCharges = isCash ? 0.00m : (pricing?.BankCharges ?? 1.50m);
-        var gstPercent = pricing?.GstPercent ?? 18.00m;
-        var taxableSubtotal = baseSwapFee + platformFee + convenienceFee + gatewayFee + bankCharges;
-        var taxAmount = Math.Round(taxableSubtotal * (gstPercent / 100m), 2);
-        var totalAmount = taxableSubtotal + taxAmount;
-        var partnerCommission = pricing?.PartnerCommission ?? 25.00m;
-
+        var fare = FareCalculator.Calculate(pricing, request.PaymentMethod);
         var swapOtp = Random.Shared.Next(100000, 999999).ToString();
 
         var swap = new SwapTransaction
@@ -182,10 +171,10 @@ public class SwapService : ISwapService
             DepletedBatterySoc = depleted?.StateOfChargePercent ?? 0,
             IssuedBatteryId = issued.Id,
             IssuedBatterySoc = issued.StateOfChargePercent,
-            BaseFee = baseSwapFee,
-            TaxAmount = taxAmount,
-            TotalAmount = totalAmount,
-            PartnerCommissionEarned = partnerCommission,
+            BaseFee = fare.BaseSwapFee,
+            TaxAmount = fare.TaxAmount,
+            TotalAmount = fare.TotalAmount,
+            PartnerCommissionEarned = fare.PartnerCommission,
             PaymentMethod = request.PaymentMethod,
             SwapOtp = swapOtp,
             Status = SwapStatus.Validated,
@@ -196,7 +185,7 @@ public class SwapService : ISwapService
 
         var response = MapToResponse(swap, depleted?.SerialNumber ?? "FIRST-PICKUP", issued.SerialNumber,
             "Swap request created! Share Swap OTP with the partner.",
-            platformFee, convenienceFee, gatewayFee, bankCharges, gstPercent);
+            fare.PlatformFee, fare.ConvenienceFee, fare.PaymentGatewayFee, fare.BankCharges, fare.GstPercent, fare.PlatformFeePercent);
         await _notificationService.NotifySwapStatusChangedAsync(request.DriverId, response);
         return response;
     }
@@ -246,15 +235,12 @@ public class SwapService : ISwapService
             .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.UpdatedAt)
-            .FirstOrDefaultAsync();
-        var isCash = s.PaymentMethod == PaymentMethod.Cash;
+            .FirstOrDefaultAsync() ?? new PricingConfig();
+        var fare = FareCalculator.Calculate(pricing, s.PaymentMethod);
         return MapToResponse(
             s, dSerial, iSerial, message,
-            pricing?.PlatformFee ?? 10.00m,
-            pricing?.ConvenienceFee ?? 5.00m,
-            isCash ? 0.00m : (pricing?.PaymentGatewayFee ?? 2.50m),
-            isCash ? 0.00m : (pricing?.BankCharges ?? 1.50m),
-            pricing?.GstPercent ?? 18.00m);
+            fare.PlatformFee, fare.ConvenienceFee, fare.PaymentGatewayFee,
+            fare.BankCharges, fare.GstPercent, fare.PlatformFeePercent);
     }
 
     public async Task<SwapResponse?> GetPendingSwapForDriverAsync(Guid driverId)
@@ -550,7 +536,8 @@ public class SwapService : ISwapService
     private static SwapResponse MapToResponse(
         SwapTransaction s, string dSerial, string iSerial, string message,
         decimal platformFee = 0m, decimal convenienceFee = 0m,
-        decimal paymentGatewayFee = 0m, decimal bankCharges = 0m, decimal gstPercent = 18m) =>
+        decimal paymentGatewayFee = 0m, decimal bankCharges = 0m,
+        decimal gstPercent = 18m, decimal platformFeePercent = 10m) =>
         new(
             s.Id,
             s.Status,
@@ -574,6 +561,7 @@ public class SwapService : ISwapService
             convenienceFee,
             paymentGatewayFee,
             bankCharges,
-            gstPercent
+            gstPercent,
+            platformFeePercent
         );
 }

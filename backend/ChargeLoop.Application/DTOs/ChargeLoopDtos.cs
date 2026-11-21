@@ -151,7 +151,8 @@ public record SwapResponse(
     decimal ConvenienceFee = 0m,
     decimal PaymentGatewayFee = 0m,
     decimal BankCharges = 0m,
-    decimal GstPercent = 18m
+    decimal GstPercent = 18m,
+    decimal PlatformFeePercent = 10m
 );
 
 public record VendorPendingSwapDto(
@@ -276,6 +277,7 @@ public record SupportTicketDto(
 
 public record PricingConfigDto(
     decimal BaseSwapFee,
+    decimal PlatformFeePercent,
     decimal PlatformFee,
     decimal ConvenienceFee,
     decimal PaymentGatewayFee,
@@ -289,7 +291,7 @@ public record PricingConfigDto(
 
 public record UpdatePricingConfigRequest(
     decimal BaseSwapFee,
-    decimal PlatformFee,
+    decimal PlatformFeePercent,
     decimal ConvenienceFee,
     decimal PaymentGatewayFee,
     decimal BankCharges,

@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 CREATE TABLE IF NOT EXISTS pricing_configs (
     id UUID PRIMARY KEY,
     base_swap_fee NUMERIC(10, 2) NOT NULL DEFAULT 100.00,
-    platform_fee NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
+    platform_fee_percent NUMERIC(5, 2) NOT NULL DEFAULT 10.00,
     convenience_fee NUMERIC(10, 2) NOT NULL DEFAULT 5.00,
     payment_gateway_fee NUMERIC(10, 2) NOT NULL DEFAULT 2.50,
     bank_charges NUMERIC(10, 2) NOT NULL DEFAULT 1.50,

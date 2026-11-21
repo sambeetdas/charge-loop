@@ -93,7 +93,7 @@ using (var scope = app.Services.CreateScope())
             CREATE TABLE IF NOT EXISTS pricing_configs (
                 id UUID PRIMARY KEY,
                 base_swap_fee NUMERIC(10,2) NOT NULL DEFAULT 100.00,
-                platform_fee NUMERIC(10,2) NOT NULL DEFAULT 10.00,
+                platform_fee_percent NUMERIC(5,2) NOT NULL DEFAULT 10.00,
                 convenience_fee NUMERIC(10,2) NOT NULL DEFAULT 5.00,
                 payment_gateway_fee NUMERIC(10,2) NOT NULL DEFAULT 2.50,
                 bank_charges NUMERIC(10,2) NOT NULL DEFAULT 1.50,
@@ -102,11 +102,11 @@ using (var scope = app.Services.CreateScope())
                 is_active BOOLEAN NOT NULL DEFAULT TRUE,
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
-            ALTER TABLE pricing_configs ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(10,2) NOT NULL DEFAULT 10.00;
+            ALTER TABLE pricing_configs ADD COLUMN IF NOT EXISTS platform_fee_percent NUMERIC(5,2) NOT NULL DEFAULT 10.00;
             ALTER TABLE pricing_configs ADD COLUMN IF NOT EXISTS convenience_fee NUMERIC(10,2) NOT NULL DEFAULT 5.00;
             ALTER TABLE pricing_configs ADD COLUMN IF NOT EXISTS payment_gateway_fee NUMERIC(10,2) NOT NULL DEFAULT 2.50;
             ALTER TABLE pricing_configs ADD COLUMN IF NOT EXISTS bank_charges NUMERIC(10,2) NOT NULL DEFAULT 1.50;
-            INSERT INTO pricing_configs (id, base_swap_fee, platform_fee, convenience_fee, payment_gateway_fee, bank_charges, gst_percent, partner_commission, is_active, updated_at)
+            INSERT INTO pricing_configs (id, base_swap_fee, platform_fee_percent, convenience_fee, payment_gateway_fee, bank_charges, gst_percent, partner_commission, is_active, updated_at)
             SELECT '99999999-9999-9999-9999-999999999999', 100.00, 10.00, 5.00, 2.50, 1.50, 18.00, 25.00, TRUE, NOW()
             WHERE NOT EXISTS (SELECT 1 FROM pricing_configs WHERE is_active = TRUE);
 
