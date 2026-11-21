@@ -1,0 +1,24 @@
+[Unit]
+Description=ChargeLoop .NET 11 WebAPI & SignalR Service
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+WorkingDirectory=/opt/chargeloop/app
+ExecStart=/usr/bin/dotnet /opt/chargeloop/app/ChargeLoop.WebApi.dll
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=chargeloop-api
+User=www-data
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment="ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=chargeloop;Username=postgres;Password=CHANGE_ME_STRONG_PASSWORD;"
+Environment="Jwt__Key=CHANGE_ME_AT_LEAST_32_CHARS_RANDOM_SECRET_KEY!"
+Environment="Jwt__Issuer=ChargeLoop.WebApi"
+Environment="Jwt__Audience=ChargeLoop.Clients"
+Environment="GoogleMaps__ApiKey="
+
+[Install]
+WantedBy=multi-user.target
