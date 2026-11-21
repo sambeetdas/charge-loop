@@ -97,68 +97,98 @@ public class ConfigController : ControllerBase
         if (string.IsNullOrWhiteSpace(address))
             return BadRequest(new { Error = "Address query is required." });
 
+        var suggestions = await FetchAddressSuggestionsAsync(address, limit: 1);
+        if (suggestions.Count == 0)
+            return NotFound(new { Error = "Address not found. Try a more specific street/city." });
+
+        return Ok(suggestions[0]);
+    }
+
+    /// <summary>
+    /// Returns up to 5 address autocomplete suggestions with coordinates and city.
+    /// </summary>
+    [HttpGet("address-suggestions")]
+    public async Task<ActionResult<List<GeocodeResultDto>>> GetAddressSuggestions([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 3)
+            return Ok(new List<GeocodeResultDto>());
+
+        var suggestions = await FetchAddressSuggestionsAsync(query.Trim(), limit: 5);
+        return Ok(suggestions);
+    }
+
+    private async Task<List<GeocodeResultDto>> FetchAddressSuggestionsAsync(string query, int limit)
+    {
+        var results = new List<GeocodeResultDto>();
         var googleKey = _configuration["GoogleMaps:ApiKey"] ?? Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY");
         if (!string.IsNullOrWhiteSpace(googleKey))
         {
-            var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&key={Uri.EscapeDataString(googleKey)}";
+            var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(query)}&key={Uri.EscapeDataString(googleKey)}";
             using var res = await _http.GetAsync(url);
-            var json = await res.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (root.TryGetProperty("status", out var st) && st.GetString() == "OK" &&
-                root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+            if (res.IsSuccessStatusCode)
             {
-                var first = results[0];
-                var formatted = first.GetProperty("formatted_address").GetString() ?? address;
-                var loc = first.GetProperty("geometry").GetProperty("location");
-                var lat = loc.GetProperty("lat").GetDouble();
-                var lng = loc.GetProperty("lng").GetDouble();
-                var city = "";
-                if (first.TryGetProperty("address_components", out var comps))
+                var json = await res.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("status", out var st) && st.GetString() == "OK" &&
+                    root.TryGetProperty("results", out var items))
                 {
-                    foreach (var c in comps.EnumerateArray())
+                    foreach (var item in items.EnumerateArray())
                     {
-                        if (c.TryGetProperty("types", out var types))
-                        {
-                            foreach (var t in types.EnumerateArray())
-                            {
-                                if (t.GetString() == "locality" || t.GetString() == "administrative_area_level_2")
-                                {
-                                    city = c.GetProperty("long_name").GetString() ?? "";
-                                    break;
-                                }
-                            }
-                        }
-                        if (!string.IsNullOrEmpty(city)) break;
+                        var formatted = item.GetProperty("formatted_address").GetString() ?? query;
+                        var loc = item.GetProperty("geometry").GetProperty("location");
+                        var lat = loc.GetProperty("lat").GetDouble();
+                        var lng = loc.GetProperty("lng").GetDouble();
+                        var city = ExtractGoogleCity(item);
+                        results.Add(new GeocodeResultDto(formatted, city, lat, lng, "GoogleMaps"));
+                        if (results.Count >= limit) return results;
                     }
+                    if (results.Count > 0) return results;
                 }
-                return Ok(new GeocodeResultDto(formatted, city, lat, lng, "GoogleMaps"));
             }
         }
 
-        // Dev fallback when GoogleMaps:ApiKey is not configured: OpenStreetMap Nominatim
-        using var req = new HttpRequestMessage(HttpMethod.Get, $"https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&q={Uri.EscapeDataString(address)}");
+        using var req = new HttpRequestMessage(HttpMethod.Get, $"https://nominatim.openstreetmap.org/search?format=json&limit={limit}&addressdetails=1&q={Uri.EscapeDataString(query)}");
         req.Headers.UserAgent.ParseAdd("ChargeLoop-MVP/1.0");
         using var osmRes = await _http.SendAsync(req);
-        if (!osmRes.IsSuccessStatusCode)
-            return BadRequest(new { Error = "Unable to geocode address. Configure GoogleMaps:ApiKey or enter coordinates manually." });
+        if (!osmRes.IsSuccessStatusCode) return results;
 
         var osmJson = await osmRes.Content.ReadAsStringAsync();
         using var osmDoc = JsonDocument.Parse(osmJson);
-        if (osmDoc.RootElement.GetArrayLength() == 0)
-            return NotFound(new { Error = "Address not found. Try a more specific street/city." });
-
-        var hit = osmDoc.RootElement[0];
-        var osmLat = double.Parse(hit.GetProperty("lat").GetString()!, System.Globalization.CultureInfo.InvariantCulture);
-        var osmLng = double.Parse(hit.GetProperty("lon").GetString()!, System.Globalization.CultureInfo.InvariantCulture);
-        var osmDisplay = hit.GetProperty("display_name").GetString() ?? address;
-        var osmCity = "";
-        if (hit.TryGetProperty("address", out var addrObj))
+        foreach (var hit in osmDoc.RootElement.EnumerateArray())
         {
-            if (addrObj.TryGetProperty("city", out var c1)) osmCity = c1.GetString() ?? "";
-            else if (addrObj.TryGetProperty("town", out var c2)) osmCity = c2.GetString() ?? "";
-            else if (addrObj.TryGetProperty("state_district", out var c3)) osmCity = c3.GetString() ?? "";
+            var osmLat = double.Parse(hit.GetProperty("lat").GetString()!, System.Globalization.CultureInfo.InvariantCulture);
+            var osmLng = double.Parse(hit.GetProperty("lon").GetString()!, System.Globalization.CultureInfo.InvariantCulture);
+            var osmDisplay = hit.GetProperty("display_name").GetString() ?? query;
+            var osmCity = ExtractOsmCity(hit);
+            results.Add(new GeocodeResultDto(osmDisplay, osmCity, osmLat, osmLng, "OpenStreetMapFallback"));
         }
-        return Ok(new GeocodeResultDto(osmDisplay, osmCity, osmLat, osmLng, "OpenStreetMapFallback"));
+        return results;
+    }
+
+    private static string ExtractGoogleCity(JsonElement item)
+    {
+        if (!item.TryGetProperty("address_components", out var comps)) return "";
+        foreach (var c in comps.EnumerateArray())
+        {
+            if (!c.TryGetProperty("types", out var types)) continue;
+            foreach (var t in types.EnumerateArray())
+            {
+                var typeName = t.GetString();
+                if (typeName == "locality" || typeName == "administrative_area_level_2")
+                    return c.GetProperty("long_name").GetString() ?? "";
+            }
+        }
+        return "";
+    }
+
+    private static string ExtractOsmCity(JsonElement hit)
+    {
+        if (!hit.TryGetProperty("address", out var addrObj)) return "";
+        if (addrObj.TryGetProperty("city", out var c1)) return c1.GetString() ?? "";
+        if (addrObj.TryGetProperty("town", out var c2)) return c2.GetString() ?? "";
+        if (addrObj.TryGetProperty("village", out var c3)) return c3.GetString() ?? "";
+        if (addrObj.TryGetProperty("state_district", out var c4)) return c4.GetString() ?? "";
+        return "";
     }
 }

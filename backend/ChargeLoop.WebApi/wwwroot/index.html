@@ -938,9 +938,9 @@
 
       <div id="addStoreForm" class="card hidden">
         <input id="newStoreName" class="input-field" placeholder="Store / Hub Name">
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="newStoreAddress" class="input-field" placeholder="Full Street Address" style="margin-bottom:0;">
-          <button class="btn btn-secondary btn-sm" type="button" onclick="lookupStoreAddress()">📍 Find</button>
+        <div style="position:relative;margin-bottom:8px;">
+          <input id="newStoreAddress" class="input-field" placeholder="Start typing Street Address..." autocomplete="off" style="margin-bottom:0;" oninput="onStoreAddressInput(this.value)">
+          <div id="storeAddressSuggestions" class="hidden" style="position:absolute;left:0;right:0;top:100%;z-index:40;background:var(--surface-elevated);border:1px solid var(--border-mint);border-radius:12px;margin-top:4px;max-height:200px;overflow-y:auto;box-shadow:0 12px 28px rgba(0,0,0,0.45);"></div>
         </div>
         <input id="newStoreCity" class="input-field" placeholder="City">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1047,7 +1047,7 @@
       <div class="card">
         <div style="font-weight:800;margin-bottom:6px;">🏪 Stores &amp; 4-Status Battery Lifecycle (Stores Tab)</div>
         <div class="muted" style="line-height:1.6;">
-          • <b>Add Store:</b> Enter Store Name &amp; Street Address and tap <b>📍 Find</b> to auto-locate coordinates via Geocoding API.<br>
+          • <b>Add Store:</b> Enter Store Name &amp; start typing the Street Address to pick an autocomplete suggestion (auto-fills City &amp; coordinates).<br>
           • <b>Register Battery:</b> Select your Store, enter Battery Serial/QR, pick a DB-configured Battery Type, and enter SOC %.<br>
           • <b>4 Battery Statuses (Toggle Anytime):</b><br>
           &nbsp;&nbsp;1. <b>Active:</b> Visible to drivers and assignable during swaps.<br>
@@ -2203,19 +2203,49 @@ function toggleAddStoreForm() {
   document.getElementById('addStoreForm').classList.toggle('hidden');
 }
 
-async function lookupStoreAddress() {
-  const address = document.getElementById('newStoreAddress').value.trim();
-  if (!address) return showToast('Enter street address first', true);
-  try {
-    const geo = await apiFetch(`/config/geocode?address=${encodeURIComponent(address)}`);
-    if (geo.formattedAddress) document.getElementById('newStoreAddress').value = geo.formattedAddress;
-    if (geo.city && !document.getElementById('newStoreCity').value.trim()) {
-      document.getElementById('newStoreCity').value = geo.city;
+let _storeAddrTimer = null;
+let _storeAddrResults = [];
+
+function onStoreAddressInput(value) {
+  clearTimeout(_storeAddrTimer);
+  const box = document.getElementById('storeAddressSuggestions');
+  const q = (value || '').trim();
+  if (q.length < 3) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+  _storeAddrTimer = setTimeout(async () => {
+    try {
+      const items = await apiFetch(`/config/address-suggestions?query=${encodeURIComponent(q)}`);
+      _storeAddrResults = Array.isArray(items) ? items : [];
+      if (_storeAddrResults.length === 0) {
+        box.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--text-muted);">No matching addresses found</div>';
+        box.classList.remove('hidden');
+        return;
+      }
+      box.innerHTML = _storeAddrResults.map((item, idx) => `
+        <div onclick="selectStoreAddressSuggestion(${idx})" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;line-height:1.35;">
+          <div style="font-weight:700;color:var(--text-primary);">${item.formattedAddress}</div>
+          ${item.city ? `<div style="color:var(--mint-text);font-size:11px;margin-top:2px;">📍 ${item.city}</div>` : ''}
+        </div>
+      `).join('');
+      box.classList.remove('hidden');
+    } catch {
+      box.classList.add('hidden');
     }
-    document.getElementById('newStoreLat').value = Number(geo.latitude).toFixed(6);
-    document.getElementById('newStoreLng').value = Number(geo.longitude).toFixed(6);
-    showToast(`Address located (${geo.provider})`);
-  } catch (e) { showToast(e.message, true); }
+  }, 350);
+}
+
+function selectStoreAddressSuggestion(idx) {
+  const item = _storeAddrResults[idx];
+  if (!item) return;
+  document.getElementById('newStoreAddress').value = item.formattedAddress || '';
+  if (item.city) document.getElementById('newStoreCity').value = item.city;
+  document.getElementById('newStoreLat').value = Number(item.latitude).toFixed(6);
+  document.getElementById('newStoreLng').value = Number(item.longitude).toFixed(6);
+  document.getElementById('storeAddressSuggestions').classList.add('hidden');
+  showToast(`Address selected (${item.provider})`);
 }
 
 async function createVendorStore() {
