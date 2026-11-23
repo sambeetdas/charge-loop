@@ -516,7 +516,7 @@
 <div class="phone-container">
   <div class="status-bar">
     <span>ChargeLoop</span>
-    <span class="status-pill"><span class="status-dot"></span> SWAP READY</span>
+    <span class="status-pill"><span class="status-dot"></span> <span data-i18n="swapReady">SWAP READY</span></span>
     <span>5G ⚡</span>
   </div>
 
@@ -525,11 +525,11 @@
       <img src="/assets/logo_icon.png?v=2" alt="ChargeLoop">
       <div>
         <div class="brand-title">Charge<span>Loop</span></div>
-        <div class="brand-sub">ENERGY SOLUTIONS</div>
+        <div class="brand-sub" data-i18n="brandTagline">ENERGY SOLUTIONS</div>
       </div>
     </div>
     <div id="headerUserChip" class="user-chip" onclick="handleHeaderAction()">
-      <span id="headerUserText">Sign In</span> 👤
+      <span id="headerUserText" data-i18n="signIn">Sign In</span> 👤
     </div>
   </div>
 
@@ -540,74 +540,80 @@
     <div id="view-auth">
       <div class="grid-hero">
         <div class="pill-row">
-          <span class="mint-pill">⚡ Quick swaps</span>
-          <span class="mint-pill">🔋 Charged &amp; tested</span>
-          <span class="amber-pill">📋 Weekly plans</span>
+          <span class="mint-pill" data-i18n="pillQuickSwaps">⚡ Quick swaps</span>
+          <span class="mint-pill" data-i18n="pillCharged">🔋 Charged &amp; tested</span>
+          <span class="amber-pill" data-i18n="pillWeekly">📋 Weekly plans</span>
         </div>
         <h1 style="font-size:26px;font-weight:900;line-height:1.15;margin-bottom:8px;">
-          Swap. Ride. <span style="color:var(--mint);">Repeat.</span>
+          <span data-i18n="heroLine1">Swap. Ride.</span> <span style="color:var(--mint);" data-i18n="heroLine2">Repeat.</span>
         </h1>
-        <p class="muted" style="line-height:1.45;">
+        <p class="muted" style="line-height:1.45;" data-i18n="heroDesc">
           Fast battery swaps. No waiting, no charging cables — just seamless electric mobility.
         </p>
       </div>
 
       <div class="card">
-        <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Sign In / Sign Up</div>
-        <div class="muted" style="margin-bottom:12px;">Choose your account type to continue.</div>
+        <div class="row-between" style="margin-bottom:4px;gap:8px;">
+          <div style="font-size:16px;font-weight:800;" data-i18n="authTitle">Sign In / Sign Up</div>
+          <select id="authLangSelect" class="input-field" style="width:auto;margin-bottom:0;padding:6px 10px;font-size:12px;" onchange="setAppLanguage(this.value)">
+            <option value="en">🌐 English</option>
+            <option value="hi">🌐 हिन्दी (Hindi)</option>
+          </select>
+        </div>
+        <div class="muted" style="margin-bottom:12px;" data-i18n="authSubtitle">Choose your account type to continue.</div>
 
         <div class="role-tabs">
-          <button id="roleTabDriver" class="role-tab active" onclick="selectAuthRole('driver')">🚗 Driver</button>
-          <button id="roleTabVendor" class="role-tab" onclick="selectAuthRole('vendor')">🏪 Partner / Vendor</button>
+          <button id="roleTabDriver" class="role-tab active" onclick="selectAuthRole('driver')" data-i18n="roleDriver">🚗 Driver</button>
+          <button id="roleTabVendor" class="role-tab" onclick="selectAuthRole('vendor')" data-i18n="roleVendor">🏪 Partner / Vendor</button>
         </div>
 
         <div class="role-tabs" style="margin-bottom:12px;">
-          <button id="modeTabSignIn" class="role-tab active" onclick="selectAuthMode('signin')">Sign In</button>
-          <button id="modeTabSignUp" class="role-tab" onclick="selectAuthMode('signup')">Sign Up</button>
+          <button id="modeTabSignIn" class="role-tab active" onclick="selectAuthMode('signin')" data-i18n="signIn">Sign In</button>
+          <button id="modeTabSignUp" class="role-tab" onclick="selectAuthMode('signup')" data-i18n="signUp">Sign Up</button>
         </div>
 
         <!-- Driver PIN Auth -->
         <div id="authDriverBox">
-          <input id="authDriverPhone" class="input-field" type="tel" placeholder="Mobile Number (e.g. +919811223344)">
+          <input id="authDriverPhone" class="input-field" type="tel" placeholder="Mobile Number (e.g. +919811223344)" data-i18n-placeholder="phDriverPhone">
           <div id="driverSignInFields">
-            <input id="authDriverPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN">
-            <button class="btn btn-primary" onclick="signInDriverWithPin()">Sign In as Driver</button>
-            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="selectAuthMode('reset')">Forgot / Reset PIN?</button>
+            <input id="authDriverPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN" data-i18n-placeholder="phPin">
+            <button class="btn btn-primary" onclick="signInDriverWithPin()" data-i18n="signInDriver">Sign In as Driver</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="selectAuthMode('reset')" data-i18n="forgotPin">Forgot / Reset PIN?</button>
           </div>
           <div id="driverSignUpFields" class="hidden">
-            <input id="authDriverSignUpPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Create PIN (4-6 digits)">
-            <input id="authDriverConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN">
-            <input id="authDriverName" class="input-field" type="text" placeholder="Full Name (optional)">
-            <input id="authDriverEmail" class="input-field" type="email" placeholder="Email for Invoices (optional)">
-            <input id="authDriverRef" class="input-field" type="text" placeholder="Referral Code (optional, get ₹50)">
-            <button class="btn btn-primary" onclick="signUpDriverWithPin()">Sign Up as Driver</button>
+            <input id="authDriverSignUpPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Create PIN (4-6 digits)" data-i18n-placeholder="phCreatePin">
+            <input id="authDriverConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN" data-i18n-placeholder="phConfirmPin">
+            <input id="authDriverName" class="input-field" type="text" placeholder="Full Name (optional)" data-i18n-placeholder="phFullNameOpt">
+            <input id="authDriverEmail" class="input-field" type="email" placeholder="Email for Invoices (optional)" data-i18n-placeholder="phEmailOpt">
+            <input id="authDriverRef" class="input-field" type="text" placeholder="Referral Code (optional, get ₹50)" data-i18n-placeholder="phRefOpt">
+            <button class="btn btn-primary" onclick="signUpDriverWithPin()" data-i18n="signUpDriver">Sign Up as Driver</button>
           </div>
           <div id="driverResetFields" class="hidden">
-            <input id="authDriverNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)">
-            <input id="authDriverConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN">
-            <button class="btn btn-primary" onclick="resetDriverPin()">Reset Driver PIN</button>
+            <input id="authDriverNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)" data-i18n-placeholder="phNewPin">
+            <input id="authDriverConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN" data-i18n-placeholder="phConfirmNewPin">
+            <button class="btn btn-primary" onclick="resetDriverPin()" data-i18n="resetDriverPin">Reset Driver PIN</button>
           </div>
         </div>
 
         <!-- Vendor PIN Auth -->
         <div id="authVendorBox" class="hidden">
-          <input id="authVendorPhone" class="input-field" type="tel" placeholder="Partner Mobile Number (e.g. +919900112233)">
+          <input id="authVendorPhone" class="input-field" type="tel" placeholder="Partner Mobile Number (e.g. +919900112233)" data-i18n-placeholder="phVendorPhone">
           <div id="vendorSignInFields">
-            <input id="authVendorPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN">
-            <button class="btn btn-primary" onclick="signInVendorWithPin()">Sign In as Partner</button>
-            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="selectAuthMode('reset')">Forgot / Reset PIN?</button>
+            <input id="authVendorPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Enter 4-6 digit PIN" data-i18n-placeholder="phPin">
+            <button class="btn btn-primary" onclick="signInVendorWithPin()" data-i18n="signInVendor">Sign In as Partner</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="selectAuthMode('reset')" data-i18n="forgotPin">Forgot / Reset PIN?</button>
           </div>
           <div id="vendorSignUpFields" class="hidden">
-            <input id="authVendorSignUpPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Create PIN (4-6 digits)">
-            <input id="authVendorConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN">
-            <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)">
-            <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)">
-            <button class="btn btn-primary" onclick="signUpVendorWithPin()">Sign Up as Partner</button>
+            <input id="authVendorSignUpPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Create PIN (4-6 digits)" data-i18n-placeholder="phCreatePin">
+            <input id="authVendorConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN" data-i18n-placeholder="phConfirmPin">
+            <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)" data-i18n-placeholder="phVendorNameOpt">
+            <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)" data-i18n-placeholder="phVendorBizOpt">
+            <button class="btn btn-primary" onclick="signUpVendorWithPin()" data-i18n="signUpVendor">Sign Up as Partner</button>
           </div>
           <div id="vendorResetFields" class="hidden">
-            <input id="authVendorNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)">
-            <input id="authVendorConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN">
-            <button class="btn btn-primary" onclick="resetVendorPin()">Reset Partner PIN</button>
+            <input id="authVendorNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)" data-i18n-placeholder="phNewPin">
+            <input id="authVendorConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN" data-i18n-placeholder="phConfirmNewPin">
+            <button class="btn btn-primary" onclick="resetVendorPin()" data-i18n="resetVendorPin">Reset Partner PIN</button>
           </div>
         </div>
       </div>
@@ -618,16 +624,16 @@
     <div id="view-driver-home" class="hidden">
       <div class="grid-hero">
         <div class="row-between" style="margin-bottom:10px;">
-          <span class="mint-pill">● SWAP READY</span>
-          <span class="amber-pill" id="homePlanBadge">Pay-Per-Swap</span>
+          <span class="mint-pill" data-i18n="swapReadyDot">● SWAP READY</span>
+          <span class="amber-pill" id="homePlanBadge" data-i18n="payPerSwap">Pay-Per-Swap</span>
         </div>
         <div class="row-between">
           <div>
-            <div class="muted">Wallet Balance</div>
+            <div class="muted" data-i18n="walletBalance">Wallet Balance</div>
             <div id="homeWalletBalance" style="font-size:28px;font-weight:900;color:var(--mint);">₹0.00</div>
           </div>
           <div style="text-align:right;">
-            <div class="muted">Active Battery</div>
+            <div class="muted" data-i18n="activeBattery">Active Battery</div>
             <div id="homeActiveBattery" style="font-size:15px;font-weight:800;">None linked</div>
           </div>
         </div>
@@ -636,27 +642,27 @@
       <div class="quick-grid">
         <button class="quick-btn" onclick="switchDriverTab('scan')">
           <span class="icon-box">📷</span>
-          <span>Scan &amp; Pay</span>
+          <span data-i18n="navScan">Scan &amp; Pay</span>
         </button>
         <button class="quick-btn" onclick="switchDriverTab('wallet')">
           <span class="icon-box">💳</span>
-          <span>Add Money</span>
+          <span data-i18n="addMoney">Add Money</span>
         </button>
         <button class="quick-btn" onclick="switchDriverTab('history')">
           <span class="icon-box">🧾</span>
-          <span>Bills</span>
+          <span data-i18n="navBills">Bills</span>
         </button>
         <button class="quick-btn" onclick="openReferralModal()">
           <span class="icon-box" style="color:var(--amber);">🎁</span>
-          <span>Refer</span>
+          <span data-i18n="refer">Refer</span>
         </button>
       </div>
 
       <div id="driverActiveReservationBox" class="hidden"></div>
 
       <div class="section-title">
-        <span>Nearby Swap Stations</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadStations()">Refresh</button>
+        <span data-i18n="nearbyStations">Nearby Swap Stations</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadStations()" data-i18n="refresh">Refresh</button>
       </div>
       <div id="driverStationsList"></div>
     </div>
@@ -664,57 +670,57 @@
     <!-- DRIVER SCAN & PAY -->
     <div id="view-driver-scan" class="hidden">
       <div class="card">
-        <div class="step-header"><span class="step-badge">1</span> Scan Station &amp; Battery QR</div>
+        <div class="step-header"><span class="step-badge">1</span> <span data-i18n="scanStep1">Scan Station &amp; Battery QR</span></div>
         <select id="scanStationSelect" class="input-field" onchange="loadStationChargedBatteries()"></select>
-        <input id="scanDepletedSerial" class="input-field" placeholder="Your Depleted Battery QR / Serial (e.g. BAT-LFP-1001)">
+        <input id="scanDepletedSerial" class="input-field" placeholder="Your Depleted Battery QR / Serial (e.g. BAT-LFP-1001)" data-i18n-placeholder="phDepletedBat">
         <select id="scanIssuedSelect" class="input-field" onchange="updateDriverFareVisibility()"></select>
       </div>
 
       <div class="card">
-        <div class="step-header"><span class="step-badge">2</span> Choose Payment Method</div>
+        <div class="step-header"><span class="step-badge">2</span> <span data-i18n="scanStep2">Choose Payment Method</span></div>
         <div class="pay-options">
-          <div class="pay-chip active" data-pm="3" onclick="selectDriverPayMethod(3, this)">💵 Cash Only</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">👛 Wallet (WIP)</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card (WIP)</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">📱 UPI (WIP)</div>
+          <div class="pay-chip active" data-pm="3" onclick="selectDriverPayMethod(3, this)" data-i18n="cashOnly">💵 Cash Only</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="walletWip">👛 Wallet (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="cardWip">💳 Card (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="upiWip">📱 UPI (WIP)</div>
         </div>
 
-        <div id="driverFareWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;">Select a reserved station and battery in Step 1 to view fare.</div>
+        <div id="driverFareWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;" data-i18n="driverFareWaiting">Select a reserved station and battery in Step 1 to view fare.</div>
         <div id="driverCashFields" class="card-elevated hidden" style="margin-bottom:12px;">
-          <div style="font-weight:800;font-size:13px;margin-bottom:8px;">🧾 Fare Breakup</div>
+          <div style="font-weight:800;font-size:13px;margin-bottom:8px;" data-i18n="fareBreakupTitle">🧾 Fare Breakup</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Base Swap &amp; Energy Fee <span style="cursor:pointer;color:var(--mint);" title="Base battery swap &amp; energy charge" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="baseFeeLabel">Base Swap &amp; Energy Fee</span> <span style="cursor:pointer;color:var(--mint);" title="Base battery swap &amp; energy charge" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupBase">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span><span id="driverBreakupPlatformLabel">Platform Fee</span> <span id="driverInfoPlatform" style="cursor:pointer;color:var(--mint);" title="Fee charged by ChargeLoop for using its platform" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span id="driverBreakupPlatformLabel" data-i18n="platformFeeLabel">Platform Fee</span> <span id="driverInfoPlatform" style="cursor:pointer;color:var(--mint);" title="Fee charged by ChargeLoop for using its platform" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupPlatform">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Convenience Fee <span style="cursor:pointer;color:var(--mint);" title="Additional fee for facilitating a transaction" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="convFeeLabel">Convenience Fee</span> <span style="cursor:pointer;color:var(--mint);" title="Additional fee for facilitating a transaction" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupConv">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Payment Gateway Fee <span style="cursor:pointer;color:var(--mint);" title="Fee for processing certain payment methods (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="gwFeeLabel">Payment Gateway Fee</span> <span style="cursor:pointer;color:var(--mint);" title="Fee for processing certain payment methods (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupGw">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Bank Charges <span style="cursor:pointer;color:var(--mint);" title="Fees imposed by your bank, depending on the transaction (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="bankFeeLabel">Bank Charges</span> <span style="cursor:pointer;color:var(--mint);" title="Fees imposed by your bank, depending on the transaction (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupBank">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span><span id="driverBreakupGstLabel">GST</span> <span id="driverInfoGst" style="cursor:pointer;color:var(--mint);" title="Applicable tax on taxable service charges" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span id="driverBreakupGstLabel" data-i18n="gstLabel">GST</span> <span id="driverInfoGst" style="cursor:pointer;color:var(--mint);" title="Applicable tax on taxable service charges" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="driverBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
-            <span>Total Payable (Cash)</span>
+            <span data-i18n="totalPayableCash">Total Payable (Cash)</span>
             <span id="driverBreakupTotal" style="color:var(--mint);">₹0.00</span>
           </div>
-          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Amount (₹) — DB-Driven System Fare (Read-Only)</div>
+          <div class="muted" style="font-size:11px;margin-bottom:6px;" data-i18n="cashReadOnlyNote">Cash Amount (₹) — System Fare (Read-Only)</div>
           <input id="driverCashAmount" class="input-field" type="number" value="0.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
         </div>
 
-        <button class="btn btn-primary" onclick="executeDriverScanAndPay()">Confirm Swap &amp; Record Payment</button>
+        <button class="btn btn-primary" onclick="executeDriverScanAndPay()" data-i18n="confirmSwapPay">Confirm Swap &amp; Record Payment</button>
       </div>
 
       <div id="driverSwapReceipt" class="card hidden"></div>
@@ -723,49 +729,49 @@
     <!-- DRIVER WALLET & REFER -->
     <div id="view-driver-wallet" class="hidden">
       <div class="grid-hero">
-        <div class="muted">Available Wallet Balance</div>
+        <div class="muted" data-i18n="availWallet">Available Wallet Balance</div>
         <div id="walletBalanceBig" style="font-size:32px;font-weight:900;color:var(--mint);margin:4px 0 12px;">₹0.00</div>
         <div style="display:flex;gap:8px;margin-bottom:10px;">
           <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(100)">+₹100</button>
           <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(200)">+₹200</button>
           <button class="btn btn-secondary btn-sm" onclick="setTopupAmount(500)">+₹500</button>
         </div>
-        <input id="walletTopupAmount" class="input-field" type="number" value="200" placeholder="Enter Cash amount (₹)">
+        <input id="walletTopupAmount" class="input-field" type="number" value="200" placeholder="Enter Cash amount (₹)" data-i18n-placeholder="phCashAmount">
         <div class="pay-options" style="margin-bottom:10px;">
-          <div class="pay-chip active" onclick="selectTopupMode('CASH', this)">💵 Cash Top-Up</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card / 📱 UPI (Online)</div>
+          <div class="pay-chip active" onclick="selectTopupMode('CASH', this)" data-i18n="cashTopup">💵 Cash Top-Up</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="onlineSoon">💳 Card / 📱 UPI (Online)</div>
         </div>
-        <button class="btn btn-primary" onclick="topUpDriverWallet()">Record Cash Top-Up</button>
+        <button class="btn btn-primary" onclick="topUpDriverWallet()" data-i18n="recordCashTopup">Record Cash Top-Up</button>
       </div>
 
       <div class="card">
         <div class="row-between" style="margin-bottom:8px;">
-          <div style="font-weight:800;">🎁 Refer Your Friend</div>
-          <span class="amber-pill">Earn ₹50 each</span>
+          <div style="font-weight:800;" data-i18n="referFriend">🎁 Refer Your Friend</div>
+          <span class="amber-pill" data-i18n="earn50">Earn ₹50 each</span>
         </div>
-        <div class="muted" style="margin-bottom:8px;">Share your code with fellow EV drivers. Both get ₹50 wallet credit!</div>
+        <div class="muted" style="margin-bottom:8px;" data-i18n="referDesc">Share your code with fellow EV drivers. Both get ₹50 wallet credit!</div>
         <div class="card-elevated row-between" style="margin-bottom:10px;">
           <div>
-            <div class="muted" style="font-size:10px;">YOUR REFERRAL CODE</div>
+            <div class="muted" style="font-size:10px;" data-i18n="yourRefCode">YOUR REFERRAL CODE</div>
             <div id="myReferralCode" style="font-size:18px;font-weight:900;color:var(--mint);letter-spacing:1px;">CL-XXXX</div>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="copyReferralCode()">Copy</button>
+          <button class="btn btn-secondary btn-sm" onclick="copyReferralCode()" data-i18n="copy">Copy</button>
         </div>
         <div style="display:flex;gap:8px;">
-          <input id="claimReferralInput" class="input-field" placeholder="Have a friend's code?" style="margin-bottom:0;">
-          <button class="btn btn-amber btn-sm" onclick="claimReferralCode()">Claim</button>
+          <input id="claimReferralInput" class="input-field" placeholder="Have a friend's code?" data-i18n-placeholder="phFriendCode" style="margin-bottom:0;">
+          <button class="btn btn-amber btn-sm" onclick="claimReferralCode()" data-i18n="claim">Claim</button>
         </div>
       </div>
 
-      <div class="section-title"><span>Recent Wallet Transactions</span></div>
+      <div class="section-title"><span data-i18n="recentWalletTx">Recent Wallet Transactions</span></div>
       <div id="driverWalletTxList"></div>
     </div>
 
     <!-- DRIVER BILLING & SWAP HISTORY -->
     <div id="view-driver-history" class="hidden">
       <div class="section-title">
-        <span>Swap &amp; Billing History</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadDriverHistory()">Refresh</button>
+        <span data-i18n="swapBillingHistory">Swap &amp; Billing History</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadDriverHistory()" data-i18n="refresh">Refresh</button>
       </div>
       <div id="driverHistoryList"></div>
     </div>
@@ -784,36 +790,40 @@
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">✏️ Edit Profile</div>
-        <input id="editDriverName" class="input-field" placeholder="Full Name">
-        <input id="editDriverEmail" class="input-field" placeholder="Email Address">
-        <select id="editDriverLang" class="input-field">
-          <option value="en">English (en)</option>
-          <option value="hi">Hindi (hi)</option>
-        </select>
-        <button class="btn btn-primary" onclick="saveDriverProfile()">Save Profile</button>
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="editProfile">✏️ Edit Profile</div>
+        <input id="editDriverName" class="input-field" placeholder="Full Name" data-i18n-placeholder="phFullName">
+        <input id="editDriverEmail" class="input-field" placeholder="Email Address" data-i18n-placeholder="phEmail">
+        <button class="btn btn-primary" onclick="saveDriverProfile()" data-i18n="saveProfile">Save Profile</button>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (PIN)</div>
-        <input id="chgDriverPhone" class="input-field" type="tel" placeholder="New 10-digit Phone">
-        <input id="chgDriverPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN (4-6 digits)">
-        <button class="btn btn-primary" onclick="confirmDriverChangePhone()">Update Phone Number</button>
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="changePhoneTitle">📱 Change Phone Number (PIN)</div>
+        <input id="chgDriverPhone" class="input-field" type="tel" placeholder="New 10-digit Phone" data-i18n-placeholder="phNewPhone">
+        <input id="chgDriverPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN (4-6 digits)" data-i18n-placeholder="phCurrentPin">
+        <button class="btn btn-primary" onclick="confirmDriverChangePhone()" data-i18n="updatePhone">Update Phone Number</button>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">📋 Weekly Subscription Plans</div>
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="weeklyPlansTitle">📋 Weekly Subscription Plans</div>
         <div id="subscriptionPlansList"></div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">🪪 Complete KYC</div>
-        <input id="kycDlInput" class="input-field" placeholder="Driving License Number">
-        <input id="kycAadhaarInput" class="input-field" placeholder="Aadhaar Number (12 digits)">
-        <button class="btn btn-primary" onclick="submitDriverKyc()">Verify KYC</button>
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="completeKycTitle">🪪 Complete KYC</div>
+        <input id="kycDlInput" class="input-field" placeholder="Driving License Number" data-i18n-placeholder="phDl">
+        <input id="kycAadhaarInput" class="input-field" placeholder="Aadhaar Number (12 digits)" data-i18n-placeholder="phAadhaar">
+        <button class="btn btn-primary" onclick="submitDriverKyc()" data-i18n="verifyKycBtn">Verify KYC</button>
       </div>
 
-      <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="appLanguageTitle">🌐 App Language</div>
+        <select id="editDriverLang" class="input-field" style="margin-bottom:0;" onchange="setAppLanguage(this.value)">
+          <option value="en">🌐 English (en)</option>
+          <option value="hi">🌐 हिन्दी — Hindi (hi)</option>
+        </select>
+      </div>
+
+      <button class="btn btn-secondary" onclick="signOut()" data-i18n="signOut">Sign Out</button>
     </div>
 
     <!-- VENDOR SWAP DESK -->
@@ -821,107 +831,107 @@
       <div class="grid-hero">
         <div class="row-between">
           <div>
-            <div class="muted">Partner Swap Desk</div>
+            <div class="muted" data-i18n="partnerSwapDesk">Partner Swap Desk</div>
             <div id="vendorHeroBiz" style="font-size:18px;font-weight:900;">ChargeLoop Hub</div>
           </div>
-          <span class="mint-pill">● ONLINE</span>
+          <span class="mint-pill" data-i18n="onlinePill">● ONLINE</span>
         </div>
       </div>
 
       <!-- STEP 1: VALIDATE DRIVER -->
       <div class="card">
-        <div class="step-header"><span class="step-badge">1</span> Validate Driver Before Swap</div>
+        <div class="step-header"><span class="step-badge">1</span> <span data-i18n="vStep1">Validate Driver Before Swap</span></div>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="vendorValidateQuery" class="input-field" placeholder="Phone, Name, or Driver ID" style="margin-bottom:0;">
-          <button class="btn btn-primary btn-sm" onclick="validateDriverForPartner()">Validate</button>
+          <input id="vendorValidateQuery" class="input-field" placeholder="Phone, Name, or Driver ID" data-i18n-placeholder="phValidateDriver" style="margin-bottom:0;">
+          <button class="btn btn-primary btn-sm" onclick="validateDriverForPartner()" data-i18n="validateBtn">Validate</button>
         </div>
         <div id="validatedDriverBox" class="card-elevated hidden"></div>
       </div>
 
       <!-- STEP 2: QR SCAN DISCONNECT & ASSIGN -->
       <div class="card">
-        <div class="step-header"><span class="step-badge">2</span> Scan Battery QRs (Disconnect &amp; Assign)</div>
+        <div class="step-header"><span class="step-badge">2</span> <span data-i18n="vStep2">Scan Battery QRs (Disconnect &amp; Assign)</span></div>
         <select id="vendorDeskStationSelect" class="input-field" onchange="loadVendorDeskBatteries()"></select>
-        <input id="vendorDepletedQr" class="input-field" placeholder="Scan Driver's Battery QR to Disconnect (empty if 1st pickup)">
+        <input id="vendorDepletedQr" class="input-field" placeholder="Scan Driver's Battery QR to Disconnect (empty if 1st pickup)" data-i18n-placeholder="phVDepletedQr">
         <select id="vendorIssuedQrSelect" class="input-field"></select>
       </div>
 
       <!-- STEP 3: VERIFY DRIVER SWAP OTP -->
       <div class="card">
-        <div class="step-header"><span class="step-badge">3</span> Verify Driver's Swap OTP</div>
+        <div class="step-header"><span class="step-badge">3</span> <span data-i18n="vStep3">Verify Driver's Swap OTP</span></div>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="vendorSwapOtpInput" class="input-field" placeholder="Enter Driver's 6-digit Swap OTP" style="margin-bottom:0;">
-          <button class="btn btn-primary btn-sm" onclick="verifyVendorSwapOtp()">Verify OTP</button>
+          <input id="vendorSwapOtpInput" class="input-field" placeholder="Enter Driver's 6-digit Swap OTP" data-i18n-placeholder="phVOtp" style="margin-bottom:0;">
+          <button class="btn btn-primary btn-sm" onclick="verifyVendorSwapOtp()" data-i18n="verifyOtpBtn">Verify OTP</button>
         </div>
         <div id="vendorSwapOtpBox" class="card-elevated hidden"></div>
       </div>
 
       <!-- STEP 4: COLLECT PAYMENT & EXECUTE SWAP -->
       <div class="card">
-        <div class="step-header"><span class="step-badge">4</span> Collect Payment &amp; Execute Swap</div>
+        <div class="step-header"><span class="step-badge">4</span> <span data-i18n="vStep4">Collect Payment &amp; Execute Swap</span></div>
         <div class="pay-options">
-          <div class="pay-chip active" data-vpm="3" onclick="selectVendorPayMethod(3, this)">💵 Cash Only</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">👛 Wallet (WIP)</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">💳 Card (WIP)</div>
-          <div class="pay-chip" onclick="showOnlinePaymentWip()">📱 UPI (WIP)</div>
+          <div class="pay-chip active" data-vpm="3" onclick="selectVendorPayMethod(3, this)" data-i18n="cashOnly">💵 Cash Only</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="walletWip">👛 Wallet (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="cardWip">💳 Card (WIP)</div>
+          <div class="pay-chip" onclick="showOnlinePaymentWip()" data-i18n="upiWip">📱 UPI (WIP)</div>
         </div>
         <div id="vendorCashFields" class="card-elevated hidden" style="margin-bottom:10px;">
-          <div style="font-weight:800;font-size:13px;margin-bottom:6px;">🧾 Fare Breakup &amp; Payment Details</div>
+          <div style="font-weight:800;font-size:13px;margin-bottom:6px;" data-i18n="fareBreakupPayment">🧾 Fare Breakup &amp; Payment Details</div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Base Swap &amp; Energy Fee <span style="cursor:pointer;color:var(--mint);" title="Base battery swap &amp; energy charge" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="baseFeeLabel">Base Swap &amp; Energy Fee</span> <span style="cursor:pointer;color:var(--mint);" title="Base battery swap &amp; energy charge" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupBase">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span><span id="vendorBreakupPlatformLabel">Platform Fee</span> <span id="vendorInfoPlatform" style="cursor:pointer;color:var(--mint);" title="Fee charged by ChargeLoop for using its platform" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span id="vendorBreakupPlatformLabel" data-i18n="platformFeeLabel">Platform Fee</span> <span id="vendorInfoPlatform" style="cursor:pointer;color:var(--mint);" title="Fee charged by ChargeLoop for using its platform" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupPlatform">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Convenience Fee <span style="cursor:pointer;color:var(--mint);" title="Additional fee for facilitating a transaction" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="convFeeLabel">Convenience Fee</span> <span style="cursor:pointer;color:var(--mint);" title="Additional fee for facilitating a transaction" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupConv">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Payment Gateway Fee <span style="cursor:pointer;color:var(--mint);" title="Fee for processing certain payment methods (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="gwFeeLabel">Payment Gateway Fee</span> <span style="cursor:pointer;color:var(--mint);" title="Fee for processing certain payment methods (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupGw">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:4px;">
-            <span>Bank Charges <span style="cursor:pointer;color:var(--mint);" title="Fees imposed by your bank, depending on the transaction (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span data-i18n="bankFeeLabel">Bank Charges</span> <span style="cursor:pointer;color:var(--mint);" title="Fees imposed by your bank, depending on the transaction (not applicable for cash)" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupBank">₹0.00</span>
           </div>
           <div class="row-between muted" style="font-size:12px;margin-bottom:6px;">
-            <span><span id="vendorBreakupGstLabel">GST</span> <span id="vendorInfoGst" style="cursor:pointer;color:var(--mint);" title="Applicable tax on taxable service charges" onclick="showToast(this.title)">ⓘ</span></span>
+            <span><span id="vendorBreakupGstLabel" data-i18n="gstLabel">GST</span> <span id="vendorInfoGst" style="cursor:pointer;color:var(--mint);" title="Applicable tax on taxable service charges" onclick="showToast(this.title)">ⓘ</span></span>
             <span id="vendorBreakupTax">₹0.00</span>
           </div>
           <div class="row-between" style="font-weight:900;font-size:14px;border-top:1px solid var(--border);padding-top:6px;margin-bottom:8px;">
-            <span>Cash Collected (₹)</span>
+            <span data-i18n="cashCollectedLabel">Cash Collected (₹)</span>
             <span id="vendorBreakupTotal" style="color:var(--mint);">₹0.00</span>
           </div>
-          <div class="muted" style="font-size:11px;margin-bottom:6px;">Cash Collected (₹) — Read-Only (Matches Driver's Request)</div>
+          <div class="muted" style="font-size:11px;margin-bottom:6px;" data-i18n="cashCollectedNote">Cash Collected (₹) — Read-Only (Matches Driver's Request)</div>
           <input id="vendorCashAmount" class="input-field" type="number" value="0.00" readonly style="margin-bottom:0;opacity:0.85;cursor:not-allowed;">
         </div>
-        <div id="vendorPaymentWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;">Verify Driver's Swap OTP in Step 3 to view Cash Collected &amp; breakup.</div>
-        <button id="vendorSwapBtn" class="btn btn-primary" disabled onclick="executePartnerSwap()">
+        <div id="vendorPaymentWaitingMsg" class="muted" style="font-size:12px;margin-bottom:10px;" data-i18n="vendorPayWaiting">Verify Driver's Swap OTP in Step 3 to view Cash Collected &amp; breakup.</div>
+        <button id="vendorSwapBtn" class="btn btn-primary" disabled onclick="executePartnerSwap()" data-i18n="unlockSwapBtn">
           🔒 Verify Swap OTP in Step 3 to Unlock
         </button>
       </div>
 
       <!-- STEP 5: PUBLISH BILL -->
       <div id="vendorBillCard" class="card hidden">
-        <div class="step-header"><span class="step-badge">5</span> Publish Bill to Driver</div>
+        <div class="step-header"><span class="step-badge">5</span> <span data-i18n="vStep5">Publish Bill to Driver</span></div>
         <div id="vendorBillSummary" class="muted" style="margin-bottom:10px;"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
           <label class="mint-pill"><input type="checkbox" id="chkWhatsApp" checked> WhatsApp</label>
           <label class="mint-pill"><input type="checkbox" id="chkSms" checked> SMS</label>
           <label class="mint-pill"><input type="checkbox" id="chkEmail" checked> Email</label>
         </div>
-        <button class="btn btn-amber" onclick="publishPartnerBill()">Send Invoice Now</button>
+        <button class="btn btn-amber" onclick="publishPartnerBill()" data-i18n="sendInvoiceBtn">Send Invoice Now</button>
       </div>
     </div>
 
     <!-- VENDOR REQUESTS -->
     <div id="view-vendor-requests" class="hidden">
       <div class="section-title">
-        <span>📥 Active Swap Requests (Your Stores)</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadVendorPendingRequests()">Refresh</button>
+        <span data-i18n="activeSwapRequests">📥 Active Swap Requests (Your Stores)</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadVendorPendingRequests()" data-i18n="refresh">Refresh</button>
       </div>
       <div id="vendorPendingRequestsList"></div>
     </div>
@@ -929,40 +939,40 @@
     <!-- VENDOR STORES & BATTERIES -->
     <div id="view-vendor-stores" class="hidden">
       <div class="section-title">
-        <span>My Stores</span>
-        <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="toggleAddStoreForm()">+ Add Store</button>
+        <span data-i18n="myStores">My Stores</span>
+        <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="toggleAddStoreForm()" data-i18n="addStoreBtn">+ Add Store</button>
       </div>
 
       <div id="addStoreForm" class="card hidden">
-        <input id="newStoreName" class="input-field" placeholder="Store / Hub Name">
+        <input id="newStoreName" class="input-field" placeholder="Store / Hub Name" data-i18n-placeholder="phStoreName">
         <div style="position:relative;margin-bottom:8px;">
-          <input id="newStoreAddress" class="input-field" placeholder="Start typing Street Address..." autocomplete="off" style="margin-bottom:0;" oninput="onStoreAddressInput(this.value)">
+          <input id="newStoreAddress" class="input-field" placeholder="Start typing Street Address..." data-i18n-placeholder="phStoreAddr" autocomplete="off" style="margin-bottom:0;" oninput="onStoreAddressInput(this.value)">
           <div id="storeAddressSuggestions" class="hidden" style="position:absolute;left:0;right:0;top:100%;z-index:40;background:var(--surface-elevated);border:1px solid var(--border-mint);border-radius:12px;margin-top:4px;max-height:200px;overflow-y:auto;box-shadow:0 12px 28px rgba(0,0,0,0.45);"></div>
         </div>
-        <input id="newStoreCity" class="input-field" placeholder="City">
+        <input id="newStoreCity" class="input-field" placeholder="City" data-i18n-placeholder="phCity">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <input id="newStoreLat" class="input-field" type="number" step="any" placeholder="Latitude (auto)">
-          <input id="newStoreLng" class="input-field" type="number" step="any" placeholder="Longitude (auto)">
+          <input id="newStoreLat" class="input-field" type="number" step="any" placeholder="Latitude (auto)" data-i18n-placeholder="phLat">
+          <input id="newStoreLng" class="input-field" type="number" step="any" placeholder="Longitude (auto)" data-i18n-placeholder="phLng">
         </div>
-        <button class="btn btn-primary" onclick="createVendorStore()">Save Store / Hub</button>
+        <button class="btn btn-primary" onclick="createVendorStore()" data-i18n="saveStore">Save Store / Hub</button>
       </div>
 
       <div id="vendorStoresList"></div>
 
       <div class="section-title">
-        <span>My Battery Inventory</span>
-        <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="toggleRegisterBatteryForm()">+ Add Battery</button>
+        <span data-i18n="myBatteryInventory">My Battery Inventory</span>
+        <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="toggleRegisterBatteryForm()" data-i18n="addBatteryBtn">+ Add Battery</button>
       </div>
 
       <div id="registerBatteryForm" class="card hidden">
-        <div style="font-weight:800;margin-bottom:10px;">🔋 Add Battery to Store</div>
+        <div style="font-weight:800;margin-bottom:10px;" data-i18n="addBatteryTitle">🔋 Add Battery to Store</div>
         <select id="regBatStationSelect" class="input-field"></select>
-        <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)">
+        <input id="regBatSerial" class="input-field" placeholder="Battery Serial / QR (e.g. BAT-LFP-5099)" data-i18n-placeholder="phBatSerial">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <select id="regBatModel" class="input-field"></select>
           <input id="regBatSoc" class="input-field" type="number" value="100" placeholder="SOC % (0-100)">
         </div>
-        <button class="btn btn-primary" onclick="registerBatteryForStore()">Add Battery</button>
+        <button class="btn btn-primary" onclick="registerBatteryForStore()" data-i18n="addBatterySubmit">Add Battery</button>
       </div>
 
       <select id="invStationSelect" class="input-field" style="margin-bottom:8px;" onchange="loadSelectedStoreBatteries()"></select>
@@ -973,10 +983,10 @@
     <!-- VENDOR EARNINGS -->
     <div id="view-vendor-earnings" class="hidden">
       <div class="grid-hero">
-        <div class="muted">Partner Commission Wallet</div>
+        <div class="muted" data-i18n="partnerCommWallet">Partner Commission Wallet</div>
         <div id="vendorWalletBig" style="font-size:32px;font-weight:900;color:var(--mint);margin-top:4px;">₹0.00</div>
       </div>
-      <div class="section-title"><span>Commission Payout Ledger</span></div>
+      <div class="section-title"><span data-i18n="commLedger">Commission Payout Ledger</span></div>
       <div id="vendorTxList"></div>
     </div>
 
@@ -990,62 +1000,70 @@
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">✏️ Edit Partner Profile</div>
-        <input id="editVendorName" class="input-field" placeholder="Full Name">
-        <input id="editVendorBiz" class="input-field" placeholder="Business / Hub Name">
-        <input id="editVendorEmail" class="input-field" placeholder="Email Address">
-        <input id="editVendorUpi" class="input-field" placeholder="UPI ID (for payouts)">
-        <input id="editVendorBank" class="input-field" placeholder="Bank Account Number">
-        <button class="btn btn-primary" onclick="saveVendorProfile()">Save Partner Profile</button>
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="editPartnerProfile">✏️ Edit Partner Profile</div>
+        <input id="editVendorName" class="input-field" placeholder="Full Name" data-i18n-placeholder="phFullName">
+        <input id="editVendorBiz" class="input-field" placeholder="Business / Hub Name" data-i18n-placeholder="phVendorBiz">
+        <input id="editVendorEmail" class="input-field" placeholder="Email Address" data-i18n-placeholder="phEmail">
+        <input id="editVendorUpi" class="input-field" placeholder="UPI ID (for payouts)" data-i18n-placeholder="phUpi">
+        <input id="editVendorBank" class="input-field" placeholder="Bank Account Number" data-i18n-placeholder="phBank">
+        <button class="btn btn-primary" onclick="saveVendorProfile()" data-i18n="savePartnerProfile">Save Partner Profile</button>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;">📱 Change Phone Number (PIN)</div>
-        <input id="chgVendorPhone" class="input-field" type="tel" placeholder="New 10-digit Phone">
-        <input id="chgVendorPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN (4-6 digits)">
-        <button class="btn btn-primary" onclick="confirmVendorChangePhone()">Update Phone Number</button>
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="changePhoneTitle">📱 Change Phone Number (PIN)</div>
+        <input id="chgVendorPhone" class="input-field" type="tel" placeholder="New 10-digit Phone" data-i18n-placeholder="phNewPhone">
+        <input id="chgVendorPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN (4-6 digits)" data-i18n-placeholder="phCurrentPin">
+        <button class="btn btn-primary" onclick="confirmVendorChangePhone()" data-i18n="updatePhone">Update Phone Number</button>
       </div>
 
-      <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="appLanguageTitle">🌐 App Language</div>
+        <select id="editVendorLang" class="input-field" style="margin-bottom:0;" onchange="setAppLanguage(this.value)">
+          <option value="en">🌐 English (en)</option>
+          <option value="hi">🌐 हिन्दी — Hindi (hi)</option>
+        </select>
+      </div>
+
+      <button class="btn btn-secondary" onclick="signOut()" data-i18n="signOut">Sign Out</button>
     </div>
 
     <!-- DRIVER HELP -->
     <div id="view-driver-help" class="hidden">
       <div class="grid-hero">
-        <div class="mint-pill" style="margin-bottom:8px;">❓ DRIVER GUIDE</div>
-        <div style="font-size:18px;font-weight:900;">How ChargeLoop Works</div>
-        <div class="muted" style="margin-top:4px;">Swap your EV battery in 4 quick steps.</div>
+        <div class="mint-pill" style="margin-bottom:8px;" data-i18n="driverGuideBadge">❓ DRIVER GUIDE</div>
+        <div style="font-size:18px;font-weight:900;" data-i18n="driverGuideTitle">How ChargeLoop Works</div>
+        <div class="muted" style="margin-top:4px;" data-i18n="driverGuideSub">Swap your EV battery in 4 quick steps.</div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:12px;">🔄 Battery Swap Steps</div>
+        <div style="font-weight:800;margin-bottom:12px;" data-i18n="driverSwapStepsTitle">🔄 Battery Swap Steps</div>
         <div style="display:grid;gap:10px;">
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">1</span>
-            <div><div style="font-weight:700;font-size:13px;">Find a Nearby Store</div><div class="muted" style="font-size:12px;margin-top:2px;">Browse live stores on <b>Home</b> and tap <b>🔋 Batteries</b> to check ready stock.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="dhStep1Title">Find a Nearby Store</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="dhStep1Desc">Browse live stores on Home and tap 🔋 Batteries to check ready stock.</div></div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">2</span>
-            <div><div style="font-weight:700;font-size:13px;">Reserve Your Battery</div><div class="muted" style="font-size:12px;margin-top:2px;">Tap <b>Reserve</b> to hold a charged battery for 2 hours (cancel anytime).</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="dhStep2Title">Reserve Your Battery</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="dhStep2Desc">Tap Reserve to hold a charged battery for 2 hours (cancel anytime).</div></div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">3</span>
-            <div><div style="font-weight:700;font-size:13px;">Request Swap &amp; Review Fare</div><div class="muted" style="font-size:12px;margin-top:2px;">Open <b>Scan &amp; Pay</b>, check the fare breakup, and tap <b>Confirm Swap</b>.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="dhStep3Title">Request Swap &amp; Review Fare</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="dhStep3Desc">Open Scan &amp; Pay, check the fare breakup, and tap Confirm Swap.</div></div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">4</span>
-            <div><div style="font-weight:700;font-size:13px;">Share Your 6-Digit Swap OTP</div><div class="muted" style="font-size:12px;margin-top:2px;">Show the OTP to the store partner to collect your charged battery.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="dhStep4Title">Share Your 6-Digit Swap OTP</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="dhStep4Desc">Show the OTP to the store partner to collect your charged battery.</div></div>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:10px;">💡 Good to Know</div>
+        <div style="font-weight:800;margin-bottom:10px;" data-i18n="goodToKnowTitle">💡 Good to Know</div>
         <div style="display:grid;gap:8px;font-size:12px;">
-          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">💳 Payments</span><span class="muted">Cash at store (Wallet/UPI coming soon)</span></div>
-          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">🎁 Refer &amp; Earn</span><span class="muted">₹50 bonus each with your CL code</span></div>
-          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">🧾 GST Bills</span><span class="muted">View all swap invoices in Bills tab</span></div>
-          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">👤 Account</span><span class="muted">Update KYC, Plans &amp; Phone in Profile</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;" data-i18n="gtkPayTitle">💳 Payments</span><span class="muted" data-i18n="gtkPayDesc">Cash at store (Wallet/UPI coming soon)</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;" data-i18n="gtkReferTitle">🎁 Refer &amp; Earn</span><span class="muted" data-i18n="gtkReferDesc">₹50 bonus each with your CL code</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;" data-i18n="gtkBillsTitle">🧾 GST Bills</span><span class="muted" data-i18n="gtkBillsDesc">View all swap invoices in Bills tab</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;" data-i18n="gtkAccTitle">👤 Account</span><span class="muted" data-i18n="gtkAccDesc">Update KYC, Plans &amp; Phone in Profile</span></div>
         </div>
       </div>
       <div id="contactSlotDriverHelp"></div>
@@ -1054,40 +1072,40 @@
     <!-- VENDOR HELP -->
     <div id="view-vendor-help" class="hidden">
       <div class="grid-hero">
-        <div class="mint-pill" style="margin-bottom:8px;">❓ PARTNER GUIDE</div>
-        <div style="font-size:18px;font-weight:900;">Managing Your Swap Store</div>
-        <div class="muted" style="margin-top:4px;">Stores, battery inventory, swap desk, and earnings.</div>
+        <div class="mint-pill" style="margin-bottom:8px;" data-i18n="partnerGuideBadge">❓ PARTNER GUIDE</div>
+        <div style="font-size:18px;font-weight:900;" data-i18n="partnerGuideTitle">Managing Your Swap Store</div>
+        <div class="muted" style="margin-top:4px;" data-i18n="partnerGuideSub">Stores, battery inventory, swap desk, and earnings.</div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:10px;">🏪 Stores &amp; Battery Statuses</div>
-        <div class="muted" style="font-size:12px;margin-bottom:10px;">Use <b>+ Add Store</b> (with address autocomplete) and <b>+ Add Battery</b> under the <b>Stores</b> tab.</div>
+        <div style="font-weight:800;margin-bottom:10px;" data-i18n="partnerStoresTitle">🏪 Stores &amp; Battery Statuses</div>
+        <div class="muted" style="font-size:12px;margin-bottom:10px;" data-i18n="partnerStoresHelpSub">Use + Add Store (with address autocomplete) and + Add Battery under the Stores tab.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="mint-pill">Active</span><div class="muted" style="margin-top:4px;">Ready &amp; visible to drivers</div></div>
-          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill">Charging</span><div class="muted" style="margin-top:4px;">Hidden while charging</div></div>
-          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill">Inactive</span><div class="muted" style="margin-top:4px;">Paused &amp; hidden</div></div>
-          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill">Out of Order</span><div class="muted" style="margin-top:4px;">Blocked for service</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="mint-pill" data-i18n="stActive">Active</span><div class="muted" style="margin-top:4px;" data-i18n="stActiveDesc">Ready &amp; visible to drivers</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill" data-i18n="stCharging">Charging</span><div class="muted" style="margin-top:4px;" data-i18n="stChargingDesc">Hidden while charging</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill" data-i18n="stInactive">Inactive</span><div class="muted" style="margin-top:4px;" data-i18n="stInactiveDesc">Paused &amp; hidden</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill" data-i18n="stOoo">Out of Order</span><div class="muted" style="margin-top:4px;" data-i18n="stOooDesc">Blocked for service</div></div>
         </div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:12px;">⚡ Swap Desk Workflow</div>
+        <div style="font-weight:800;margin-bottom:12px;" data-i18n="vhDeskTitle">⚡ Swap Desk Workflow</div>
         <div style="display:grid;gap:10px;">
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">1</span>
-            <div><div style="font-weight:700;font-size:13px;">Select or Validate Driver</div><div class="muted" style="font-size:12px;margin-top:2px;">Tap a request in <b>Requests</b> or search by phone/name.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="vhStep1Title">Select or Validate Driver</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="vhStep1Desc">Tap a request in Requests or search by phone/name.</div></div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">2</span>
-            <div><div style="font-weight:700;font-size:13px;">Select Batteries</div><div class="muted" style="font-size:12px;margin-top:2px;">Confirm the returning battery (blank on first pickup) and the Active battery to issue.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="vhStep2Title">Select Batteries</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="vhStep2Desc">Confirm the returning battery (blank on first pickup) and the Active battery to issue.</div></div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">3</span>
-            <div><div style="font-weight:700;font-size:13px;">Verify Driver's Swap OTP</div><div class="muted" style="font-size:12px;margin-top:2px;">Enter the driver's 6-digit OTP to unlock the fare breakup.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="vhStep3Title">Verify Driver's Swap OTP</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="vhStep3Desc">Enter the driver's 6-digit OTP to unlock the fare breakup.</div></div>
           </div>
           <div style="display:flex;gap:10px;align-items:flex-start;">
             <span class="mint-pill" style="min-width:26px;justify-content:center;">4</span>
-            <div><div style="font-weight:700;font-size:13px;">Collect Cash &amp; Complete</div><div class="muted" style="font-size:12px;margin-top:2px;">Confirm payment to complete the swap, credit earnings, and send the GST bill.</div></div>
+            <div><div style="font-weight:700;font-size:13px;" data-i18n="vhStep4Title">Collect Cash &amp; Complete</div><div class="muted" style="font-size:12px;margin-top:2px;" data-i18n="vhStep4Desc">Confirm payment to complete the swap, credit earnings, and send the GST bill.</div></div>
           </div>
         </div>
       </div>
@@ -1097,22 +1115,22 @@
 
   <!-- DRIVER BOTTOM NAV -->
   <div id="navDriver" class="bottom-nav hidden">
-    <div class="nav-item active" data-tab="home" onclick="switchDriverTab('home')"><span class="nav-icon">🏠</span>Home</div>
-    <div class="nav-item" data-tab="scan" onclick="switchDriverTab('scan')"><span class="nav-icon">📷</span>Scan &amp; Pay</div>
-    <div class="nav-item" data-tab="wallet" onclick="switchDriverTab('wallet')"><span class="nav-icon">💳</span>Wallet</div>
-    <div class="nav-item" data-tab="history" onclick="switchDriverTab('history')"><span class="nav-icon">🧾</span>Bills</div>
-    <div class="nav-item" data-tab="profile" onclick="switchDriverTab('profile')"><span class="nav-icon">👤</span>Profile</div>
-    <div class="nav-item" data-tab="help" onclick="switchDriverTab('help')"><span class="nav-icon">❓</span>Help</div>
+    <div class="nav-item active" data-tab="home" onclick="switchDriverTab('home')"><span class="nav-icon">🏠</span><span data-i18n="navHome">Home</span></div>
+    <div class="nav-item" data-tab="scan" onclick="switchDriverTab('scan')"><span class="nav-icon">📷</span><span data-i18n="navScan">Scan &amp; Pay</span></div>
+    <div class="nav-item" data-tab="wallet" onclick="switchDriverTab('wallet')"><span class="nav-icon">💳</span><span data-i18n="navWallet">Wallet</span></div>
+    <div class="nav-item" data-tab="history" onclick="switchDriverTab('history')"><span class="nav-icon">🧾</span><span data-i18n="navBills">Bills</span></div>
+    <div class="nav-item" data-tab="profile" onclick="switchDriverTab('profile')"><span class="nav-icon">👤</span><span data-i18n="navProfile">Profile</span></div>
+    <div class="nav-item" data-tab="help" onclick="switchDriverTab('help')"><span class="nav-icon">❓</span><span data-i18n="navHelp">Help</span></div>
   </div>
 
   <!-- VENDOR BOTTOM NAV -->
   <div id="navVendor" class="bottom-nav hidden">
-    <div class="nav-item active" data-tab="requests" onclick="switchVendorTab('requests')"><span class="nav-icon">📥</span>Requests</div>
-    <div class="nav-item" data-tab="desk" onclick="switchVendorTab('desk')"><span class="nav-icon">⚡</span>Swap Desk</div>
-    <div class="nav-item" data-tab="stores" onclick="switchVendorTab('stores')"><span class="nav-icon">🔋</span>Stores</div>
-    <div class="nav-item" data-tab="earnings" onclick="switchVendorTab('earnings')"><span class="nav-icon">💰</span>Earnings</div>
-    <div class="nav-item" data-tab="profile" onclick="switchVendorTab('profile')"><span class="nav-icon">👤</span>Profile</div>
-    <div class="nav-item" data-tab="help" onclick="switchVendorTab('help')"><span class="nav-icon">❓</span>Help</div>
+    <div class="nav-item active" data-tab="requests" onclick="switchVendorTab('requests')"><span class="nav-icon">📥</span><span data-i18n="navRequests">Requests</span></div>
+    <div class="nav-item" data-tab="desk" onclick="switchVendorTab('desk')"><span class="nav-icon">⚡</span><span data-i18n="navDesk">Swap Desk</span></div>
+    <div class="nav-item" data-tab="stores" onclick="switchVendorTab('stores')"><span class="nav-icon">🔋</span><span data-i18n="navStores">Stores</span></div>
+    <div class="nav-item" data-tab="earnings" onclick="switchVendorTab('earnings')"><span class="nav-icon">💰</span><span data-i18n="navEarnings">Earnings</span></div>
+    <div class="nav-item" data-tab="profile" onclick="switchVendorTab('profile')"><span class="nav-icon">👤</span><span data-i18n="navProfile">Profile</span></div>
+    <div class="nav-item" data-tab="help" onclick="switchVendorTab('help')"><span class="nav-icon">❓</span><span data-i18n="navHelp">Help</span></div>
   </div>
 
   <!-- BILL MODAL -->
@@ -1233,7 +1251,7 @@ async function signUpDriverWithPin() {
   try {
     const auth = await apiFetch('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, email, languageCode: 'en', referralCode })
+      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, email, languageCode: state.lang || 'en', referralCode })
     });
     state.token = auth.token;
     await enterDriverApp(auth.driverId);
@@ -1329,7 +1347,10 @@ async function refreshDriverViews() {
 
   document.getElementById('editDriverName').value = state.driver.fullName || '';
   document.getElementById('editDriverEmail').value = state.driver.email || '';
-  document.getElementById('editDriverLang').value = state.driver.languageCode || 'en';
+  const savedLang = localStorage.getItem('chargeloop_lang');
+  const activeLang = (savedLang && I18N[savedLang]) ? savedLang : (state.driver.languageCode || 'en');
+  document.getElementById('editDriverLang').value = activeLang;
+  setAppLanguage(activeLang, false);
 
   const depInput = document.getElementById('scanDepletedSerial');
   if (state.driver.activeBattery) {
@@ -1505,19 +1526,19 @@ async function loadStations() {
       <div class="card">
         <div class="row-between" style="margin-bottom:6px;">
           <div style="font-weight:800;font-size:15px;">${s.name}</div>
-          <span class="mint-pill">${s.availableChargedBatteries} Charged</span>
+          <span class="mint-pill">${s.availableChargedBatteries} ${t('chargedLabel')}</span>
         </div>
         <div class="muted" style="margin-bottom:10px;">📍 ${s.address}, ${s.city} • ${s.distanceKm ?? '—'} km</div>
         <div class="row-between">
-          <span class="amber-pill">⚡ ${s.chargingBatteries} Charging • ${s.estimatedWaitMinutes}m wait</span>
+          <span class="amber-pill">⚡ ${s.chargingBatteries} ${t('chargingLabel')} • ${s.estimatedWaitMinutes}m ${t('waitLabel')}</span>
           <div style="display:flex;gap:6px;">
-            <button class="btn btn-secondary btn-sm" onclick="toggleStationBatteriesPreview('${s.id}')">🔋 Batteries</button>
-            <button class="btn btn-primary btn-sm" onclick="reserveAtStation('${s.id}')">Reserve</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleStationBatteriesPreview('${s.id}')">${t('batteriesBtn')}</button>
+            <button class="btn btn-primary btn-sm" onclick="reserveAtStation('${s.id}')">${t('reserveBtn')}</button>
           </div>
         </div>
         <div id="stationBats-${s.id}" class="hidden" style="margin-top:8px;"></div>
       </div>
-    `).join('') || '<div class="muted">No stations found nearby.</div>';
+    `).join('') || `<div class="muted">${t('noStationsNearby')}</div>`;
 
     const sel = document.getElementById('scanStationSelect');
     if (state.activeReservation && new Date(state.activeReservation.expiresAt) > new Date()) {
@@ -1738,7 +1759,7 @@ async function loadDriverHistory() {
         <div class="muted">${s.depletedBatterySerial} ➔ ${s.issuedBatterySerial}</div>
         <div class="row-between" style="margin-top:8px;">
           <span class="amber-pill">${pmNames[s.paymentMethod] || 'Paid'}</span>
-          <button class="btn btn-secondary btn-sm" onclick='openBillModal(${JSON.stringify(s)})'>View Bill</button>
+          <button class="btn btn-secondary btn-sm" onclick='openBillModal(${JSON.stringify(s)})'>${t('viewBillBtn')}</button>
         </div>
       </div>
     `).join('') || '<div class="muted">No swap history yet.</div>';
@@ -1771,15 +1792,15 @@ async function loadSubscriptionPlans() {
       apiFetch(`/subscriptions/active/${state.driver.id}`).catch(() => null)
     ]);
     document.getElementById('homePlanBadge').textContent = active
-      ? `${active.planName} (${active.swapsTotalAllowed - active.swapsUsed} left)`
-      : 'Pay-Per-Swap';
+      ? `${active.planName} (${active.swapsTotalAllowed - active.swapsUsed} ${t('leftLabel')})`
+      : t('payPerSwap');
     document.getElementById('subscriptionPlansList').innerHTML = (plans || []).map(p => `
       <div class="card-elevated row-between" style="margin-bottom:8px;">
         <div>
           <div style="font-weight:800;font-size:13px;">${p.name}</div>
-          <div class="muted">${p.maxSwapsAllowed} swaps / ${p.validityDays} days • ₹${p.price}</div>
+          <div class="muted">${p.maxSwapsAllowed} ${t('swapsLabel')} / ${p.validityDays} ${t('daysLabel')} • ₹${p.price}</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="subscribePlan('${p.id}')">Activate</button>
+        <button class="btn btn-primary btn-sm" onclick="subscribePlan('${p.id}')">${t('activateBtn')}</button>
       </div>
     `).join('');
   } catch (e) { console.error(e); }
@@ -1873,15 +1894,15 @@ async function refreshVendorViews() {
   const prevDeskSid = document.getElementById('vendorDeskStationSelect').value;
   const prevRegSid = document.getElementById('regBatStationSelect').value;
   const prevInvSid = document.getElementById('invStationSelect').value;
-  const opts = state.vendorStations.map(s => `<option value="${s.id}">${s.name} (${s.availableChargedBatteries} charged)</option>`).join('')
-    || '<option value="">No stores yet — add one in Stores tab</option>';
+  const opts = state.vendorStations.map(s => `<option value="${s.id}">${s.name} (${s.availableChargedBatteries} ${t('chargedLabel')})</option>`).join('')
+    || `<option value="">${t('noStoresOpt')}</option>`;
   const deskSel = document.getElementById('vendorDeskStationSelect');
   const regSel = document.getElementById('regBatStationSelect');
   const invSel = document.getElementById('invStationSelect');
   deskSel.innerHTML = opts;
   regSel.innerHTML = opts;
   invSel.innerHTML = state.vendorStations.length > 0
-    ? `<option value="ALL">All My Stores (${state.vendorStations.length})</option>${opts}`
+    ? `<option value="ALL">${t('allMyStores')} (${state.vendorStations.length})</option>${opts}`
     : opts;
   if (prevDeskSid && state.vendorStations.some(s => s.id === prevDeskSid)) deskSel.value = prevDeskSid;
   if (prevRegSid && state.vendorStations.some(s => s.id === prevRegSid)) regSel.value = prevRegSid;
@@ -1897,9 +1918,9 @@ async function refreshVendorViews() {
         <div style="font-weight:800;">${s.name}</div>
         <div class="muted">${s.address}, ${s.city}</div>
       </div>
-      <span class="mint-pill">${s.availableChargedBatteries} Charged</span>
+      <span class="mint-pill">${s.availableChargedBatteries} ${t('chargedLabel')}</span>
     </div>
-  `).join('') || '<div class="muted">No stores added yet.</div>';
+  `).join('') || `<div class="muted">${t('noStoresYet')}</div>`;
 
   await Promise.all([loadBatteryTypes(), loadVendorPendingRequests(), loadVendorDeskBatteries(), loadSelectedStoreBatteries(), loadVendorEarnings()]);
 }
@@ -2146,17 +2167,17 @@ function renderVendorStoreBatteries() {
   const bats = _vendorBatteryCache || [];
   const myStationIds = new Set((state.vendorStations || []).map(s => (s.id || '').toLowerCase()));
   const statusMap = {
-    0: { label: 'Active', cls: 'mint-pill' },
-    1: { label: 'Charging', cls: 'amber-pill' },
-    2: { label: 'Out with Driver', cls: 'amber-pill' },
-    3: { label: 'Out of Order', cls: 'amber-pill' },
-    4: { label: 'Inactive', cls: 'amber-pill' }
+    0: { label: t('stActive'), cls: 'mint-pill' },
+    1: { label: t('stCharging'), cls: 'amber-pill' },
+    2: { label: t('stOutDriver'), cls: 'amber-pill' },
+    3: { label: t('stOoo'), cls: 'amber-pill' },
+    4: { label: t('stInactive'), cls: 'amber-pill' }
   };
   const statuses = [
-    { code: 0, label: 'Active' },
-    { code: 4, label: 'Inactive' },
-    { code: 1, label: 'Charging' },
-    { code: 3, label: 'Out of Order' }
+    { code: 0, label: t('stActive') },
+    { code: 4, label: t('stInactive') },
+    { code: 1, label: t('stCharging') },
+    { code: 3, label: t('stOoo') }
   ];
 
   const isAway = b => {
@@ -2175,11 +2196,11 @@ function renderVendorStoreBatteries() {
   };
 
   const filterDefs = [
-    { key: 'all', label: `All (${counts.all})` },
-    { key: 'active', label: `Active (${counts.active})` },
-    { key: 'charging', label: `Charging (${counts.charging})` },
-    { key: 'away', label: `Out / Away (${counts.away})` },
-    { key: 'other', label: `Inactive / OOO (${counts.other})` }
+    { key: 'all', label: `${t('filterAll')} (${counts.all})` },
+    { key: 'active', label: `${t('stActive')} (${counts.active})` },
+    { key: 'charging', label: `${t('stCharging')} (${counts.charging})` },
+    { key: 'away', label: `${t('filterAway')} (${counts.away})` },
+    { key: 'other', label: `${t('filterOther')} (${counts.other})` }
   ];
 
   document.getElementById('vendorBatteryFilterBar').innerHTML = filterDefs.map(f => `
@@ -2212,8 +2233,8 @@ function renderVendorStoreBatteries() {
         `).join('');
 
     const visibilityLine = away
-      ? `<div class="muted" style="font-size:11px;margin-bottom:6px;">📍 ${b.locationNote || 'Away from this store'}</div>`
-      : `<div class="muted" style="font-size:11px;margin-bottom:6px;">${b.locationNote ? `📍 ${b.locationNote} • ` : ''}${b.status === 0 ? '👁️ Visible & assignable to drivers' : '🙈 Hidden from drivers'}</div>`;
+      ? `<div class="muted" style="font-size:11px;margin-bottom:6px;">📍 ${b.locationNote || t('awayFromStore')}</div>`
+      : `<div class="muted" style="font-size:11px;margin-bottom:6px;">${b.locationNote ? `📍 ${b.locationNote} • ` : ''}${b.status === 0 ? t('visibleToDrivers') : t('hiddenFromDrivers')}</div>`;
 
     return `
       <div class="card">
@@ -2450,6 +2471,467 @@ function signOut() {
   document.getElementById('headerUserText').textContent = 'Sign In';
 }
 
+const I18N = {
+  en: {
+    brandTagline: 'ENERGY SOLUTIONS',
+    pillQuickSwaps: '⚡ Quick swaps',
+    pillCharged: '🔋 Charged & tested',
+    pillWeekly: '📋 Weekly plans',
+    heroLine1: 'Swap. Ride.',
+    heroLine2: 'Repeat.',
+    heroDesc: 'Fast battery swaps. No waiting, no charging cables — just seamless electric mobility.',
+    authTitle: 'Sign In / Sign Up',
+    authSubtitle: 'Choose your account type to continue.',
+    roleDriver: '🚗 Driver',
+    roleVendor: '🏪 Partner / Vendor',
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    signInDriver: 'Sign In as Driver',
+    signUpDriver: 'Sign Up as Driver',
+    resetDriverPin: 'Reset Driver PIN',
+    signInVendor: 'Sign In as Partner',
+    signUpVendor: 'Sign Up as Partner',
+    resetVendorPin: 'Reset Partner PIN',
+    forgotPin: 'Forgot / Reset PIN?',
+    phDriverPhone: 'Mobile Number (e.g. +919811223344)',
+    phVendorPhone: 'Partner Mobile Number (e.g. +919900112233)',
+    phPin: 'Enter 4-6 digit PIN',
+    phCreatePin: 'Create PIN (4-6 digits)',
+    phConfirmPin: 'Confirm PIN',
+    phNewPin: 'New PIN (4-6 digits)',
+    phConfirmNewPin: 'Confirm New PIN',
+    phFullNameOpt: 'Full Name (optional)',
+    phEmailOpt: 'Email for Invoices (optional)',
+    phRefOpt: 'Referral Code (optional, get ₹50)',
+    phVendorNameOpt: 'Partner Full Name (optional)',
+    phVendorBizOpt: 'Business / Hub Name (optional)',
+    walletBalance: 'Wallet Balance',
+    activeBattery: 'Active Battery',
+    addMoney: 'Add Money',
+    refer: 'Refer',
+    nearbyStations: 'Nearby Swap Stations',
+    refresh: 'Refresh',
+    scanStep1: 'Scan Station & Battery QR',
+    phDepletedBat: 'Your Depleted Battery QR / Serial (e.g. BAT-LFP-1001)',
+    scanStep2: 'Choose Payment Method',
+    cashOnly: '💵 Cash Only',
+    walletWip: '👛 Wallet (WIP)',
+    cardWip: '💳 Card (WIP)',
+    upiWip: '📱 UPI (WIP)',
+    driverFareWaiting: 'Select a reserved station and battery in Step 1 to view fare.',
+    fareBreakupTitle: '🧾 Fare Breakup',
+    fareBreakupPayment: '🧾 Fare Breakup & Payment Details',
+    baseFeeLabel: 'Base Swap & Energy Fee',
+    platformFeeLabel: 'Platform Fee',
+    convFeeLabel: 'Convenience Fee',
+    gwFeeLabel: 'Payment Gateway Fee',
+    bankFeeLabel: 'Bank Charges',
+    gstLabel: 'GST',
+    totalPayableCash: 'Total Payable (Cash)',
+    cashReadOnlyNote: 'Cash Amount (₹) — System Fare (Read-Only)',
+    confirmSwapPay: 'Confirm Swap & Record Payment',
+    availWallet: 'Available Wallet Balance',
+    phCashAmount: 'Enter Cash amount (₹)',
+    cashTopup: '💵 Cash Top-Up',
+    onlineSoon: '💳 Card / 📱 UPI (Online)',
+    recordCashTopup: 'Record Cash Top-Up',
+    referFriend: '🎁 Refer Your Friend',
+    earn50: 'Earn ₹50 each',
+    referDesc: 'Share your code with fellow EV drivers. Both get ₹50 wallet credit!',
+    yourRefCode: 'YOUR REFERRAL CODE',
+    copy: 'Copy',
+    phFriendCode: "Have a friend's code?",
+    claim: 'Claim',
+    recentWalletTx: 'Recent Wallet Transactions',
+    swapBillingHistory: 'Swap & Billing History',
+    editProfile: '✏️ Edit Profile',
+    editPartnerProfile: '✏️ Edit Partner Profile',
+    phFullName: 'Full Name',
+    phEmail: 'Email Address',
+    phVendorBiz: 'Business / Hub Name',
+    phUpi: 'UPI ID (for payouts)',
+    phBank: 'Bank Account Number',
+    saveProfile: 'Save Profile',
+    savePartnerProfile: 'Save Partner Profile',
+    changePhoneTitle: '📱 Change Phone Number (PIN)',
+    phNewPhone: 'New 10-digit Phone',
+    phCurrentPin: 'Current PIN (4-6 digits)',
+    updatePhone: 'Update Phone Number',
+    weeklyPlansTitle: '📋 Weekly Subscription Plans',
+    completeKycTitle: '🪪 Complete KYC',
+    phDl: 'Driving License Number',
+    phAadhaar: 'Aadhaar Number (12 digits)',
+    verifyKycBtn: 'Verify KYC',
+    appLanguageTitle: '🌐 App Language',
+    signOut: 'Sign Out',
+    partnerSwapDesk: 'Partner Swap Desk',
+    onlinePill: '● ONLINE',
+    vStep1: 'Validate Driver Before Swap',
+    phValidateDriver: 'Phone, Name, or Driver ID',
+    validateBtn: 'Validate',
+    vStep2: 'Scan Battery QRs (Disconnect & Assign)',
+    phVDepletedQr: "Scan Driver's Battery QR to Disconnect (empty if 1st pickup)",
+    vStep3: "Verify Driver's Swap OTP",
+    phVOtp: "Enter Driver's 6-digit Swap OTP",
+    verifyOtpBtn: 'Verify OTP',
+    vStep4: 'Collect Payment & Execute Swap',
+    cashCollectedLabel: 'Cash Collected (₹)',
+    cashCollectedNote: "Cash Collected (₹) — Read-Only (Matches Driver's Request)",
+    vendorPayWaiting: "Verify Driver's Swap OTP in Step 3 to view Cash Collected & breakup.",
+    unlockSwapBtn: '🔒 Verify Swap OTP in Step 3 to Unlock',
+    vStep5: 'Publish Bill to Driver',
+    sendInvoiceBtn: 'Send Invoice Now',
+    activeSwapRequests: '📥 Active Swap Requests (Your Stores)',
+    myStores: 'My Stores',
+    addStoreBtn: '+ Add Store',
+    phStoreName: 'Store / Hub Name',
+    phStoreAddr: 'Start typing Street Address...',
+    phCity: 'City',
+    phLat: 'Latitude (auto)',
+    phLng: 'Longitude (auto)',
+    saveStore: 'Save Store / Hub',
+    myBatteryInventory: 'My Battery Inventory',
+    addBatteryBtn: '+ Add Battery',
+    addBatteryTitle: '🔋 Add Battery to Store',
+    phBatSerial: 'Battery Serial / QR (e.g. BAT-LFP-5099)',
+    addBatterySubmit: 'Add Battery',
+    partnerCommWallet: 'Partner Commission Wallet',
+    commLedger: 'Commission Payout Ledger',
+    driverGuideBadge: '❓ DRIVER GUIDE',
+    driverGuideTitle: 'How ChargeLoop Works',
+    driverGuideSub: 'Swap your EV battery in 4 quick steps.',
+    driverSwapStepsTitle: '🔄 Battery Swap Steps',
+    partnerGuideBadge: '❓ PARTNER GUIDE',
+    partnerGuideTitle: 'Managing Your Swap Store',
+    partnerGuideSub: 'Stores, battery inventory, swap desk, and earnings.',
+    partnerStoresTitle: '🏪 Stores & Battery Statuses',
+    navHome: 'Home',
+    navScan: 'Scan & Pay',
+    navWallet: 'Wallet',
+    navBills: 'Bills',
+    navProfile: 'Profile',
+    navHelp: 'Help',
+    navRequests: 'Requests',
+    navDesk: 'Swap Desk',
+    navStores: 'Stores',
+    navEarnings: 'Earnings',
+    contactTitle: 'Contact ChargeLoop',
+    contactSub: 'Tap to view phone, email, website & office address',
+    contactPhone: 'Phone',
+    contactWebsite: 'Website',
+    contactEmail: 'Email',
+    contactAddrLabel: 'Office Address (Tap to Copy)',
+    swapReady: 'SWAP READY',
+    swapReadyDot: '● SWAP READY',
+    payPerSwap: 'Pay-Per-Swap',
+    chargedLabel: 'Charged',
+    chargingLabel: 'Charging',
+    waitLabel: 'wait',
+    batteriesBtn: '🔋 Batteries',
+    reserveBtn: 'Reserve',
+    noStationsNearby: 'No stations found nearby.',
+    viewBillBtn: 'View Bill',
+    activateBtn: 'Activate',
+    leftLabel: 'left',
+    swapsLabel: 'swaps',
+    daysLabel: 'days',
+    noStoresOpt: 'No stores yet — add one in Stores tab',
+    allMyStores: 'All My Stores',
+    noStoresYet: 'No stores added yet.',
+    stActive: 'Active',
+    stCharging: 'Charging',
+    stInactive: 'Inactive',
+    stOoo: 'Out of Order',
+    stOutDriver: 'Out with Driver',
+    stActiveDesc: 'Ready & visible to drivers',
+    stChargingDesc: 'Hidden while charging',
+    stInactiveDesc: 'Paused & hidden',
+    stOooDesc: 'Blocked for service',
+    filterAll: 'All',
+    filterAway: 'Out / Away',
+    filterOther: 'Inactive / OOO',
+    awayFromStore: 'Away from this store',
+    visibleToDrivers: '👁️ Visible & assignable to drivers',
+    hiddenFromDrivers: '🙈 Hidden from drivers',
+    dhStep1Title: 'Find a Nearby Store',
+    dhStep1Desc: 'Browse live stores on Home and tap 🔋 Batteries to check ready stock.',
+    dhStep2Title: 'Reserve Your Battery',
+    dhStep2Desc: 'Tap Reserve to hold a charged battery for 2 hours (cancel anytime).',
+    dhStep3Title: 'Request Swap & Review Fare',
+    dhStep3Desc: 'Open Scan & Pay, check the fare breakup, and tap Confirm Swap.',
+    dhStep4Title: 'Share Your 6-Digit Swap OTP',
+    dhStep4Desc: 'Show the OTP to the store partner to collect your charged battery.',
+    goodToKnowTitle: '💡 Good to Know',
+    gtkPayTitle: '💳 Payments',
+    gtkPayDesc: 'Cash at store (Wallet/UPI coming soon)',
+    gtkReferTitle: '🎁 Refer & Earn',
+    gtkReferDesc: '₹50 bonus each with your CL code',
+    gtkBillsTitle: '🧾 GST Bills',
+    gtkBillsDesc: 'View all swap invoices in Bills tab',
+    gtkAccTitle: '👤 Account',
+    gtkAccDesc: 'Update KYC, Plans & Phone in Profile',
+    partnerStoresHelpSub: 'Use + Add Store (with address autocomplete) and + Add Battery under the Stores tab.',
+    vhDeskTitle: '⚡ Swap Desk Workflow',
+    vhStep1Title: 'Select or Validate Driver',
+    vhStep1Desc: 'Tap a request in Requests or search by phone/name.',
+    vhStep2Title: 'Select Batteries',
+    vhStep2Desc: 'Confirm the returning battery (blank on first pickup) and the Active battery to issue.',
+    vhStep3Title: "Verify Driver's Swap OTP",
+    vhStep3Desc: "Enter the driver's 6-digit OTP to unlock the fare breakup.",
+    vhStep4Title: 'Collect Cash & Complete',
+    vhStep4Desc: 'Confirm payment to complete the swap, credit earnings, and send the GST bill.'
+  },
+  hi: {
+    brandTagline: 'ऊर्जा समाधान',
+    pillQuickSwaps: '⚡ तेज़ स्वैप',
+    pillCharged: '🔋 चार्ज और जाँची हुई',
+    pillWeekly: '📋 साप्ताहिक प्लान',
+    heroLine1: 'स्वैप करें। चलाएं।',
+    heroLine2: 'दोहराएं।',
+    heroDesc: 'तेज़ बैटरी स्वैप। कोई इंतज़ार नहीं, कोई चार्जिंग केबल नहीं — बस आसान इलेक्ट्रिक सफ़र।',
+    authTitle: 'साइन इन / साइन अप',
+    authSubtitle: 'जारी रखने के लिए अपना खाता प्रकार चुनें।',
+    roleDriver: '🚗 ड्राइवर',
+    roleVendor: '🏪 पार्टनर / वेंडर',
+    signIn: 'साइन इन',
+    signUp: 'साइन अप',
+    signInDriver: 'ड्राइवर के रूप में साइन इन करें',
+    signUpDriver: 'ड्राइवर के रूप में साइन अप करें',
+    resetDriverPin: 'ड्राइवर पिन रीसेट करें',
+    signInVendor: 'पार्टनर के रूप में साइन इन करें',
+    signUpVendor: 'पार्टनर के रूप में साइन अप करें',
+    resetVendorPin: 'पार्टनर पिन रीसेट करें',
+    forgotPin: 'पिन भूल गए / रीसेट करें?',
+    phDriverPhone: 'मोबाइल नंबर (जैसे +919811223344)',
+    phVendorPhone: 'पार्टनर मोबाइल नंबर (जैसे +919900112233)',
+    phPin: '4-6 अंकों का पिन दर्ज करें',
+    phCreatePin: 'पिन बनाएं (4-6 अंक)',
+    phConfirmPin: 'पिन की पुष्टि करें',
+    phNewPin: 'नया पिन (4-6 अंक)',
+    phConfirmNewPin: 'नए पिन की पुष्टि करें',
+    phFullNameOpt: 'पूरा नाम (वैकल्पिक)',
+    phEmailOpt: 'इनवॉइस के लिए ईमेल (वैकल्पिक)',
+    phRefOpt: 'रेफरल कोड (वैकल्पिक, ₹50 पाएं)',
+    phVendorNameOpt: 'पार्टनर का पूरा नाम (वैकल्पिक)',
+    phVendorBizOpt: 'बिजनेस / हब का नाम (वैकल्पिक)',
+    walletBalance: 'वॉलेट बैलेंस',
+    activeBattery: 'सक्रिय बैटरी',
+    addMoney: 'पैसे जोड़ें',
+    refer: 'रेफर करें',
+    nearbyStations: 'नज़दीकी स्वैप स्टेशन',
+    refresh: 'रिफ्रेश',
+    scanStep1: 'स्टेशन और बैटरी QR चुनें',
+    phDepletedBat: 'आपकी खाली बैटरी QR / सीरियल (जैसे BAT-LFP-1001)',
+    scanStep2: 'भुगतान का तरीका चुनें',
+    cashOnly: '💵 केवल नकद',
+    walletWip: '👛 वॉलेट (जल्द)',
+    cardWip: '💳 कार्ड (जल्द)',
+    upiWip: '📱 UPI (जल्द)',
+    driverFareWaiting: 'किराया देखने के लिए चरण 1 में आरक्षित स्टेशन और बैटरी चुनें।',
+    fareBreakupTitle: '🧾 किराया विवरण',
+    fareBreakupPayment: '🧾 किराया और भुगतान विवरण',
+    baseFeeLabel: 'बेस स्वैप और ऊर्जा शुल्क',
+    platformFeeLabel: 'प्लेटफ़ॉर्म शुल्क',
+    convFeeLabel: 'सुविधा शुल्क',
+    gwFeeLabel: 'पेमेंट गेटवे शुल्क',
+    bankFeeLabel: 'बैंक शुल्क',
+    gstLabel: 'GST',
+    totalPayableCash: 'कुल देय राशि (नकद)',
+    cashReadOnlyNote: 'नकद राशि (₹) — सिस्टम किराया (केवल पढ़ने योग्य)',
+    confirmSwapPay: 'स्वैप कन्फर्म करें और भुगतान दर्ज करें',
+    availWallet: 'उपलब्ध वॉलेट बैलेंस',
+    phCashAmount: 'नकद राशि दर्ज करें (₹)',
+    cashTopup: '💵 नकद टॉप-अप',
+    onlineSoon: '💳 कार्ड / 📱 UPI (ऑनलाइन)',
+    recordCashTopup: 'नकद टॉप-अप दर्ज करें',
+    referFriend: '🎁 अपने दोस्त को रेफर करें',
+    earn50: 'प्रत्येक ₹50 कमाएं',
+    referDesc: 'अन्य EV ड्राइवरों के साथ अपना कोड साझा करें। दोनों को ₹50 वॉलेट क्रेडिट मिलेगा!',
+    yourRefCode: 'आपका रेफरल कोड',
+    copy: 'कॉपी करें',
+    phFriendCode: 'दोस्त का कोड है?',
+    claim: 'क्लेम करें',
+    recentWalletTx: 'हाल के वॉलेट लेनदेन',
+    swapBillingHistory: 'स्वैप और बिलिंग इतिहास',
+    editProfile: '✏️ प्रोफ़ाइल संपादित करें',
+    editPartnerProfile: '✏️ पार्टनर प्रोफ़ाइल संपादित करें',
+    phFullName: 'पूरा नाम',
+    phEmail: 'ईमेल पता',
+    phVendorBiz: 'बिजनेस / हब का नाम',
+    phUpi: 'UPI आईडी (भुगतान के लिए)',
+    phBank: 'बैंक खाता संख्या',
+    saveProfile: 'प्रोफ़ाइल सहेजें',
+    savePartnerProfile: 'पार्टनर प्रोफ़ाइल सहेजें',
+    changePhoneTitle: '📱 फ़ोन नंबर बदलें (पिन)',
+    phNewPhone: 'नया 10-अंकों का फ़ोन नंबर',
+    phCurrentPin: 'वर्तमान पिन (4-6 अंक)',
+    updatePhone: 'फ़ोन नंबर अपडेट करें',
+    weeklyPlansTitle: '📋 साप्ताहिक सदस्यता प्लान',
+    completeKycTitle: '🪪 KYC पूरा करें',
+    phDl: 'ड्राइविंग लाइसेंस नंबर',
+    phAadhaar: 'आधार नंबर (12 अंक)',
+    verifyKycBtn: 'KYC सत्यापित करें',
+    appLanguageTitle: '🌐 ऐप की भाषा',
+    signOut: 'साइन आउट',
+    partnerSwapDesk: 'पार्टनर स्वैप डेस्क',
+    onlinePill: '● ऑनलाइन',
+    vStep1: 'स्वैप से पहले ड्राइवर सत्यापित करें',
+    phValidateDriver: 'फ़ोन, नाम या ड्राइवर आईडी',
+    validateBtn: 'सत्यापित करें',
+    vStep2: 'बैटरी QR स्कैन करें (डिस्कनेक्ट व असाइन)',
+    phVDepletedQr: 'ड्राइवर की पुरानी बैटरी QR (पहली बार हो तो खाली छोड़ें)',
+    vStep3: 'ड्राइवर का स्वैप OTP सत्यापित करें',
+    phVOtp: 'ड्राइवर का 6-अंकों का स्वैप OTP दर्ज करें',
+    verifyOtpBtn: 'OTP सत्यापित करें',
+    vStep4: 'भुगतान लें और स्वैप पूरा करें',
+    cashCollectedLabel: 'प्राप्त नकद (₹)',
+    cashCollectedNote: 'प्राप्त नकद (₹) — केवल पढ़ने योग्य (ड्राइवर के अनुरोध के अनुसार)',
+    vendorPayWaiting: 'राशि और विवरण देखने के लिए चरण 3 में ड्राइवर का स्वैप OTP सत्यापित करें।',
+    unlockSwapBtn: '🔒 अनलॉक करने के लिए चरण 3 में स्वैप OTP सत्यापित करें',
+    vStep5: 'ड्राइवर को बिल भेजें',
+    sendInvoiceBtn: 'अभी इनवॉइस भेजें',
+    activeSwapRequests: '📥 सक्रिय स्वैप अनुरोध (आपके स्टोर)',
+    myStores: 'मेरे स्टोर',
+    addStoreBtn: '+ स्टोर जोड़ें',
+    phStoreName: 'स्टोर / हब का नाम',
+    phStoreAddr: 'सड़क का पता टाइप करना शुरू करें...',
+    phCity: 'शहर',
+    phLat: 'अक्षांश (ऑटो)',
+    phLng: 'देशांतर (ऑटो)',
+    saveStore: 'स्टोर / हब सहेजें',
+    myBatteryInventory: 'मेरी बैटरी इन्वेंटरी',
+    addBatteryBtn: '+ बैटरी जोड़ें',
+    addBatteryTitle: '🔋 स्टोर में बैटरी जोड़ें',
+    phBatSerial: 'बैटरी सीरियल / QR (जैसे BAT-LFP-5099)',
+    addBatterySubmit: 'बैटरी जोड़ें',
+    partnerCommWallet: 'पार्टनर कमीशन वॉलेट',
+    commLedger: 'कमीशन भुगतान खाता',
+    driverGuideBadge: '❓ ड्राइवर गाइड',
+    driverGuideTitle: 'ChargeLoop कैसे काम करता है',
+    driverGuideSub: '4 आसान चरणों में अपनी EV बैटरी बदलें।',
+    driverSwapStepsTitle: '🔄 बैटरी स्वैप के चरण',
+    partnerGuideBadge: '❓ पार्टनर गाइड',
+    partnerGuideTitle: 'अपना स्वैप स्टोर प्रबंधित करें',
+    partnerGuideSub: 'स्टोर, बैटरी इन्वेंटरी, स्वैप डेस्क और कमाई।',
+    partnerStoresTitle: '🏪 स्टोर और बैटरी स्थिति',
+    navHome: 'होम',
+    navScan: 'स्कैन व पे',
+    navWallet: 'वॉलेट',
+    navBills: 'बिल',
+    navProfile: 'प्रोफ़ाइल',
+    navHelp: 'सहायता',
+    navRequests: 'अनुरोध',
+    navDesk: 'स्वैप डेस्क',
+    navStores: 'स्टोर',
+    navEarnings: 'कमाई',
+    contactTitle: 'ChargeLoop से संपर्क करें',
+    contactSub: 'फ़ोन, ईमेल, वेबसाइट और कार्यालय का पता देखने के लिए टैप करें',
+    contactPhone: 'फ़ोन',
+    contactWebsite: 'वेबसाइट',
+    contactEmail: 'ईमेल',
+    contactAddrLabel: 'कार्यालय का पता (कॉपी करने के लिए टैप करें)',
+    swapReady: 'स्वैप के लिए तैयार',
+    swapReadyDot: '● स्वैप के लिए तैयार',
+    payPerSwap: 'पे-पर-स्वैप',
+    chargedLabel: 'चार्ज्ड',
+    chargingLabel: 'चार्ज हो रही',
+    waitLabel: 'प्रतीक्षा',
+    batteriesBtn: '🔋 बैटरियां',
+    reserveBtn: 'रिज़र्व करें',
+    noStationsNearby: 'आस-पास कोई स्टेशन नहीं मिला।',
+    viewBillBtn: 'बिल देखें',
+    activateBtn: 'सक्रिय करें',
+    leftLabel: 'शेष',
+    swapsLabel: 'स्वैप',
+    daysLabel: 'दिन',
+    noStoresOpt: 'अभी कोई स्टोर नहीं — स्टोर टैब में जोड़ें',
+    allMyStores: 'मेरे सभी स्टोर',
+    noStoresYet: 'अभी कोई स्टोर नहीं जोड़ा गया है।',
+    stActive: 'सक्रिय',
+    stCharging: 'चार्जिंग',
+    stInactive: 'निष्क्रिय',
+    stOoo: 'खराब (OOO)',
+    stOutDriver: 'ड्राइवर के पास',
+    stActiveDesc: 'तैयार और ड्राइवरों को दिखाई देगी',
+    stChargingDesc: 'चार्जिंग के दौरान छिपी हुई',
+    stInactiveDesc: 'रोकी गई और छिपी हुई',
+    stOooDesc: 'सर्विस के लिए बंद',
+    filterAll: 'सभी',
+    filterAway: 'बाहर / अन्यत्र',
+    filterOther: 'निष्क्रिय / खराब',
+    awayFromStore: 'इस स्टोर से बाहर',
+    visibleToDrivers: '👁️ ड्राइवरों को दिखाई देगी और असाइन हो सकती है',
+    hiddenFromDrivers: '🙈 ड्राइवरों से छिपी हुई',
+    dhStep1Title: 'नज़दीकी स्टोर खोजें',
+    dhStep1Desc: 'होम पर लाइव स्टोर देखें और स्टॉक जांचने के लिए 🔋 बैटरियां पर टैप करें।',
+    dhStep2Title: 'अपनी बैटरी रिज़र्व करें',
+    dhStep2Desc: '2 घंटे के लिए चार्ज बैटरी होल्ड करने हेतु रिज़र्व करें दबाएं (कभी भी रद्द करें)।',
+    dhStep3Title: 'स्वैप अनुरोध और किराया देखें',
+    dhStep3Desc: 'स्कैन व पे खोलें, किराया विवरण जांचें और स्वैप कन्फर्म करें।',
+    dhStep4Title: 'अपना 6-अंकों का स्वैप OTP साझा करें',
+    dhStep4Desc: 'अपनी चार्ज बैटरी लेने के लिए स्टोर पार्टनर को OTP दिखाएं।',
+    goodToKnowTitle: '💡 उपयोगी जानकारी',
+    gtkPayTitle: '💳 भुगतान',
+    gtkPayDesc: 'स्टोर पर नकद (वॉलेट/UPI जल्द)',
+    gtkReferTitle: '🎁 रेफर व कमाएं',
+    gtkReferDesc: 'आपके CL कोड से प्रत्येक को ₹50 बोनस',
+    gtkBillsTitle: '🧾 GST बिल',
+    gtkBillsDesc: 'बिल टैब में सभी स्वैप इनवॉइस देखें',
+    gtkAccTitle: '👤 खाता',
+    gtkAccDesc: 'प्रोफ़ाइल में KYC, प्लान और फ़ोन अपडेट करें',
+    partnerStoresHelpSub: 'स्टोर टैब में + स्टोर जोड़ें (पता ऑटोकम्प्लीट के साथ) और + बैटरी जोड़ें का उपयोग करें।',
+    vhDeskTitle: '⚡ स्वैप डेस्क कार्यप्रवाह',
+    vhStep1Title: 'ड्राइवर चुनें या सत्यापित करें',
+    vhStep1Desc: 'अनुरोध टैब में अनुरोध चुनें या फ़ोन/नाम से खोजें।',
+    vhStep2Title: 'बैटरियां चुनें',
+    vhStep2Desc: 'लौटाई गई बैटरी (पहली बार हो तो खाली) और दी जाने वाली सक्रिय बैटरी कन्फर्म करें।',
+    vhStep3Title: 'ड्राइवर का स्वैप OTP सत्यापित करें',
+    vhStep3Desc: 'किराया विवरण अनलॉक करने के लिए ड्राइवर का 6-अंकों का OTP दर्ज करें।',
+    vhStep4Title: 'नकद लें और पूरा करें',
+    vhStep4Desc: 'स्वैप पूरा करने, कमाई जोड़ने और GST बिल भेजने के लिए भुगतान कन्फर्म करें।'
+  }
+};
+
+state.lang = localStorage.getItem('chargeloop_lang') || 'en';
+
+function t(key) {
+  return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
+}
+
+function setAppLanguage(lang, persist = true) {
+  state.lang = I18N[lang] ? lang : 'en';
+  if (persist) localStorage.setItem('chargeloop_lang', state.lang);
+
+  ['authLangSelect', 'editDriverLang', 'editVendorLang'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.value = state.lang;
+  });
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
+  });
+
+  ['contactSlotAuth', 'contactSlotDriverHelp', 'contactSlotVendorHelp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = buildContactCardHtml(id);
+  });
+
+  if (persist) {
+    if (state.role === 'driver' && state.driver) {
+      loadStations();
+      loadDriverHistory();
+      loadSubscriptionPlans();
+    } else if (state.role === 'vendor' && state.vendor) {
+      refreshVendorViews();
+    }
+  }
+}
+
 function toggleContactDetails(slotId) {
   const panel = document.getElementById(`${slotId}-panel`);
   const chev = document.getElementById(`${slotId}-chev`);
@@ -2465,8 +2947,8 @@ function buildContactCardHtml(slotId) {
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="width:36px;height:36px;border-radius:10px;background:var(--mint-pill);border:1px solid var(--border-mint);display:inline-flex;align-items:center;justify-content:center;font-size:16px;">📞</span>
           <div>
-            <div style="font-weight:800;font-size:14px;">Contact ChargeLoop</div>
-            <div class="muted" style="font-size:11px;">Tap to view phone, email, website &amp; office address</div>
+            <div style="font-weight:800;font-size:14px;">${t('contactTitle')}</div>
+            <div class="muted" style="font-size:11px;">${t('contactSub')}</div>
           </div>
         </div>
         <span id="${slotId}-chev" style="color:var(--mint-text);font-weight:800;font-size:13px;">▾</span>
@@ -2474,28 +2956,28 @@ function buildContactCardHtml(slotId) {
       <div id="${slotId}-panel" class="hidden" style="margin-top:12px;display:grid;gap:8px;">
         <a href="tel:+919591471658" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);">
           <div>
-            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Phone</div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">${t('contactPhone')}</div>
             <div style="font-weight:700;font-size:13px;color:var(--mint-text);">+91 95914 71658</div>
           </div>
           <span style="font-size:16px;">📲</span>
         </a>
         <a href="https://www.chargeloopsln.in" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);">
           <div>
-            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Website</div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">${t('contactWebsite')}</div>
             <div style="font-weight:700;font-size:13px;color:var(--mint-text);">www.chargeloopsln.in</div>
           </div>
           <span style="font-size:16px;">🌐</span>
         </a>
         <a href="mailto:chargeloopenergysolutions@gmail.com" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);">
           <div style="min-width:0;">
-            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Email</div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">${t('contactEmail')}</div>
             <div style="font-weight:700;font-size:12px;color:var(--mint-text);word-break:break-all;">chargeloopenergysolutions@gmail.com</div>
           </div>
           <span style="font-size:16px;margin-left:8px;">✉️</span>
         </a>
         <div onclick="copyChargeLoopAddress()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);cursor:pointer;">
           <div>
-            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Office Address (Tap to Copy)</div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">${t('contactAddrLabel')}</div>
             <div style="font-weight:600;font-size:12px;line-height:1.45;color:var(--text-primary);">322 DS MAX Saanjh, Akshay Nagar A3 Block, Bangalore, KARNATAKA - 560114</div>
           </div>
           <span style="font-size:16px;margin-left:8px;">📍</span>
@@ -2505,10 +2987,7 @@ function buildContactCardHtml(slotId) {
   `;
 }
 
-['contactSlotAuth', 'contactSlotDriverHelp', 'contactSlotVendorHelp'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = buildContactCardHtml(id);
-});
+setAppLanguage(state.lang, false);
 
 async function copyChargeLoopAddress() {
   const addr = '322 DS MAX Saanjh, Akshay Nagar A3 Block, Bangalore, KARNATAKA - 560114';
