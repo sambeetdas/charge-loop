@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ChargeLoop — Swap. Ride. Repeat.</title>
-  <link rel="icon" type="image/png" href="/assets/logo_icon.png">
+  <link rel="icon" type="image/png" href="/assets/logo_icon.png?v=2">
   <style>
     :root {
       --bg-deep: #0F273B;
@@ -124,15 +124,17 @@
     }
 
     .brand img {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      border: 1.5px solid rgba(42, 224, 158, 0.55);
       object-fit: cover;
     }
 
     .brand-title {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 800;
+      line-height: 1.1;
       letter-spacing: -0.3px;
       color: #FFFFFF;
     }
@@ -142,7 +144,11 @@
     }
 
     .brand-sub {
-      font-size: 9px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #C5DDF0;
+      letter-spacing: 1.4px;
+      margin-top: 2px;
       letter-spacing: 1.6px;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -516,10 +522,10 @@
 
   <div class="app-header">
     <div class="brand">
-      <img src="/assets/logo_icon.png" alt="ChargeLoop">
+      <img src="/assets/logo_icon.png?v=2" alt="ChargeLoop">
       <div>
         <div class="brand-title">Charge<span>Loop</span></div>
-        <div class="brand-sub">Energy Solutions</div>
+        <div class="brand-sub">ENERGY SOLUTIONS</div>
       </div>
     </div>
     <div id="headerUserChip" class="user-chip" onclick="handleHeaderAction()">
@@ -605,6 +611,7 @@
           </div>
         </div>
       </div>
+      <div id="contactSlotAuth"></div>
     </div>
 
     <!-- DRIVER HOME -->
@@ -1005,84 +1012,86 @@
     <!-- DRIVER HELP -->
     <div id="view-driver-help" class="hidden">
       <div class="grid-hero">
-        <div class="mint-pill" style="margin-bottom:8px;">❓ DRIVER GUIDE &amp; WORKFLOW</div>
-        <div style="font-size:18px;font-weight:900;">How ChargeLoop Works for Drivers</div>
-        <div class="muted" style="margin-top:4px;">Complete walkthrough of every screen, button, and swap step.</div>
+        <div class="mint-pill" style="margin-bottom:8px;">❓ DRIVER GUIDE</div>
+        <div style="font-size:18px;font-weight:900;">How ChargeLoop Works</div>
+        <div class="muted" style="margin-top:4px;">Swap your EV battery in 4 quick steps.</div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:6px;">🔄 End-to-End Battery Swap Workflow</div>
-        <div class="muted" style="line-height:1.6;">
-          <b>1. Browse &amp; Preview (Home):</b> View nearby swap stations using your location. Tap <b>🔋 Batteries</b> on any station card to inspect Active charged batteries before reserving.<br>
-          <b>2. Reserve (2-Hour Hold):</b> Tap <b>Reserve</b> to hold an Active battery for 2 hours. You can cancel anytime using <b>Reverse Reserve</b>.<br>
-          <b>3. Scan &amp; Pay (Create Swap Request):</b> Open <b>Scan &amp; Pay</b> (only your Reserved Station is shown).<br>
-          &nbsp;&nbsp;• <b>First Battery Pickup:</b> Leave the Depleted Battery field empty.<br>
-          &nbsp;&nbsp;• <b>Replacement Swap:</b> Your currently assigned battery serial is prefilled automatically.<br>
-          &nbsp;&nbsp;• Review the DB-driven <b>Fare Breakup</b> (Base Fee + GST) and tap <b>Confirm Swap &amp; Record Payment</b>.<br>
-          <b>4. Share Swap OTP:</b> A 6-digit <b>Swap OTP</b> is generated on screen (tap <b>🔄 Regenerate OTP</b> if needed). Share it with the Partner at the station. Once the Partner verifies your OTP and confirms, your swap is completed!
+        <div style="font-weight:800;margin-bottom:12px;">🔄 Battery Swap Steps</div>
+        <div style="display:grid;gap:10px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">1</span>
+            <div><div style="font-weight:700;font-size:13px;">Find a Nearby Store</div><div class="muted" style="font-size:12px;margin-top:2px;">Browse live stores on <b>Home</b> and tap <b>🔋 Batteries</b> to check ready stock.</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">2</span>
+            <div><div style="font-weight:700;font-size:13px;">Reserve Your Battery</div><div class="muted" style="font-size:12px;margin-top:2px;">Tap <b>Reserve</b> to hold a charged battery for 2 hours (cancel anytime).</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">3</span>
+            <div><div style="font-weight:700;font-size:13px;">Request Swap &amp; Review Fare</div><div class="muted" style="font-size:12px;margin-top:2px;">Open <b>Scan &amp; Pay</b>, check the fare breakup, and tap <b>Confirm Swap</b>.</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">4</span>
+            <div><div style="font-weight:700;font-size:13px;">Share Your 6-Digit Swap OTP</div><div class="muted" style="font-size:12px;margin-top:2px;">Show the OTP to the store partner to collect your charged battery.</div></div>
+          </div>
         </div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:6px;">💳 Wallet, Payments, Referrals &amp; Bills</div>
-        <div class="muted" style="line-height:1.6;">
-          • <b>Wallet:</b> Starts at ₹0.00. Record Cash Top-Ups in the <b>Wallet</b> tab.<br>
-          • <b>Payment Modes:</b> <b>Cash Only</b> is active. Wallet checkout, Card, and UPI are marked WIP (Work in Progress).<br>
-          • <b>Refer &amp; Earn:</b> Share your <code>CL-...</code> code or claim a friend's code for ₹50 wallet bonus each.<br>
-          • <b>Bills:</b> View GST tax invoices (<code>INV-CL-...</code>) and tax breakup in the <b>Bills</b> tab.
+        <div style="font-weight:800;margin-bottom:10px;">💡 Good to Know</div>
+        <div style="display:grid;gap:8px;font-size:12px;">
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">💳 Payments</span><span class="muted">Cash at store (Wallet/UPI coming soon)</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">🎁 Refer &amp; Earn</span><span class="muted">₹50 bonus each with your CL code</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">🧾 GST Bills</span><span class="muted">View all swap invoices in Bills tab</span></div>
+          <div class="row-between" style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span style="font-weight:700;">👤 Account</span><span class="muted">Update KYC, Plans &amp; Phone in Profile</span></div>
         </div>
       </div>
-
-      <div class="card">
-        <div style="font-weight:800;margin-bottom:6px;">👤 Profile, PIN &amp; KYC</div>
-        <div class="muted" style="line-height:1.6;">
-          • Edit your Full Name, Email, and Language in <b>Profile</b>.<br>
-          • Update your mobile number anytime using your PIN in <b>Change Phone Number</b>.<br>
-          • Complete KYC (Driving License &amp; Aadhaar) and subscribe to Weekly Plans from <b>Profile</b>.<br>
-          • Use <b>Forgot / Reset PIN?</b> on the Sign In screen if you ever forget your 4–6 digit PIN.
-        </div>
-      </div>
+      <div id="contactSlotDriverHelp"></div>
     </div>
 
     <!-- VENDOR HELP -->
     <div id="view-vendor-help" class="hidden">
       <div class="grid-hero">
-        <div class="mint-pill" style="margin-bottom:8px;">❓ PARTNER / VENDOR GUIDE</div>
-        <div style="font-size:18px;font-weight:900;">How ChargeLoop Works for Partners</div>
-        <div class="muted" style="margin-top:4px;">Store setup, 4-status battery control, Swap Desk, and commissions.</div>
+        <div class="mint-pill" style="margin-bottom:8px;">❓ PARTNER GUIDE</div>
+        <div style="font-size:18px;font-weight:900;">Managing Your Swap Store</div>
+        <div class="muted" style="margin-top:4px;">Stores, battery inventory, swap desk, and earnings.</div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:6px;">🏪 Stores &amp; 4-Status Battery Lifecycle (Stores Tab)</div>
-        <div class="muted" style="line-height:1.6;">
-          • <b>Add Store:</b> Enter Store Name &amp; start typing the Street Address to pick an autocomplete suggestion (auto-fills City &amp; coordinates).<br>
-          • <b>Register Battery:</b> Select your Store, enter Battery Serial/QR, pick a DB-configured Battery Type, and enter SOC %.<br>
-          • <b>4 Battery Statuses (Toggle Anytime):</b><br>
-          &nbsp;&nbsp;1. <b>Active:</b> Visible to drivers and assignable during swaps.<br>
-          &nbsp;&nbsp;2. <b>Inactive:</b> Hidden from drivers and cannot be assigned.<br>
-          &nbsp;&nbsp;3. <b>Charging:</b> Hidden from drivers while charging.<br>
-          &nbsp;&nbsp;4. <b>Out of Order:</b> Hidden from drivers and blocked from assignment.
+        <div style="font-weight:800;margin-bottom:10px;">🏪 Stores &amp; Battery Statuses</div>
+        <div class="muted" style="font-size:12px;margin-bottom:10px;">Use <b>+ Add Store</b> (with address autocomplete) and <b>+ Add Battery</b> under the <b>Stores</b> tab.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="mint-pill">Active</span><div class="muted" style="margin-top:4px;">Ready &amp; visible to drivers</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill">Charging</span><div class="muted" style="margin-top:4px;">Hidden while charging</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill">Inactive</span><div class="muted" style="margin-top:4px;">Paused &amp; hidden</div></div>
+          <div style="padding:8px 10px;border-radius:10px;background:var(--surface-elevated);"><span class="amber-pill">Out of Order</span><div class="muted" style="margin-top:4px;">Blocked for service</div></div>
         </div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:6px;">⚡ 5-Step Swap Desk Workflow (Swap Desk Tab)</div>
-        <div class="muted" style="line-height:1.6;">
-          <b>Step 1 — Validate Driver:</b> Search by Driver phone, name, or ID.<br>
-          <b>Step 2 — Scan Battery QRs:</b> Confirm the returning Depleted Battery QR (empty for first-time pickup) and the Active Charged Battery to issue.<br>
-          <b>Step 3 — Verify Driver's Swap OTP:</b> Enter the 6-digit <b>Swap OTP</b> shown on the Driver's Scan &amp; Pay screen and tap <b>Verify OTP</b>.<br>
-          <b>Step 4 — Collect Payment &amp; Execute Swap:</b> On OTP verification, the exact <b>Cash Collected (₹)</b> and full Fare Breakup unlock. Collect Cash and tap <b>Confirm Swap &amp; Collect Payment</b> to complete the Driver's request.<br>
-          <b>Step 5 — Publish Bill:</b> Send the GST invoice summary across WhatsApp, SMS, or Email.
+        <div style="font-weight:800;margin-bottom:12px;">⚡ Swap Desk Workflow</div>
+        <div style="display:grid;gap:10px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">1</span>
+            <div><div style="font-weight:700;font-size:13px;">Select or Validate Driver</div><div class="muted" style="font-size:12px;margin-top:2px;">Tap a request in <b>Requests</b> or search by phone/name.</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">2</span>
+            <div><div style="font-weight:700;font-size:13px;">Select Batteries</div><div class="muted" style="font-size:12px;margin-top:2px;">Confirm the returning battery (blank on first pickup) and the Active battery to issue.</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">3</span>
+            <div><div style="font-weight:700;font-size:13px;">Verify Driver's Swap OTP</div><div class="muted" style="font-size:12px;margin-top:2px;">Enter the driver's 6-digit OTP to unlock the fare breakup.</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <span class="mint-pill" style="min-width:26px;justify-content:center;">4</span>
+            <div><div style="font-weight:700;font-size:13px;">Collect Cash &amp; Complete</div><div class="muted" style="font-size:12px;margin-top:2px;">Confirm payment to complete the swap, credit earnings, and send the GST bill.</div></div>
+          </div>
         </div>
       </div>
-
-      <div class="card">
-        <div style="font-weight:800;margin-bottom:6px;">💰 Earnings &amp; Profile</div>
-        <div class="muted" style="line-height:1.6;">
-          • <b>Partner Commission Wallet:</b> Starts at ₹0.00. Every completed swap credits your commission instantly to the <b>Earnings</b> ledger.<br>
-          • <b>Profile:</b> Edit Name, Business Name, Email, UPI ID, and Bank Account, or change your phone number using your PIN.
-        </div>
-      </div>
+      <div id="contactSlotVendorHelp"></div>
     </div>
   </div>
 
@@ -2439,6 +2448,78 @@ function signOut() {
   vBtn.disabled = true;
   vBtn.textContent = '🔒 Validate Driver First to Unlock Swap';
   document.getElementById('headerUserText').textContent = 'Sign In';
+}
+
+function toggleContactDetails(slotId) {
+  const panel = document.getElementById(`${slotId}-panel`);
+  const chev = document.getElementById(`${slotId}-chev`);
+  if (!panel || !chev) return;
+  const isHidden = panel.classList.toggle('hidden');
+  chev.textContent = isHidden ? '▾' : '▴';
+}
+
+function buildContactCardHtml(slotId) {
+  return `
+    <div class="card" style="padding:14px;">
+      <div class="row-between" style="cursor:pointer;" onclick="toggleContactDetails('${slotId}')">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="width:36px;height:36px;border-radius:10px;background:var(--mint-pill);border:1px solid var(--border-mint);display:inline-flex;align-items:center;justify-content:center;font-size:16px;">📞</span>
+          <div>
+            <div style="font-weight:800;font-size:14px;">Contact ChargeLoop</div>
+            <div class="muted" style="font-size:11px;">Tap to view phone, email, website &amp; office address</div>
+          </div>
+        </div>
+        <span id="${slotId}-chev" style="color:var(--mint-text);font-weight:800;font-size:13px;">▾</span>
+      </div>
+      <div id="${slotId}-panel" class="hidden" style="margin-top:12px;display:grid;gap:8px;">
+        <a href="tel:+919591471658" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);">
+          <div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Phone</div>
+            <div style="font-weight:700;font-size:13px;color:var(--mint-text);">+91 95914 71658</div>
+          </div>
+          <span style="font-size:16px;">📲</span>
+        </a>
+        <a href="https://www.chargeloopsln.in" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);">
+          <div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Website</div>
+            <div style="font-weight:700;font-size:13px;color:var(--mint-text);">www.chargeloopsln.in</div>
+          </div>
+          <span style="font-size:16px;">🌐</span>
+        </a>
+        <a href="mailto:chargeloopenergysolutions@gmail.com" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);">
+          <div style="min-width:0;">
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Email</div>
+            <div style="font-weight:700;font-size:12px;color:var(--mint-text);word-break:break-all;">chargeloopenergysolutions@gmail.com</div>
+          </div>
+          <span style="font-size:16px;margin-left:8px;">✉️</span>
+        </a>
+        <div onclick="copyChargeLoopAddress()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--surface-elevated);border:1px solid var(--border);cursor:pointer;">
+          <div>
+            <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;">Office Address (Tap to Copy)</div>
+            <div style="font-weight:600;font-size:12px;line-height:1.45;color:var(--text-primary);">322 DS MAX Saanjh, Akshay Nagar A3 Block, Bangalore, KARNATAKA - 560114</div>
+          </div>
+          <span style="font-size:16px;margin-left:8px;">📍</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+['contactSlotAuth', 'contactSlotDriverHelp', 'contactSlotVendorHelp'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = buildContactCardHtml(id);
+});
+
+async function copyChargeLoopAddress() {
+  const addr = '322 DS MAX Saanjh, Akshay Nagar A3 Block, Bangalore, KARNATAKA - 560114';
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(addr);
+      showToast('Office address copied!');
+      return;
+    }
+  } catch {}
+  showToast(addr);
 }
 </script>
 </body>
