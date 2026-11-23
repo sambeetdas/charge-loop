@@ -10,6 +10,8 @@ public class Partner
     public string PhoneNumber { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? PinHash { get; set; }
+    public string? SecurityQuestion { get; set; }
+    public string? SecurityAnswerHash { get; set; }
     public string? UpiId { get; set; }
     public string? BankAccountNumber { get; set; }
     public decimal WalletBalance { get; set; } = 0.00m;

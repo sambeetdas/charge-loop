@@ -125,21 +125,33 @@ public class AuthAndRoleTests
         var dIn = await driverService.SignInWithPinAsync(new DriverPinSignInRequest("+919555555555", "1234"));
         Assert.Equal(dUp.DriverId, dIn.DriverId);
 
-        await driverService.ResetPinAsync(new ResetPinRequest("9555555555", "5678", "5678"));
+        // Without security question set -> blocked with Call/Email support message
+        var noSqEx = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            driverService.ResetPinAsync(new ResetPinRequest("9555555555", "5678", "5678")));
+        Assert.Contains("+91 95914 71658", noSqEx.Message);
+
+        // Set security question in Profile -> wrong answer rejected, right answer resets PIN
+        await driverService.UpdateProfileAsync(dUp.DriverId, new UpdateDriverProfileRequest(null, null, null, "What is your birth city?", "Bengaluru"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            driverService.ResetPinAsync(new ResetPinRequest("9555555555", "5678", "5678", "wrong")));
+        await driverService.ResetPinAsync(new ResetPinRequest("9555555555", "5678", "5678", " bengaluru "));
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             driverService.SignInWithPinAsync(new DriverPinSignInRequest("9555555555", "1234")));
         var dInNew = await driverService.SignInWithPinAsync(new DriverPinSignInRequest("9555555555", "5678"));
         Assert.Equal(dUp.DriverId, dInNew.DriverId);
 
-        // Vendor Sign Up -> Sign In -> Reset PIN -> Sign In with New PIN
-        var vUp = await vendorService.SignUpWithPinAsync(new VendorPinSignUpRequest("9666666666", "4321", "4321", "Pin Vendor", "Pin Hub"));
+        // Vendor Sign Up with Security Question -> Sign In -> Reset PIN -> Sign In with New PIN
+        var vUp = await vendorService.SignUpWithPinAsync(new VendorPinSignUpRequest(
+            "9666666666", "4321", "4321", "Pin Vendor", "Pin Hub", null, "What was your first vehicle model?", "Ather 450X"));
         Assert.Equal("+919666666666", vUp.PhoneNumber);
         Assert.Equal(0.00m, vUp.WalletBalance);
 
         var vIn = await vendorService.SignInWithPinAsync(new VendorPinSignInRequest("+919666666666", "4321"));
         Assert.Equal(vUp.VendorId, vIn.VendorId);
 
-        await vendorService.ResetPinAsync(new ResetPinRequest("9666666666", "8765", "8765"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            vendorService.ResetPinAsync(new ResetPinRequest("9666666666", "8765", "8765", "wrong")));
+        await vendorService.ResetPinAsync(new ResetPinRequest("9666666666", "8765", "8765", "ather 450x"));
         var vInNew = await vendorService.SignInWithPinAsync(new VendorPinSignInRequest("9666666666", "8765"));
         Assert.Equal(vUp.VendorId, vInNew.VendorId);
     }

@@ -56,6 +56,15 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpGet("security-question")]
+    public async Task<ActionResult<SecurityQuestionLookupDto>> GetSecurityQuestion([FromQuery] string phoneNumber, [FromQuery] string role = "driver")
+    {
+        var result = string.Equals(role, "vendor", StringComparison.OrdinalIgnoreCase)
+            ? await _vendorService.GetSecurityQuestionAsync(phoneNumber)
+            : await _driverService.GetSecurityQuestionAsync(phoneNumber);
+        return Ok(result);
+    }
+
     [HttpPost("reset-pin")]
     public async Task<ActionResult> ResetDriverPin([FromBody] ResetPinRequest request)
     {

@@ -134,6 +134,12 @@ public class VendorService : IVendorService
             BusinessName = string.IsNullOrWhiteSpace(request.BusinessName) ? "ChargeLoop Station " + suffix : request.BusinessName.Trim(),
             Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
             PinHash = PinHasher.Hash(request.Pin),
+            SecurityQuestion = !string.IsNullOrWhiteSpace(request.SecurityQuestion) && !string.IsNullOrWhiteSpace(request.SecurityAnswer)
+                ? request.SecurityQuestion.Trim()
+                : null,
+            SecurityAnswerHash = !string.IsNullOrWhiteSpace(request.SecurityQuestion) && !string.IsNullOrWhiteSpace(request.SecurityAnswer)
+                ? PinHasher.Hash(request.SecurityAnswer.Trim().ToLowerInvariant())
+                : null,
             WalletBalance = 0.00m
         };
         await _context.Partners.AddAsync(partner);
@@ -175,6 +181,26 @@ public class VendorService : IVendorService
         return new VendorAuthResponse(partner.Id, partner.PhoneNumber, partner.FullName, partner.BusinessName, token, partner.WalletBalance, partner.Email);
     }
 
+    public async Task<SecurityQuestionLookupDto> GetSecurityQuestionAsync(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            return new SecurityQuestionLookupDto(false, false, null);
+
+        var normalized = NormalizePhone(phoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var partner = await _context.Partners.AsNoTracking().FirstOrDefaultAsync(p =>
+            p.PhoneNumber == normalized ||
+            p.PhoneNumber == phoneNumber.Trim() ||
+            (last10.Length == 10 && p.PhoneNumber.EndsWith(last10)));
+
+        if (partner == null)
+            return new SecurityQuestionLookupDto(false, false, null);
+
+        var hasSq = !string.IsNullOrWhiteSpace(partner.SecurityQuestion) && !string.IsNullOrWhiteSpace(partner.SecurityAnswerHash);
+        return new SecurityQuestionLookupDto(true, hasSq, hasSq ? partner.SecurityQuestion : null);
+    }
+
     public async Task ResetPinAsync(ResetPinRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PhoneNumber))
@@ -189,6 +215,13 @@ public class VendorService : IVendorService
             p.PhoneNumber == request.PhoneNumber.Trim() ||
             (last10.Length == 10 && p.PhoneNumber.EndsWith(last10)))
             ?? throw new KeyNotFoundException("Partner account not found for this phone number.");
+
+        if (string.IsNullOrWhiteSpace(partner.SecurityAnswerHash))
+            throw new InvalidOperationException("Security question is not set for this account. Please call +91 95914 71658 or email chargeloopenergysolutions@gmail.com to reset your PIN.");
+
+        if (string.IsNullOrWhiteSpace(request.SecurityAnswer) ||
+            !PinHasher.Verify(request.SecurityAnswer.Trim().ToLowerInvariant(), partner.SecurityAnswerHash))
+            throw new InvalidOperationException("Incorrect security answer.");
 
         partner.PinHash = PinHasher.Hash(request.NewPin);
         await _context.SaveChangesAsync();
@@ -230,7 +263,8 @@ public class VendorService : IVendorService
             partner.BankAccountNumber,
             partner.WalletBalance,
             stationDtos,
-            partner.Email
+            partner.Email,
+            partner.SecurityQuestion
         );
     }
 
@@ -249,6 +283,11 @@ public class VendorService : IVendorService
             partner.UpiId = string.IsNullOrWhiteSpace(request.UpiId) ? null : request.UpiId.Trim();
         if (request.BankAccountNumber != null)
             partner.BankAccountNumber = string.IsNullOrWhiteSpace(request.BankAccountNumber) ? null : request.BankAccountNumber.Trim();
+        if (!string.IsNullOrWhiteSpace(request.SecurityQuestion) && !string.IsNullOrWhiteSpace(request.SecurityAnswer))
+        {
+            partner.SecurityQuestion = request.SecurityQuestion.Trim();
+            partner.SecurityAnswerHash = PinHasher.Hash(request.SecurityAnswer.Trim().ToLowerInvariant());
+        }
 
         await _context.SaveChangesAsync();
         return await GetProfileAsync(vendorId);

@@ -169,6 +169,12 @@ public class DriverService : IDriverService
             Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
             LanguageCode = string.IsNullOrWhiteSpace(request.LanguageCode) ? "en" : request.LanguageCode.Trim(),
             PinHash = PinHasher.Hash(request.Pin),
+            SecurityQuestion = !string.IsNullOrWhiteSpace(request.SecurityQuestion) && !string.IsNullOrWhiteSpace(request.SecurityAnswer)
+                ? request.SecurityQuestion.Trim()
+                : null,
+            SecurityAnswerHash = !string.IsNullOrWhiteSpace(request.SecurityQuestion) && !string.IsNullOrWhiteSpace(request.SecurityAnswer)
+                ? PinHasher.Hash(request.SecurityAnswer.Trim().ToLowerInvariant())
+                : null,
             WalletBalance = 0.00m,
             ReferralCode = $"CL-{suffix}{Random.Shared.Next(10, 99)}"
         };
@@ -217,6 +223,26 @@ public class DriverService : IDriverService
         return new AuthResponse(driver.Id, driver.PhoneNumber, driver.FullName, token, driver.KycStatus, driver.WalletBalance, driver.ReferralCode, driver.Email);
     }
 
+    public async Task<SecurityQuestionLookupDto> GetSecurityQuestionAsync(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            return new SecurityQuestionLookupDto(false, false, null);
+
+        var normalized = NormalizePhone(phoneNumber);
+        var last10 = normalized.Length >= 10 ? normalized[^10..] : normalized;
+
+        var driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d =>
+            d.PhoneNumber == normalized ||
+            d.PhoneNumber == phoneNumber.Trim() ||
+            (last10.Length == 10 && d.PhoneNumber.EndsWith(last10)));
+
+        if (driver == null)
+            return new SecurityQuestionLookupDto(false, false, null);
+
+        var hasSq = !string.IsNullOrWhiteSpace(driver.SecurityQuestion) && !string.IsNullOrWhiteSpace(driver.SecurityAnswerHash);
+        return new SecurityQuestionLookupDto(true, hasSq, hasSq ? driver.SecurityQuestion : null);
+    }
+
     public async Task ResetPinAsync(ResetPinRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PhoneNumber))
@@ -231,6 +257,13 @@ public class DriverService : IDriverService
             d.PhoneNumber == request.PhoneNumber.Trim() ||
             (last10.Length == 10 && d.PhoneNumber.EndsWith(last10)))
             ?? throw new KeyNotFoundException("Driver account not found for this phone number.");
+
+        if (string.IsNullOrWhiteSpace(driver.SecurityAnswerHash))
+            throw new InvalidOperationException("Security question is not set for this account. Please call +91 95914 71658 or email chargeloopenergysolutions@gmail.com to reset your PIN.");
+
+        if (string.IsNullOrWhiteSpace(request.SecurityAnswer) ||
+            !PinHasher.Verify(request.SecurityAnswer.Trim().ToLowerInvariant(), driver.SecurityAnswerHash))
+            throw new InvalidOperationException("Incorrect security answer.");
 
         driver.PinHash = PinHasher.Hash(request.NewPin);
         await _context.SaveChangesAsync();
@@ -332,7 +365,8 @@ public class DriverService : IDriverService
             activeBattery,
             driver.Email,
             driver.ReferralCode,
-            driver.ReferredByCode
+            driver.ReferredByCode,
+            driver.SecurityQuestion
         );
     }
 
@@ -347,6 +381,11 @@ public class DriverService : IDriverService
             driver.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
         if (!string.IsNullOrWhiteSpace(request.LanguageCode))
             driver.LanguageCode = request.LanguageCode.Trim();
+        if (!string.IsNullOrWhiteSpace(request.SecurityQuestion) && !string.IsNullOrWhiteSpace(request.SecurityAnswer))
+        {
+            driver.SecurityQuestion = request.SecurityQuestion.Trim();
+            driver.SecurityAnswerHash = PinHasher.Hash(request.SecurityAnswer.Trim().ToLowerInvariant());
+        }
 
         await _context.SaveChangesAsync();
         return await GetDriverDetailsAsync(driverId);

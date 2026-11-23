@@ -10,11 +10,12 @@ public record SendOtpRequest(string PhoneNumber);
 public record SendOtpResponse(string PhoneNumber, string DemoOtp, DateTime ExpiresAt, string Message);
 public record VerifyOtpRequest(string PhoneNumber, string OtpCode, string? FullName = null, string? Email = null, string? ReferralCode = null);
 
-public record DriverPinSignUpRequest(string PhoneNumber, string Pin, string ConfirmPin, string? FullName = null, string? Email = null, string? LanguageCode = "en", string? ReferralCode = null);
+public record DriverPinSignUpRequest(string PhoneNumber, string Pin, string ConfirmPin, string? FullName = null, string? Email = null, string? LanguageCode = "en", string? ReferralCode = null, string? SecurityQuestion = null, string? SecurityAnswer = null);
 public record DriverPinSignInRequest(string PhoneNumber, string Pin);
-public record VendorPinSignUpRequest(string PhoneNumber, string Pin, string ConfirmPin, string? FullName = null, string? BusinessName = null, string? Email = null);
+public record VendorPinSignUpRequest(string PhoneNumber, string Pin, string ConfirmPin, string? FullName = null, string? BusinessName = null, string? Email = null, string? SecurityQuestion = null, string? SecurityAnswer = null);
 public record VendorPinSignInRequest(string PhoneNumber, string Pin);
-public record ResetPinRequest(string PhoneNumber, string NewPin, string ConfirmNewPin);
+public record ResetPinRequest(string PhoneNumber, string NewPin, string ConfirmNewPin, string? SecurityAnswer = null);
+public record SecurityQuestionLookupDto(bool Found, bool HasSecurityQuestion, string? SecurityQuestion);
 
 public record ClaimReferralRequest(Guid DriverId, string ReferralCode);
 public record ReferralResponse(bool Success, decimal BonusAmount, decimal NewWalletBalance, string Message);
@@ -22,10 +23,10 @@ public record ReferralResponse(bool Success, decimal BonusAmount, decimal NewWal
 public record VendorAuthRequest(string PhoneNumber, string? FullName, string? BusinessName);
 public record VerifyVendorOtpRequest(string PhoneNumber, string OtpCode, string? FullName = null, string? BusinessName = null);
 public record VendorAuthResponse(Guid VendorId, string PhoneNumber, string FullName, string BusinessName, string Token, decimal WalletBalance, string? Email = null);
-public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, string BusinessName, string? UpiId, string? BankAccountNumber, decimal WalletBalance, List<StationDto> Stations, string? Email = null);
+public record VendorProfileDto(Guid Id, string PhoneNumber, string FullName, string BusinessName, string? UpiId, string? BankAccountNumber, decimal WalletBalance, List<StationDto> Stations, string? Email = null, string? SecurityQuestion = null);
 
-public record UpdateDriverProfileRequest(string? FullName, string? Email, string? LanguageCode);
-public record UpdateVendorProfileRequest(string? FullName, string? BusinessName, string? Email, string? UpiId, string? BankAccountNumber);
+public record UpdateDriverProfileRequest(string? FullName, string? Email, string? LanguageCode, string? SecurityQuestion = null, string? SecurityAnswer = null);
+public record UpdateVendorProfileRequest(string? FullName, string? BusinessName, string? Email, string? UpiId, string? BankAccountNumber, string? SecurityQuestion = null, string? SecurityAnswer = null);
 public record ChangePhoneRequest(string NewPhoneNumber, string Pin);
 public record ToggleBatteryVisibilityRequest(bool IsVisibleToDriver);
 public record UpdateBatteryChargeRequest(int StateOfChargePercent);
@@ -90,7 +91,8 @@ public record DriverDetailDto(
     BatteryDto? ActiveBattery,
     string? Email = null,
     string? ReferralCode = null,
-    string? ReferredByCode = null
+    string? ReferredByCode = null,
+    string? SecurityQuestion = null
 );
 
 public record DriverValidationDto(

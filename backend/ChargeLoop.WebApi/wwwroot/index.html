@@ -528,8 +528,8 @@
         <div class="brand-sub" data-i18n="brandTagline">ENERGY SOLUTIONS</div>
       </div>
     </div>
-    <div id="headerUserChip" class="user-chip" onclick="handleHeaderAction()">
-      <span id="headerUserText" data-i18n="signIn">Sign In</span> 👤
+    <div id="headerUserChip" class="user-chip hidden" onclick="handleHeaderAction()">
+      <span id="headerUserText"></span> 👤
     </div>
   </div>
 
@@ -586,12 +586,20 @@
             <input id="authDriverName" class="input-field" type="text" placeholder="Full Name (optional)" data-i18n-placeholder="phFullNameOpt">
             <input id="authDriverEmail" class="input-field" type="email" placeholder="Email for Invoices (optional)" data-i18n-placeholder="phEmailOpt">
             <input id="authDriverRef" class="input-field" type="text" placeholder="Referral Code (optional, get ₹50)" data-i18n-placeholder="phRefOpt">
+            <select id="authDriverSecQ" class="input-field sec-q-select"></select>
+            <input id="authDriverSecA" class="input-field" type="text" placeholder="Security Answer (for PIN reset)" data-i18n-placeholder="phSecAnswer">
             <button class="btn btn-primary" onclick="signUpDriverWithPin()" data-i18n="signUpDriver">Sign Up as Driver</button>
           </div>
           <div id="driverResetFields" class="hidden">
-            <input id="authDriverNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)" data-i18n-placeholder="phNewPin">
-            <input id="authDriverConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN" data-i18n-placeholder="phConfirmNewPin">
-            <button class="btn btn-primary" onclick="resetDriverPin()" data-i18n="resetDriverPin">Reset Driver PIN</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:10px;" type="button" onclick="loadResetSecurityQuestion('driver')" data-i18n="checkSecQBtn">Verify Phone &amp; Load Security Question</button>
+            <div id="driverResetStatusBox" class="hidden" style="margin-bottom:10px;"></div>
+            <div id="driverResetAnswerWrap" class="hidden">
+              <div id="driverResetQuestionText" class="mint-pill" style="display:block;margin-bottom:8px;white-space:normal;"></div>
+              <input id="authDriverResetSecA" class="input-field" type="text" placeholder="Your Security Answer" data-i18n-placeholder="phResetSecAnswer">
+              <input id="authDriverNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)" data-i18n-placeholder="phNewPin">
+              <input id="authDriverConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN" data-i18n-placeholder="phConfirmNewPin">
+              <button class="btn btn-primary" onclick="resetDriverPin()" data-i18n="resetDriverPin">Reset Driver PIN</button>
+            </div>
           </div>
         </div>
 
@@ -608,12 +616,20 @@
             <input id="authVendorConfirmPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm PIN" data-i18n-placeholder="phConfirmPin">
             <input id="authVendorName" class="input-field" type="text" placeholder="Partner Full Name (optional)" data-i18n-placeholder="phVendorNameOpt">
             <input id="authVendorBiz" class="input-field" type="text" placeholder="Business / Hub Name (optional)" data-i18n-placeholder="phVendorBizOpt">
+            <select id="authVendorSecQ" class="input-field sec-q-select"></select>
+            <input id="authVendorSecA" class="input-field" type="text" placeholder="Security Answer (for PIN reset)" data-i18n-placeholder="phSecAnswer">
             <button class="btn btn-primary" onclick="signUpVendorWithPin()" data-i18n="signUpVendor">Sign Up as Partner</button>
           </div>
           <div id="vendorResetFields" class="hidden">
-            <input id="authVendorNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)" data-i18n-placeholder="phNewPin">
-            <input id="authVendorConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN" data-i18n-placeholder="phConfirmNewPin">
-            <button class="btn btn-primary" onclick="resetVendorPin()" data-i18n="resetVendorPin">Reset Partner PIN</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:10px;" type="button" onclick="loadResetSecurityQuestion('vendor')" data-i18n="checkSecQBtn">Verify Phone &amp; Load Security Question</button>
+            <div id="vendorResetStatusBox" class="hidden" style="margin-bottom:10px;"></div>
+            <div id="vendorResetAnswerWrap" class="hidden">
+              <div id="vendorResetQuestionText" class="mint-pill" style="display:block;margin-bottom:8px;white-space:normal;"></div>
+              <input id="authVendorResetSecA" class="input-field" type="text" placeholder="Your Security Answer" data-i18n-placeholder="phResetSecAnswer">
+              <input id="authVendorNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)" data-i18n-placeholder="phNewPin">
+              <input id="authVendorConfirmNewPin" class="input-field" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm New PIN" data-i18n-placeholder="phConfirmNewPin">
+              <button class="btn btn-primary" onclick="resetVendorPin()" data-i18n="resetVendorPin">Reset Partner PIN</button>
+            </div>
           </div>
         </div>
       </div>
@@ -793,6 +809,8 @@
         <div style="font-weight:800;margin-bottom:8px;" data-i18n="editProfile">✏️ Edit Profile</div>
         <input id="editDriverName" class="input-field" placeholder="Full Name" data-i18n-placeholder="phFullName">
         <input id="editDriverEmail" class="input-field" placeholder="Email Address" data-i18n-placeholder="phEmail">
+        <select id="editDriverSecQ" class="input-field sec-q-select"></select>
+        <input id="editDriverSecA" class="input-field" type="text" placeholder="Security Answer (set/update)" data-i18n-placeholder="phSecAnswerProfile">
         <button class="btn btn-primary" onclick="saveDriverProfile()" data-i18n="saveProfile">Save Profile</button>
       </div>
 
@@ -1006,6 +1024,8 @@
         <input id="editVendorEmail" class="input-field" placeholder="Email Address" data-i18n-placeholder="phEmail">
         <input id="editVendorUpi" class="input-field" placeholder="UPI ID (for payouts)" data-i18n-placeholder="phUpi">
         <input id="editVendorBank" class="input-field" placeholder="Bank Account Number" data-i18n-placeholder="phBank">
+        <select id="editVendorSecQ" class="input-field sec-q-select"></select>
+        <input id="editVendorSecA" class="input-field" type="text" placeholder="Security Answer (set/update)" data-i18n-placeholder="phSecAnswerProfile">
         <button class="btn btn-primary" onclick="saveVendorProfile()" data-i18n="savePartnerProfile">Save Partner Profile</button>
       </div>
 
@@ -1224,12 +1244,55 @@ function selectAuthMode(mode) {
   document.getElementById('vendorSignInFields').classList.toggle('hidden', mode !== 'signin');
   document.getElementById('vendorSignUpFields').classList.toggle('hidden', mode !== 'signup');
   document.getElementById('vendorResetFields').classList.toggle('hidden', mode !== 'reset');
+  if (mode === 'reset') {
+    const isDriver = !document.getElementById('authDriverBox').classList.contains('hidden');
+    const role = isDriver ? 'driver' : 'vendor';
+    const phone = document.getElementById(isDriver ? 'authDriverPhone' : 'authVendorPhone').value.trim();
+    if (phone) loadResetSecurityQuestion(role);
+  }
+}
+
+async function loadResetSecurityQuestion(role) {
+  const isDriver = role === 'driver';
+  const phoneNumber = document.getElementById(isDriver ? 'authDriverPhone' : 'authVendorPhone').value.trim();
+  const statusBox = document.getElementById(isDriver ? 'driverResetStatusBox' : 'vendorResetStatusBox');
+  const answerWrap = document.getElementById(isDriver ? 'driverResetAnswerWrap' : 'vendorResetAnswerWrap');
+  const qText = document.getElementById(isDriver ? 'driverResetQuestionText' : 'vendorResetQuestionText');
+  if (!phoneNumber) return showToast(t('enterPhoneFirst'), true);
+  try {
+    const res = await apiFetch(`/auth/security-question?phoneNumber=${encodeURIComponent(phoneNumber)}&role=${role}`);
+    if (!res.found) {
+      answerWrap.classList.add('hidden');
+      statusBox.classList.remove('hidden');
+      statusBox.innerHTML = `<div class="card-elevated muted" style="font-size:12px;">${t('accountNotFound')}</div>`;
+      return;
+    }
+    if (res.hasSecurityQuestion && res.securityQuestion) {
+      statusBox.classList.add('hidden');
+      qText.textContent = `🔐 ${translateSecurityQuestion(res.securityQuestion)}`;
+      answerWrap.classList.remove('hidden');
+    } else {
+      answerWrap.classList.add('hidden');
+      statusBox.classList.remove('hidden');
+      statusBox.innerHTML = `
+        <div class="card-elevated" style="font-size:12px;line-height:1.6;">
+          <div style="font-weight:800;color:var(--amber);margin-bottom:6px;">⚠️ ${t('noSecQTitle')}</div>
+          <div class="muted" style="margin-bottom:8px;">${t('noSecQDesc')}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="btn btn-secondary btn-sm" href="tel:+919591471658" style="text-decoration:none;">📞 +91 95914 71658</a>
+            <a class="btn btn-secondary btn-sm" href="mailto:chargeloopenergysolutions@gmail.com" style="text-decoration:none;">✉️ ${t('emailSupportBtn')}</a>
+          </div>
+        </div>
+      `;
+    }
+  } catch (e) { showToast(e.message, true); }
 }
 
 async function signInDriverWithPin() {
   const phoneNumber = document.getElementById('authDriverPhone').value.trim();
   const pin = document.getElementById('authDriverPin').value.trim();
-  if (!phoneNumber || !pin) return showToast('Enter phone number and PIN', true);
+  if (!isValidPhone(phoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!isValidPin(pin)) return showToast('PIN must be 4 to 6 digits', true);
   try {
     const auth = await apiFetch('/auth/signin', {
       method: 'POST',
@@ -1247,11 +1310,18 @@ async function signUpDriverWithPin() {
   const fullName = document.getElementById('authDriverName').value.trim() || null;
   const email = document.getElementById('authDriverEmail').value.trim() || null;
   const referralCode = document.getElementById('authDriverRef').value.trim() || null;
-  if (!phoneNumber || !pin || !confirmPin) return showToast('Enter phone number, PIN, and Confirm PIN', true);
+  const securityQuestion = document.getElementById('authDriverSecQ').value || null;
+  const securityAnswer = document.getElementById('authDriverSecA').value.trim() || null;
+  if (!isValidPhone(phoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!isValidPin(pin)) return showToast('PIN must be 4 to 6 digits', true);
+  if (pin !== confirmPin) return showToast('PIN and Confirm PIN must match', true);
+  if (email && !isValidEmail(email)) return showToast('Enter a valid email address', true);
+  if (securityQuestion && !securityAnswer) return showToast('Enter your security answer', true);
+  if (!securityQuestion && securityAnswer) return showToast('Select a security question', true);
   try {
     const auth = await apiFetch('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, email, languageCode: state.lang || 'en', referralCode })
+      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, email, languageCode: state.lang || 'en', referralCode, securityQuestion, securityAnswer })
     });
     state.token = auth.token;
     await enterDriverApp(auth.driverId);
@@ -1260,14 +1330,19 @@ async function signUpDriverWithPin() {
 
 async function resetDriverPin() {
   const phoneNumber = document.getElementById('authDriverPhone').value.trim();
+  const securityAnswer = document.getElementById('authDriverResetSecA').value.trim();
   const newPin = document.getElementById('authDriverNewPin').value.trim();
   const confirmNewPin = document.getElementById('authDriverConfirmNewPin').value.trim();
-  if (!phoneNumber || !newPin || !confirmNewPin) return showToast('Enter phone number, New PIN, and Confirm New PIN', true);
+  if (!isValidPhone(phoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!securityAnswer) return showToast('Enter your security answer', true);
+  if (!isValidPin(newPin)) return showToast('New PIN must be 4 to 6 digits', true);
+  if (newPin !== confirmNewPin) return showToast('New PIN and Confirm New PIN must match', true);
   try {
     const res = await apiFetch('/auth/reset-pin', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, newPin, confirmNewPin })
+      body: JSON.stringify({ phoneNumber, newPin, confirmNewPin, securityAnswer })
     });
+    document.getElementById('authDriverResetSecA').value = '';
     document.getElementById('authDriverNewPin').value = '';
     document.getElementById('authDriverConfirmNewPin').value = '';
     selectAuthMode('signin');
@@ -1278,7 +1353,8 @@ async function resetDriverPin() {
 async function signInVendorWithPin() {
   const phoneNumber = document.getElementById('authVendorPhone').value.trim();
   const pin = document.getElementById('authVendorPin').value.trim();
-  if (!phoneNumber || !pin) return showToast('Enter phone number and PIN', true);
+  if (!isValidPhone(phoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!isValidPin(pin)) return showToast('PIN must be 4 to 6 digits', true);
   try {
     const auth = await apiFetch('/auth/vendor/signin', {
       method: 'POST',
@@ -1294,11 +1370,17 @@ async function signUpVendorWithPin() {
   const confirmPin = document.getElementById('authVendorConfirmPin').value.trim();
   const fullName = document.getElementById('authVendorName').value.trim() || null;
   const businessName = document.getElementById('authVendorBiz').value.trim() || null;
-  if (!phoneNumber || !pin || !confirmPin) return showToast('Enter phone number, PIN, and Confirm PIN', true);
+  const securityQuestion = document.getElementById('authVendorSecQ').value || null;
+  const securityAnswer = document.getElementById('authVendorSecA').value.trim() || null;
+  if (!isValidPhone(phoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!isValidPin(pin)) return showToast('PIN must be 4 to 6 digits', true);
+  if (pin !== confirmPin) return showToast('PIN and Confirm PIN must match', true);
+  if (securityQuestion && !securityAnswer) return showToast('Enter your security answer', true);
+  if (!securityQuestion && securityAnswer) return showToast('Select a security question', true);
   try {
     const auth = await apiFetch('/auth/vendor/signup', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, businessName })
+      body: JSON.stringify({ phoneNumber, pin, confirmPin, fullName, businessName, email: null, securityQuestion, securityAnswer })
     });
     await enterVendorApp(auth);
   } catch (e) { showToast(e.message, true); }
@@ -1306,14 +1388,19 @@ async function signUpVendorWithPin() {
 
 async function resetVendorPin() {
   const phoneNumber = document.getElementById('authVendorPhone').value.trim();
+  const securityAnswer = document.getElementById('authVendorResetSecA').value.trim();
   const newPin = document.getElementById('authVendorNewPin').value.trim();
   const confirmNewPin = document.getElementById('authVendorConfirmNewPin').value.trim();
-  if (!phoneNumber || !newPin || !confirmNewPin) return showToast('Enter phone number, New PIN, and Confirm New PIN', true);
+  if (!isValidPhone(phoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!securityAnswer) return showToast('Enter your security answer', true);
+  if (!isValidPin(newPin)) return showToast('New PIN must be 4 to 6 digits', true);
+  if (newPin !== confirmNewPin) return showToast('New PIN and Confirm New PIN must match', true);
   try {
     const res = await apiFetch('/auth/vendor/reset-pin', {
       method: 'POST',
-      body: JSON.stringify({ phoneNumber, newPin, confirmNewPin })
+      body: JSON.stringify({ phoneNumber, newPin, confirmNewPin, securityAnswer })
     });
+    document.getElementById('authVendorResetSecA').value = '';
     document.getElementById('authVendorNewPin').value = '';
     document.getElementById('authVendorConfirmNewPin').value = '';
     selectAuthMode('signin');
@@ -1326,6 +1413,7 @@ async function enterDriverApp(driverId) {
   state.driver = await apiFetch(`/auth/profile/${driverId}`);
   document.getElementById('view-auth').classList.add('hidden');
   document.getElementById('navDriver').classList.remove('hidden');
+  document.getElementById('headerUserChip').classList.remove('hidden');
   document.getElementById('headerUserText').textContent = state.driver.fullName.split(' ')[0];
   await refreshDriverViews();
   switchDriverTab('home');
@@ -1347,6 +1435,9 @@ async function refreshDriverViews() {
 
   document.getElementById('editDriverName').value = state.driver.fullName || '';
   document.getElementById('editDriverEmail').value = state.driver.email || '';
+  if (state.driver.securityQuestion) {
+    document.getElementById('editDriverSecQ').value = state.driver.securityQuestion;
+  }
   const savedLang = localStorage.getItem('chargeloop_lang');
   const activeLang = (savedLang && I18N[savedLang]) ? savedLang : (state.driver.languageCode || 'en');
   document.getElementById('editDriverLang').value = activeLang;
@@ -1818,13 +1909,17 @@ async function subscribePlan(planId) {
 }
 
 async function submitDriverKyc() {
+  const drivingLicenseNumber = document.getElementById('kycDlInput').value.trim();
+  const aadhaarNumber = document.getElementById('kycAadhaarInput').value.trim();
+  if (drivingLicenseNumber.length < 6) return showToast('Enter a valid Driving License number', true);
+  if (!/^\d{12}$/.test(aadhaarNumber)) return showToast('Aadhaar number must be exactly 12 digits', true);
   try {
     await apiFetch('/auth/kyc', {
       method: 'POST',
       body: JSON.stringify({
         driverId: state.driver.id,
-        drivingLicenseNumber: document.getElementById('kycDlInput').value.trim(),
-        aadhaarNumber: document.getElementById('kycAadhaarInput').value.trim()
+        drivingLicenseNumber,
+        aadhaarNumber
       })
     });
     await refreshDriverViews();
@@ -1837,13 +1932,19 @@ async function saveDriverProfile() {
   const fullName = document.getElementById('editDriverName').value.trim();
   const email = document.getElementById('editDriverEmail').value.trim();
   const languageCode = document.getElementById('editDriverLang').value;
+  const securityQuestion = document.getElementById('editDriverSecQ').value || null;
+  const securityAnswer = document.getElementById('editDriverSecA').value.trim() || null;
+  if (email && !isValidEmail(email)) return showToast('Enter a valid email address', true);
+  if (securityAnswer && !securityQuestion) return showToast('Select a security question', true);
   try {
     await apiFetch(`/auth/profile/${state.driver.id}`, {
       method: 'PUT',
-      body: JSON.stringify({ fullName, email, languageCode })
+      body: JSON.stringify({ fullName, email, languageCode, securityQuestion, securityAnswer })
     });
+    document.getElementById('editDriverSecA').value = '';
     await refreshDriverViews();
-    document.getElementById('headerUserText').textContent = state.driver.fullName.split(' ')[0];
+    document.getElementById('headerUserChip').classList.remove('hidden');
+  document.getElementById('headerUserText').textContent = state.driver.fullName.split(' ')[0];
     showToast('Driver profile updated!');
   } catch (e) { showToast(e.message, true); }
 }
@@ -1851,7 +1952,8 @@ async function saveDriverProfile() {
 async function confirmDriverChangePhone() {
   const newPhoneNumber = document.getElementById('chgDriverPhone').value.trim();
   const pin = document.getElementById('chgDriverPin').value.trim();
-  if (!newPhoneNumber || !pin) return showToast('Enter new phone number and current PIN', true);
+  if (!isValidPhone(newPhoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!isValidPin(pin)) return showToast('Enter your 4 to 6 digit PIN', true);
   try {
     await apiFetch(`/auth/profile/${state.driver.id}/change-phone`, {
       method: 'POST',
@@ -1870,6 +1972,7 @@ async function enterVendorApp(auth) {
   state.vendor = await apiFetch(`/auth/vendor/profile/${auth.vendorId}`);
   document.getElementById('view-auth').classList.add('hidden');
   document.getElementById('navVendor').classList.remove('hidden');
+  document.getElementById('headerUserChip').classList.remove('hidden');
   document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
   await refreshVendorViews();
   switchVendorTab('requests');
@@ -1890,6 +1993,9 @@ async function refreshVendorViews() {
   document.getElementById('editVendorEmail').value = state.vendor.email || '';
   document.getElementById('editVendorUpi').value = state.vendor.upiId || '';
   document.getElementById('editVendorBank').value = state.vendor.bankAccountNumber || '';
+  if (state.vendor.securityQuestion) {
+    document.getElementById('editVendorSecQ').value = state.vendor.securityQuestion;
+  }
 
   const prevDeskSid = document.getElementById('vendorDeskStationSelect').value;
   const prevRegSid = document.getElementById('regBatStationSelect').value;
@@ -2010,7 +2116,7 @@ async function validateDriverForPartner() {
 
 async function verifyVendorSwapOtp() {
   const otpCode = document.getElementById('vendorSwapOtpInput').value.trim();
-  if (!otpCode) return showToast('Enter driver Swap OTP', true);
+  if (!/^\d{6}$/.test(otpCode)) return showToast('Enter the 6-digit Swap OTP', true);
   try {
     const driverParam = state.validatedDriver ? `&driverId=${encodeURIComponent(state.validatedDriver.driverId)}` : '';
     const swap = await apiFetch(`/swaps/validate-otp?otpCode=${encodeURIComponent(otpCode)}${driverParam}`);
@@ -2130,6 +2236,9 @@ async function registerBatteryForStore() {
   const modelType = document.getElementById('regBatModel').value.trim();
   const stateOfChargePercent = Number(document.getElementById('regBatSoc').value || 100);
   if (!stationId || !serialNumber) return showToast('Select a store and enter battery serial', true);
+  if (Number.isNaN(stateOfChargePercent) || stateOfChargePercent < 0 || stateOfChargePercent > 100) {
+    return showToast('SOC % must be between 0 and 100', true);
+  }
   try {
     await apiFetch(`/stations/${stationId}/batteries`, {
       method: 'POST',
@@ -2294,13 +2403,19 @@ async function saveVendorProfile() {
   const email = document.getElementById('editVendorEmail').value.trim();
   const upiId = document.getElementById('editVendorUpi').value.trim();
   const bankAccountNumber = document.getElementById('editVendorBank').value.trim();
+  const securityQuestion = document.getElementById('editVendorSecQ').value || null;
+  const securityAnswer = document.getElementById('editVendorSecA').value.trim() || null;
+  if (email && !isValidEmail(email)) return showToast('Enter a valid email address', true);
+  if (securityAnswer && !securityQuestion) return showToast('Select a security question', true);
   try {
     await apiFetch(`/auth/vendor/profile/${state.vendor.id}`, {
       method: 'PUT',
-      body: JSON.stringify({ fullName, businessName, email, upiId, bankAccountNumber })
+      body: JSON.stringify({ fullName, businessName, email, upiId, bankAccountNumber, securityQuestion, securityAnswer })
     });
+    document.getElementById('editVendorSecA').value = '';
     await refreshVendorViews();
-    document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
+    document.getElementById('headerUserChip').classList.remove('hidden');
+  document.getElementById('headerUserText').textContent = state.vendor.fullName.split(' ')[0];
     showToast('Partner profile updated!');
   } catch (e) { showToast(e.message, true); }
 }
@@ -2308,7 +2423,8 @@ async function saveVendorProfile() {
 async function confirmVendorChangePhone() {
   const newPhoneNumber = document.getElementById('chgVendorPhone').value.trim();
   const pin = document.getElementById('chgVendorPin').value.trim();
-  if (!newPhoneNumber || !pin) return showToast('Enter new phone number and current PIN', true);
+  if (!isValidPhone(newPhoneNumber)) return showToast('Enter a valid 10-digit mobile number', true);
+  if (!isValidPin(pin)) return showToast('Enter your 4 to 6 digit PIN', true);
   try {
     await apiFetch(`/auth/vendor/profile/${state.vendor.id}/change-phone`, {
       method: 'POST',
@@ -2468,7 +2584,8 @@ function signOut() {
   const vBtn = document.getElementById('vendorSwapBtn');
   vBtn.disabled = true;
   vBtn.textContent = '🔒 Validate Driver First to Unlock Swap';
-  document.getElementById('headerUserText').textContent = 'Sign In';
+  document.getElementById('headerUserChip').classList.add('hidden');
+  document.getElementById('headerUserText').textContent = '';
 }
 
 const I18N = {
@@ -2679,7 +2796,21 @@ const I18N = {
     vhStep3Title: "Verify Driver's Swap OTP",
     vhStep3Desc: "Enter the driver's 6-digit OTP to unlock the fare breakup.",
     vhStep4Title: 'Collect Cash & Complete',
-    vhStep4Desc: 'Confirm payment to complete the swap, credit earnings, and send the GST bill.'
+    vhStep4Desc: 'Confirm payment to complete the swap, credit earnings, and send the GST bill.',
+    phSecAnswer: 'Security Answer (for PIN reset)',
+    phSecAnswerProfile: 'Security Answer (set/update)',
+    phResetSecAnswer: 'Your Security Answer',
+    checkSecQBtn: 'Verify Phone & Load Security Question',
+    enterPhoneFirst: 'Enter your mobile number first',
+    accountNotFound: 'No account found for this phone number.',
+    noSecQTitle: 'Security Question Not Set',
+    noSecQDesc: 'No security question is set for this account. Please call or email ChargeLoop Support to reset your PIN.',
+    emailSupportBtn: 'Email Support',
+    secQPrompt: 'Select Security Question (for PIN reset)',
+    sqBirthCity: 'What is your birth city?',
+    sqFirstVehicle: 'What was your first vehicle model?',
+    sqNickname: 'What is your childhood nickname?',
+    sqFavFood: 'What is your favorite food?'
   },
   hi: {
     brandTagline: 'ऊर्जा समाधान',
@@ -2888,7 +3019,21 @@ const I18N = {
     vhStep3Title: 'ड्राइवर का स्वैप OTP सत्यापित करें',
     vhStep3Desc: 'किराया विवरण अनलॉक करने के लिए ड्राइवर का 6-अंकों का OTP दर्ज करें।',
     vhStep4Title: 'नकद लें और पूरा करें',
-    vhStep4Desc: 'स्वैप पूरा करने, कमाई जोड़ने और GST बिल भेजने के लिए भुगतान कन्फर्म करें।'
+    vhStep4Desc: 'स्वैप पूरा करने, कमाई जोड़ने और GST बिल भेजने के लिए भुगतान कन्फर्म करें।',
+    phSecAnswer: 'सुरक्षा उत्तर (पिन रीसेट के लिए)',
+    phSecAnswerProfile: 'सुरक्षा उत्तर (सेट/अपडेट करें)',
+    phResetSecAnswer: 'आपका सुरक्षा उत्तर',
+    checkSecQBtn: 'फ़ोन सत्यापित करें और सुरक्षा प्रश्न देखें',
+    enterPhoneFirst: 'पहले अपना मोबाइल नंबर दर्ज करें',
+    accountNotFound: 'इस फ़ोन नंबर के लिए कोई खाता नहीं मिला।',
+    noSecQTitle: 'सुरक्षा प्रश्न सेट नहीं है',
+    noSecQDesc: 'इस खाते के लिए कोई सुरक्षा प्रश्न सेट नहीं है। अपना पिन रीसेट करने के लिए कृपया ChargeLoop सहायता को कॉल या ईमेल करें।',
+    emailSupportBtn: 'सहायता को ईमेल करें',
+    secQPrompt: 'सुरक्षा प्रश्न चुनें (पिन रीसेट के लिए)',
+    sqBirthCity: 'आपका जन्म शहर कौन-सा है?',
+    sqFirstVehicle: 'आपका पहला वाहन मॉडल कौन-सा था?',
+    sqNickname: 'आपके बचपन का उपनाम क्या है?',
+    sqFavFood: 'आपका पसंदीदा भोजन क्या है?'
   }
 };
 
@@ -2898,9 +3043,32 @@ function t(key) {
   return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
 }
 
+const SECURITY_QUESTIONS = [
+  { value: 'What is your birth city?', key: 'sqBirthCity' },
+  { value: 'What was your first vehicle model?', key: 'sqFirstVehicle' },
+  { value: 'What is your childhood nickname?', key: 'sqNickname' },
+  { value: 'What is your favorite food?', key: 'sqFavFood' }
+];
+
+function translateSecurityQuestion(q) {
+  const match = SECURITY_QUESTIONS.find(x => x.value === q);
+  return match ? t(match.key) : q;
+}
+
+function populateSecurityQuestionSelects() {
+  document.querySelectorAll('.sec-q-select').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">${t('secQPrompt')}</option>` +
+      SECURITY_QUESTIONS.map(q => `<option value="${q.value}">${t(q.key)}</option>`).join('');
+    if (prev) sel.value = prev;
+  });
+}
+
 function setAppLanguage(lang, persist = true) {
   state.lang = I18N[lang] ? lang : 'en';
   if (persist) localStorage.setItem('chargeloop_lang', state.lang);
+
+  populateSecurityQuestionSelects();
 
   ['authLangSelect', 'editDriverLang', 'editVendorLang'].forEach(id => {
     const sel = document.getElementById(id);
@@ -2987,6 +3155,64 @@ function buildContactCardHtml(slotId) {
   `;
 }
 
+function isValidPhone(v) {
+  const cleaned = (v || '').trim();
+  const digits = cleaned.replace(/\D/g, '');
+  return /^\+?\d+$/.test(cleaned) && digits.length >= 10 && digits.length <= 13;
+}
+
+function isValidPin(v) {
+  return /^\d{4,6}$/.test((v || '').trim());
+}
+
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((v || '').trim());
+}
+
+function attachInputFilters() {
+  ['authDriverPhone', 'authVendorPhone', 'chgDriverPhone', 'chgVendorPhone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const hasPlus = el.value.startsWith('+');
+      const digits = el.value.replace(/\D/g, '').slice(0, 12);
+      el.value = (hasPlus ? '+' : '') + digits;
+    });
+  });
+
+  [
+    'authDriverPin', 'authDriverSignUpPin', 'authDriverConfirmPin', 'authDriverNewPin', 'authDriverConfirmNewPin',
+    'authVendorPin', 'authVendorSignUpPin', 'authVendorConfirmPin', 'authVendorNewPin', 'authVendorConfirmNewPin',
+    'chgDriverPin', 'chgVendorPin'
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      el.value = el.value.replace(/\D/g, '').slice(0, 6);
+    });
+  });
+
+  [
+    { id: 'kycAadhaarInput', max: 12 },
+    { id: 'vendorSwapOtpInput', max: 6 }
+  ].forEach(({ id, max }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      el.value = el.value.replace(/\D/g, '').slice(0, max);
+    });
+  });
+
+  const socEl = document.getElementById('regBatSoc');
+  if (socEl) {
+    socEl.addEventListener('input', () => {
+      const digits = socEl.value.replace(/\D/g, '').slice(0, 3);
+      socEl.value = digits === '' ? '' : String(Math.min(100, Number(digits)));
+    });
+  }
+}
+
+attachInputFilters();
 setAppLanguage(state.lang, false);
 
 async function copyChargeLoopAddress() {

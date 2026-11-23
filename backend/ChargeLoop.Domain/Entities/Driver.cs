@@ -9,6 +9,8 @@ public class Driver
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? PinHash { get; set; }
+    public string? SecurityQuestion { get; set; }
+    public string? SecurityAnswerHash { get; set; }
     public string LanguageCode { get; set; } = "en";
     public KycStatus KycStatus { get; set; } = KycStatus.Pending;
     public string? DrivingLicenseNumber { get; set; }

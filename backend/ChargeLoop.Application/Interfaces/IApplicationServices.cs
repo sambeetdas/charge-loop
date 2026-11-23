@@ -11,6 +11,7 @@ public interface IDriverService
     Task<AuthResponse> VerifyOtpAndAuthenticateAsync(VerifyOtpRequest request);
     Task<AuthResponse> SignUpWithPinAsync(DriverPinSignUpRequest request);
     Task<AuthResponse> SignInWithPinAsync(DriverPinSignInRequest request);
+    Task<SecurityQuestionLookupDto> GetSecurityQuestionAsync(string phoneNumber);
     Task ResetPinAsync(ResetPinRequest request);
     Task<ReferralResponse> ClaimReferralCodeAsync(ClaimReferralRequest request);
     Task<Driver?> GetProfileAsync(Guid driverId);
@@ -85,6 +86,7 @@ public interface IVendorService
     Task<VendorAuthResponse> VerifyOtpAndAuthenticateAsync(VerifyVendorOtpRequest request);
     Task<VendorAuthResponse> SignUpWithPinAsync(VendorPinSignUpRequest request);
     Task<VendorAuthResponse> SignInWithPinAsync(VendorPinSignInRequest request);
+    Task<SecurityQuestionLookupDto> GetSecurityQuestionAsync(string phoneNumber);
     Task ResetPinAsync(ResetPinRequest request);
     Task<VendorProfileDto?> GetProfileAsync(Guid vendorId);
     Task<VendorProfileDto?> UpdateProfileAsync(Guid vendorId, UpdateVendorProfileRequest request);
