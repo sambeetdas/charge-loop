@@ -1,8 +1,8 @@
 # ChargeLoop — End-to-End Test Report
 
-**Generated:** 2026-11-21T11:45:01+05:30  
-**Target:** `.NET 11` (`ChargeLoop.WebApi` + PostgreSQL 18 + `wwwroot/index.html`)  
-**Overall Result:** **ALL PASSED** (18/18 Unit Tests, 21/21 Live E2E API & UI Checks, 0 Build Errors/Warnings)
+**Generated:** 2026-11-27T19:05:00+05:30  
+**Target:** `.NET 11` (`ChargeLoop.WebApi` + PostgreSQL 18 / PostGIS 3.7 + `wwwroot/index.html`)  
+**Overall Result:** **ALL PASSED** (21/21 Unit Tests, 21/21 Live E2E API & UI Checks, 0 Build Errors/Warnings)
 
 ---
 
@@ -11,7 +11,12 @@
 | Check | Command | Result | Details |
 | :--- | :--- | :--- | :--- |
 | Solution Build | `dotnet build backend/ChargeLoop.WebApi/ChargeLoop.WebApi.csproj` | **PASS** | `0 Warning(s), 0 Error(s)` |
-| Unit Tests | `dotnet test tests/ChargeLoop.UnitTests/ChargeLoop.UnitTests.csproj` | **PASS** | `Passed: 18, Failed: 0, Skipped: 0, Total: 18` |
+| Unit Tests | `dotnet test tests/ChargeLoop.UnitTests/ChargeLoop.UnitTests.csproj` | **PASS** | `Passed: 21, Failed: 0, Skipped: 0, Total: 21` |
+
+### New Unit Test Coverage (Phase 6)
+- `StoreEditDelete_DeletesOnlyBatteriesCurrentlyInStore_PreservingMovedBatteries`: Verifies store edit/delete ownership, deletion of batteries physically in the deleted store, and preservation of batteries moved to another store.
+- `BatteryEditDelete_AllowedOnlyForOwner`: Verifies only the battery owner (`OwnerPartnerId`) can edit or delete a battery, even when located at another store.
+- `DriverKycDocs_RequiredForReserveAndSwap_AndSaveKeepsStatusPending`: Verifies reserve/swap are blocked without Aadhaar + DL/PAN, saving keeps `KycStatus.Pending`, and saving unlocks reserve/swap.
 
 ---
 

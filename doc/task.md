@@ -89,9 +89,21 @@
 - [x] **TASK-MOB01 (Flutter Mobile Parity)**: Wire 2-step OTP login into `auth_screen.dart`, Cash top-up + online WIP notice into `wallet_screen.dart`, and Partner Swap Desk + Register Battery into `vendor_home_screen.dart`.
 
 ### 5.2 Backlog (Next Integrations)
+- [ ] **TASK-KYC01 (Automated KYC Verification)**: Integrate DigiLocker / Aadhaar / DL & PAN verification APIs (currently drivers save Aadhaar & DL/PAN in Profile to unlock reserve/swap, and verification is done manually at the nearest vendor store).
+- [ ] **TASK-SUB01 (Weekly Subscription Plans UI)**: Re-enable Weekly Subscription Plans UI in Driver Profile (backend `/api/v1/subscriptions/*` is already implemented and kept in backlog).
 - [ ] **TASK-B01 (Real OTP SMS Gateway)**: Replace demo OTP UI display with actual SMS delivery via MSG91 / Gupshup / Twilio (DLT templates).
 - [ ] **TASK-B02 (Online Payment Gateway)**: Integrate Razorpay / Cashfree / Stripe for Card, UPI Intent, and online Wallet top-ups with webhook signature verification.
 - [ ] **TASK-B03 (Real Bill Dispatch)**: Connect `PublishSwapBillAsync` to WhatsApp Business API, SMS, and SMTP/SendGrid email delivery.
 - [ ] **TASK-H01**: Integrate `mobile_scanner` plugin in Flutter to scan physical QR codes and battery barcodes using native camera.
 - [ ] **TASK-H02**: Integrate `google_maps_flutter` with Google Maps API key for live map tile rendering and marker clustering.
 - [ ] **TASK-H03**: Implement GPS location permissions (`geolocator`) to sort stations by real GPS coordinates.
+
+---
+
+## 6. Phase 6: PostGIS Spatial Search, Store/Battery Management, KYC Gate & Tablet/Hindi UI (COMPLETED ✅)
+- [x] **TASK-PG01 (PostGIS Spatial Filtering)**: Added `stations.geom` (`geography(Point, 4326)`) + `ix_stations_geom` GiST index in `Program.cs` `EnsureSchemaAsync` and `StationService`, filtering nearby stores with `ST_DWithin` / `ST_Distance` (with Haversine fallback).
+- [x] **TASK-DR05 (20 km Radius & Custom Location Search)**: Restricted driver nearby store discovery to **20 km**, added `📍 Change Location` autocomplete (`/config/address-suggestions`) + `Use My GPS` reset so drivers can search any area and reserve 2 hours in advance.
+- [x] **TASK-GEO01 (Clean Street Autocomplete)**: Added `StreetAddress` extraction in `ConfigController` (Nominatim & Google Maps) and duplicate-city suppression (`formatStationLocation`) so street address doesn't repeat city/state.
+- [x] **TASK-ST01 (Vendor Store & Owner Battery Edit/Delete)**: Added `PUT/DELETE /api/v1/stations/{id}` (deleting a store removes only batteries currently at that store, preserving batteries moved to other stores or out with drivers) and owner-only `PUT/DELETE /api/v1/stations/batteries/{batteryId}`.
+- [x] **TASK-KYC00 (KYC Document Gate & Manual Verification Notice)**: Required Aadhaar & DL/PAN to be saved in Driver Profile before reserving or swapping; status stays `Pending` (red badge) until verified, with `Verify KYC` showing the manual store verification message.
+- [x] **TASK-UI01 (Tablet Responsive + Hindi i18n + Subscription Backlog)**: Fixed tablet viewport layout, added Hindi (`hi`) translations for all new controls, and hid Weekly Subscription Plans from active UI into backlog.

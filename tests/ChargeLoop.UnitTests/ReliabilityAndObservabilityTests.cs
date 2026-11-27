@@ -32,8 +32,8 @@ public class ReliabilityAndObservabilityTests
         var reservationService = new ReservationService(ctx);
 
         var partner = new Partner { FullName = "Partner", BusinessName = "XYZ", PhoneNumber = "+919100000001" };
-        var d1 = new Driver { FullName = "Driver 1", PhoneNumber = "+919100000002" };
-        var d2 = new Driver { FullName = "Driver 2", PhoneNumber = "+919100000003" };
+        var d1 = new Driver { FullName = "Driver 1", PhoneNumber = "+919100000002", AadhaarMasked = "XXXXXXXX1002", DrivingLicenseNumber = "DL01TEST0002" };
+        var d2 = new Driver { FullName = "Driver 2", PhoneNumber = "+919100000003", AadhaarMasked = "XXXXXXXX1003", DrivingLicenseNumber = "DL01TEST0003" };
         await ctx.Partners.AddAsync(partner);
         await ctx.Drivers.AddRangeAsync(d1, d2);
         await ctx.SaveChangesAsync();
@@ -62,7 +62,7 @@ public class ReliabilityAndObservabilityTests
         var walletService = new WalletService(ctx);
         var swapService = new SwapService(ctx, walletService, new MockNotificationService());
 
-        var driver = new Driver { FullName = "Driver", PhoneNumber = "+919200000001" };
+        var driver = new Driver { FullName = "Driver", PhoneNumber = "+919200000001", AadhaarMasked = "XXXXXXXX2001", DrivingLicenseNumber = "DL01TEST2001" };
         var partner = new Partner { FullName = "Partner", BusinessName = "Hub", PhoneNumber = "+919200000002", WalletBalance = 0.00m };
         var station = new Station { PartnerId = partner.Id, Name = "Hub", AvailableChargedBatteriesCount = 1 };
         var bat = new Battery { SerialNumber = "BAT-DBL-1", StateOfChargePercent = 100, Status = BatteryStatus.AvailableCharged, IsVisibleToDriver = true, CurrentStationId = station.Id };

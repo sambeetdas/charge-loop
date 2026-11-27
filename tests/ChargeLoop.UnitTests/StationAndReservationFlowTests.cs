@@ -81,7 +81,7 @@ public class StationAndReservationFlowTests
         var reservationService = new ReservationService(context);
 
         var partner = new Partner { FullName = "Partner", BusinessName = "Hub", PhoneNumber = "+919000000002" };
-        var driver = new Driver { FullName = "Driver", PhoneNumber = "+919000000003" };
+        var driver = new Driver { FullName = "Driver", PhoneNumber = "+919000000003", AadhaarMasked = "XXXXXXXX0003", DrivingLicenseNumber = "DL01TEST0003" };
         await context.Partners.AddAsync(partner);
         await context.Drivers.AddAsync(driver);
         await context.SaveChangesAsync();
@@ -218,5 +218,49 @@ public class StationAndReservationFlowTests
 
         await stationService.DeleteBatteryAsync(bat.Id, owner.Id);
         Assert.Null(await context.Batteries.FindAsync(bat.Id));
+    }
+
+    [Fact]
+    public async Task DriverKycDocs_RequiredForReserveAndSwap_AndSaveKeepsStatusPending()
+    {
+        var context = CreateInMemoryDbContext();
+        var stationService = new StationService(context, new MockNotificationService());
+        var reservationService = new ReservationService(context);
+        var walletService = new WalletService(context);
+        var swapService = new SwapService(context, walletService, new MockNotificationService());
+        var driverService = new DriverService(context, new JwtTokenService(new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build()));
+
+        var partner = new Partner { FullName = "Partner", BusinessName = "Hub", PhoneNumber = "+919000000031" };
+        var driver = new Driver { FullName = "NoKYC Driver", PhoneNumber = "+919000000032" };
+        await context.Partners.AddAsync(partner);
+        await context.Drivers.AddAsync(driver);
+        await context.SaveChangesAsync();
+
+        var station = await stationService.CreateStationAsync(new CreateStationRequest(
+            partner.Id, "Hub 1", "Street 1", "Bengaluru", 12.97, 77.59));
+        var bat = await stationService.RegisterBatteryAtStationAsync(
+            new RegisterBatteryRequest(station.Id, "BAT-KYC-1", "LFP-48V", 100));
+
+        // Cannot reserve or swap before saving Aadhaar & DL/PAN
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            reservationService.CreateReservationAsync(new ReservationRequest(driver.Id, station.Id)));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            swapService.InitiateSwapAsync(new InitiateSwapRequest(driver.Id, station.Id, partner.Id, "", bat.SerialNumber)));
+
+        // Save Aadhaar & DL/PAN -> status stays Pending (manual KYC at store)
+        var saved = await driverService.SubmitKycAsync(new KycSubmissionRequest(driver.Id, "KA0120200012345", "123456789012"));
+        Assert.True(saved);
+
+        var updatedDriver = await context.Drivers.FindAsync(driver.Id);
+        Assert.Equal("XXXXXXXX9012", updatedDriver!.AadhaarMasked);
+        Assert.Equal("KA0120200012345", updatedDriver.DrivingLicenseNumber);
+        Assert.Equal(KycStatus.Pending, updatedDriver.KycStatus);
+
+        // Now driver CAN reserve and initiate swap
+        var res = await reservationService.CreateReservationAsync(new ReservationRequest(driver.Id, station.Id));
+        Assert.Equal(ReservationStatus.Active, res.Status);
+
+        var swap = await swapService.InitiateSwapAsync(new InitiateSwapRequest(driver.Id, station.Id, partner.Id, "", bat.SerialNumber));
+        Assert.Equal(SwapStatus.Validated, swap.Status);
     }
 }

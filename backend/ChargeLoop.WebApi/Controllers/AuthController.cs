@@ -151,9 +151,16 @@ public class AuthController : ControllerBase
     [HttpPost("kyc")]
     public async Task<ActionResult> SubmitKyc([FromBody] KycSubmissionRequest request)
     {
-        var success = await _driverService.SubmitKycAsync(request);
-        if (!success) return BadRequest("Unable to process KYC for driver");
-        return Ok(new { Message = "KYC verified successfully" });
+        try
+        {
+            var success = await _driverService.SubmitKycAsync(request);
+            if (!success) return BadRequest("Unable to process KYC for driver");
+            return Ok(new { Message = "KYC documents saved. Verification is done manually at the nearest vendor store." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
     }
 
     [Authorize]

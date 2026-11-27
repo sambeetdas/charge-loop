@@ -76,10 +76,13 @@ public class SwapService : ISwapService
             reservedStationName = resStation?.Name ?? "Reserved Station";
         }
 
-        var eligible = driver.KycStatus == KycStatus.Verified || remainingSwaps > 0 || driver.WalletBalance >= 0;
-        var msg = driver.KycStatus == KycStatus.Verified
-            ? "Driver verified. Proceed to scan battery & verify Swap OTP."
-            : "Driver found (KYC Pending — cash swap allowed). Verify Swap OTP in Step 3.";
+        var hasKycDocs = !string.IsNullOrWhiteSpace(driver.AadhaarMasked) && !string.IsNullOrWhiteSpace(driver.DrivingLicenseNumber);
+        var eligible = hasKycDocs;
+        var msg = !hasKycDocs
+            ? "KYC documents (Aadhaar & DL/PAN) missing. Driver must save them in Profile before swapping."
+            : driver.KycStatus == KycStatus.Verified
+                ? "Driver verified. Proceed to scan battery & verify Swap OTP."
+                : "Documents saved (manual KYC verification at store). Proceed to scan battery & verify Swap OTP.";
 
         return new DriverValidationDto(
             driver.Id,
@@ -105,6 +108,10 @@ public class SwapService : ISwapService
         // 1. Validate station and partner from database
         var station = await _context.Stations.FindAsync(request.StationId);
         if (station == null) throw new ArgumentException("Station not found in database");
+
+        var driver = await _context.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == request.DriverId);
+        if (driver != null && (string.IsNullOrWhiteSpace(driver.AadhaarMasked) || string.IsNullOrWhiteSpace(driver.DrivingLicenseNumber)))
+            throw new InvalidOperationException("Please save your Aadhaar and DL/PAN in Profile before swapping a battery.");
 
         // 2. Validate depleted battery (null allowed for driver's first battery pickup)
         Battery? depleted = null;

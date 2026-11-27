@@ -124,7 +124,7 @@ public class SwapServiceTests
         var swapService = new SwapService(context, walletService, notifService);
 
         var partner = new Partner { Id = Guid.NewGuid(), FullName = "Partner 1", BusinessName = "Shop", PhoneNumber = "111", WalletBalance = 100.00m };
-        var driver = new Driver { Id = Guid.NewGuid(), PhoneNumber = "999", FullName = "Driver 1", WalletBalance = 500.00m };
+        var driver = new Driver { Id = Guid.NewGuid(), PhoneNumber = "999", FullName = "Driver 1", WalletBalance = 500.00m, AadhaarMasked = "XXXXXXXX0999", DrivingLicenseNumber = "DL01TEST0999" };
         var station = new Station { Id = Guid.NewGuid(), PartnerId = partner.Id, Name = "Hub", AvailableChargedBatteriesCount = 5, ChargingBatteriesCount = 2 };
         var depleted = new Battery { SerialNumber = "BAT-D", StateOfChargePercent = 12, CurrentDriverId = driver.Id, Status = BatteryStatus.InUseByDriver };
         var issued = new Battery { SerialNumber = "BAT-I", StateOfChargePercent = 100, CurrentStationId = station.Id, Status = BatteryStatus.AvailableCharged };
@@ -176,7 +176,7 @@ public class SwapServiceTests
         var swapService = new SwapService(context, walletService, new MockNotificationService());
         var reservationService = new ReservationService(context);
 
-        var driver = new Driver { FullName = "First Time Driver", PhoneNumber = "+919000000010", WalletBalance = 0.00m };
+        var driver = new Driver { FullName = "First Time Driver", PhoneNumber = "+919000000010", WalletBalance = 0.00m, AadhaarMasked = "XXXXXXXX0010", DrivingLicenseNumber = "DL01TEST0010" };
         var partner = new Partner { FullName = "Partner", BusinessName = "XYZ Mall", PhoneNumber = "+919000000011", WalletBalance = 0.00m };
         var station = new Station { PartnerId = partner.Id, Name = "XYZ Mall", AvailableChargedBatteriesCount = 1, ChargingBatteriesCount = 0 };
         var issued = new Battery { SerialNumber = "BAT-FIRST-100", StateOfChargePercent = 100, Status = BatteryStatus.AvailableCharged, CurrentStationId = station.Id };
@@ -216,7 +216,7 @@ public class SwapServiceTests
         var walletService = new WalletService(context);
         var swapService = new SwapService(context, walletService, new MockNotificationService());
 
-        var driver = new Driver { FullName = "Swap Driver", PhoneNumber = "+919000000020", WalletBalance = 0.00m };
+        var driver = new Driver { FullName = "Swap Driver", PhoneNumber = "+919000000020", WalletBalance = 0.00m, AadhaarMasked = "XXXXXXXX0020", DrivingLicenseNumber = "DL01TEST0020" };
         var partner = new Partner { FullName = "Partner", BusinessName = "XYZ Mall", PhoneNumber = "+919000000021" };
         var station = new Station { PartnerId = partner.Id, Name = "XYZ Mall", AvailableChargedBatteriesCount = 1 };
         var inactiveBattery = new Battery

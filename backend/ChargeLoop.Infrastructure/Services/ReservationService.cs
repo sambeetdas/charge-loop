@@ -27,6 +27,8 @@ public class ReservationService : IReservationService
 
         var driver = await _context.Drivers.FindAsync(request.DriverId);
         if (driver == null) throw new ArgumentException("Driver not found");
+        if (string.IsNullOrWhiteSpace(driver.AadhaarMasked) || string.IsNullOrWhiteSpace(driver.DrivingLicenseNumber))
+            throw new InvalidOperationException("Please save your Aadhaar and DL/PAN in Profile before reserving a store.");
 
         // Cancel any existing active reservations for this driver
         var existing = await _context.Reservations

@@ -428,9 +428,18 @@ public class DriverService : IDriverService
         var driver = await _context.Drivers.FindAsync(request.DriverId);
         if (driver == null) return false;
 
-        driver.DrivingLicenseNumber = request.DrivingLicenseNumber;
-        driver.AadhaarMasked = $"XXXXXXXX{request.AadhaarNumber[^4..]}";
-        driver.KycStatus = KycStatus.Verified;
+        var dlOrPan = (request.DrivingLicenseNumber ?? "").Trim().ToUpperInvariant();
+        var aadhaar = (request.AadhaarNumber ?? "").Trim();
+        if (dlOrPan.Length < 6)
+            throw new ArgumentException("Enter a valid Driving License or PAN number.");
+        if (aadhaar.Length != 12 || !aadhaar.All(char.IsDigit))
+            throw new ArgumentException("Aadhaar number must be exactly 12 digits.");
+
+        driver.DrivingLicenseNumber = dlOrPan;
+        driver.AadhaarMasked = $"XXXXXXXX{aadhaar[^4..]}";
+        // KYC verification is in backlog / handled manually at the nearest vendor store
+        if (driver.KycStatus != KycStatus.Verified)
+            driver.KycStatus = KycStatus.Pending;
         await _context.SaveChangesAsync();
         return true;
     }

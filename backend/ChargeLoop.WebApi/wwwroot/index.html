@@ -862,16 +862,22 @@
         <button class="btn btn-primary" onclick="confirmDriverChangePhone()" data-i18n="updatePhone">Update Phone Number</button>
       </div>
 
-      <div class="card">
+      <!-- Subscription Plans (Backlog) -->
+      <div id="weeklyPlansCard" class="card hidden">
         <div style="font-weight:800;margin-bottom:8px;" data-i18n="weeklyPlansTitle">📋 Weekly Subscription Plans</div>
         <div id="subscriptionPlansList"></div>
       </div>
 
       <div class="card">
-        <div style="font-weight:800;margin-bottom:8px;" data-i18n="completeKycTitle">🪪 Complete KYC</div>
-        <input id="kycDlInput" class="input-field" placeholder="Driving License Number" data-i18n-placeholder="phDl">
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="completeKycTitle">🪪 KYC Documents (Aadhaar &amp; DL / PAN)</div>
+        <div id="kycSavedSummary" class="muted hidden" style="font-size:12px;margin-bottom:8px;"></div>
+        <input id="kycDlInput" class="input-field" placeholder="Driving License or PAN Number" data-i18n-placeholder="phDl">
         <input id="kycAadhaarInput" class="input-field" placeholder="Aadhaar Number (12 digits)" data-i18n-placeholder="phAadhaar">
-        <button class="btn btn-primary" onclick="submitDriverKyc()" data-i18n="verifyKycBtn">Verify KYC</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="submitDriverKyc()" data-i18n="saveKycBtn">Save KYC Details</button>
+          <button id="verifyKycBtn" class="btn btn-secondary hidden" onclick="onVerifyKycClick()" data-i18n="verifyKycBtn">Verify KYC</button>
+        </div>
+        <div id="kycManualNote" class="hidden" style="margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#FCD34D;font-size:12px;line-height:1.4;"></div>
       </div>
 
       <div class="card">
@@ -1490,7 +1496,29 @@ async function refreshDriverViews() {
   document.getElementById('profDriverName').textContent = state.driver.fullName;
   document.getElementById('profDriverPhone').textContent = state.driver.phoneNumber;
   document.getElementById('profDriverEmail').textContent = state.driver.email || 'No email set';
-  document.getElementById('profKycBadge').textContent = state.driver.kycStatus === 1 ? 'KYC Verified' : 'KYC Pending';
+  const kycBadge = document.getElementById('profKycBadge');
+  if (state.driver.kycStatus === 1) {
+    kycBadge.className = 'mint-pill';
+    kycBadge.style.cssText = '';
+    kycBadge.textContent = t('kycVerifiedBadge');
+  } else {
+    kycBadge.className = 'mint-pill';
+    kycBadge.style.cssText = 'background:rgba(239,68,68,0.16);color:#FCA5A5;border:1px solid rgba(239,68,68,0.45);';
+    kycBadge.textContent = t('kycNotVerifiedBadge');
+  }
+
+  const hasKycDocs = Boolean(state.driver.aadhaarMasked && state.driver.drivingLicenseNumber);
+  const kycSummary = document.getElementById('kycSavedSummary');
+  const verifyKycBtn = document.getElementById('verifyKycBtn');
+  if (hasKycDocs) {
+    kycSummary.textContent = `${t('kycSavedPrefix')} ${state.driver.aadhaarMasked} • ${state.driver.drivingLicenseNumber}`;
+    kycSummary.classList.remove('hidden');
+    verifyKycBtn.classList.remove('hidden');
+    if (state.driver.drivingLicenseNumber) document.getElementById('kycDlInput').value = state.driver.drivingLicenseNumber;
+  } else {
+    kycSummary.classList.add('hidden');
+    verifyKycBtn.classList.add('hidden');
+  }
 
   document.getElementById('editDriverName').value = state.driver.fullName || '';
   document.getElementById('editDriverEmail').value = state.driver.email || '';
@@ -1511,8 +1539,9 @@ async function refreshDriverViews() {
     depInput.placeholder = 'Leave empty for first battery pickup';
   }
 
+  document.getElementById('homePlanBadge').textContent = t('payPerSwap');
   await loadActiveReservation();
-  await Promise.all([loadPricingConfig(), loadStations(), loadPendingDriverSwap(), loadDriverWalletTx(), loadDriverHistory(), loadSubscriptionPlans()]);
+  await Promise.all([loadPricingConfig(), loadStations(), loadPendingDriverSwap(), loadDriverWalletTx(), loadDriverHistory()]);
 }
 
 function switchDriverTab(tab) {
@@ -1841,7 +1870,16 @@ function updateDriverFareVisibility() {
   document.getElementById('driverFareWaitingMsg').classList.toggle('hidden', ready);
 }
 
+function hasDriverKycDocs() {
+  return Boolean(state.driver?.aadhaarMasked && state.driver?.drivingLicenseNumber);
+}
+
 async function reserveAtStation(stationId) {
+  if (!hasDriverKycDocs()) {
+    showToast(t('kycDocsRequiredToast'), true);
+    switchDriverTab('profile');
+    return;
+  }
   try {
     const res = await apiFetch('/reservations/hold', {
       method: 'POST',
@@ -1907,6 +1945,11 @@ async function regenerateDriverSwapOtp(swapId) {
 }
 
 async function executeDriverScanAndPay() {
+  if (!hasDriverKycDocs()) {
+    showToast(t('kycDocsRequiredToast'), true);
+    switchDriverTab('profile');
+    return;
+  }
   const sel = document.getElementById('scanStationSelect');
   const stationId = sel.value;
   if (!stationId) return showToast('Please reserve a station on Home tab first.', true);
@@ -2078,8 +2121,8 @@ async function subscribePlan(planId) {
 async function submitDriverKyc() {
   const drivingLicenseNumber = document.getElementById('kycDlInput').value.trim();
   const aadhaarNumber = document.getElementById('kycAadhaarInput').value.trim();
-  if (drivingLicenseNumber.length < 6) return showToast('Enter a valid Driving License number', true);
-  if (!/^\d{12}$/.test(aadhaarNumber)) return showToast('Aadhaar number must be exactly 12 digits', true);
+  if (drivingLicenseNumber.length < 6) return showToast(t('kycInvalidDlToast'), true);
+  if (!/^\d{12}$/.test(aadhaarNumber)) return showToast(t('kycInvalidAadhaarToast'), true);
   try {
     await apiFetch('/auth/kyc', {
       method: 'POST',
@@ -2089,9 +2132,20 @@ async function submitDriverKyc() {
         aadhaarNumber
       })
     });
+    document.getElementById('kycAadhaarInput').value = '';
     await refreshDriverViews();
-    showToast('KYC verified!');
+    showToast(t('kycDocsSavedToast'));
   } catch (e) { showToast(e.message, true); }
+}
+
+function onVerifyKycClick() {
+  const msg = t('kycManualStoreMsg');
+  const noteEl = document.getElementById('kycManualNote');
+  if (noteEl) {
+    noteEl.textContent = `ℹ️ ${msg}`;
+    noteEl.classList.remove('hidden');
+  }
+  showToast(msg);
 }
 
 // VENDOR FLOWS
@@ -2996,10 +3050,19 @@ const I18N = {
     phCurrentPin: 'Current PIN (4-6 digits)',
     updatePhone: 'Update Phone Number',
     weeklyPlansTitle: '📋 Weekly Subscription Plans',
-    completeKycTitle: '🪪 Complete KYC',
-    phDl: 'Driving License Number',
+    completeKycTitle: '🪪 KYC Documents (Aadhaar & DL / PAN)',
+    phDl: 'Driving License or PAN Number',
     phAadhaar: 'Aadhaar Number (12 digits)',
+    saveKycBtn: 'Save KYC Details',
     verifyKycBtn: 'Verify KYC',
+    kycVerifiedBadge: '✅ KYC Verified',
+    kycNotVerifiedBadge: '❌ KYC Not Verified',
+    kycSavedPrefix: 'Saved:',
+    kycDocsSavedToast: 'Aadhaar and DL/PAN saved! Tap Verify KYC for verification info.',
+    kycManualStoreMsg: 'At this point, KYC verification is done manually at the nearest vendor store.',
+    kycDocsRequiredToast: 'Please save your Aadhaar and DL/PAN in Profile before reserving or swapping.',
+    kycInvalidDlToast: 'Enter a valid Driving License or PAN number',
+    kycInvalidAadhaarToast: 'Aadhaar number must be exactly 12 digits',
     appLanguageTitle: '🌐 App Language',
     signOut: 'Sign Out',
     partnerSwapDesk: 'Partner Swap Desk',
@@ -3107,7 +3170,7 @@ const I18N = {
     gtkBillsTitle: '🧾 GST Bills',
     gtkBillsDesc: 'View all swap invoices in Bills tab',
     gtkAccTitle: '👤 Account',
-    gtkAccDesc: 'Update KYC, Plans & Phone in Profile',
+    gtkAccDesc: 'Update KYC & Phone in Profile',
     partnerStoresHelpSub: 'Use + Add Store (with address autocomplete) and + Add Battery under the Stores tab.',
     vhDeskTitle: '⚡ Swap Desk Workflow',
     vhStep1Title: 'Select or Validate Driver',
@@ -3241,10 +3304,19 @@ const I18N = {
     phCurrentPin: 'वर्तमान पिन (4-6 अंक)',
     updatePhone: 'फ़ोन नंबर अपडेट करें',
     weeklyPlansTitle: '📋 साप्ताहिक सदस्यता प्लान',
-    completeKycTitle: '🪪 KYC पूरा करें',
-    phDl: 'ड्राइविंग लाइसेंस नंबर',
+    completeKycTitle: '🪪 KYC दस्तावेज़ (आधार और DL / PAN)',
+    phDl: 'ड्राइविंग लाइसेंस या पैन नंबर',
     phAadhaar: 'आधार नंबर (12 अंक)',
+    saveKycBtn: 'KYC विवरण सहेजें',
     verifyKycBtn: 'KYC सत्यापित करें',
+    kycVerifiedBadge: '✅ KYC सत्यापित',
+    kycNotVerifiedBadge: '❌ KYC सत्यापित नहीं',
+    kycSavedPrefix: 'सहेजा गया:',
+    kycDocsSavedToast: 'आधार और DL/PAN सहेजे गए! सत्यापन जानकारी के लिए KYC सत्यापित करें दबाएं।',
+    kycManualStoreMsg: 'इस समय, KYC सत्यापन निकटतम वेंडर स्टोर पर मैन्युअल रूप से किया जाता है।',
+    kycDocsRequiredToast: 'रिज़र्व या स्वैप करने से पहले कृपया प्रोफ़ाइल में अपना आधार और DL/PAN सहेजें।',
+    kycInvalidDlToast: 'मान्य ड्राइविंग लाइसेंस या पैन नंबर दर्ज करें',
+    kycInvalidAadhaarToast: 'आधार नंबर ठीक 12 अंकों का होना चाहिए',
     appLanguageTitle: '🌐 ऐप की भाषा',
     signOut: 'साइन आउट',
     partnerSwapDesk: 'पार्टनर स्वैप डेस्क',
@@ -3352,7 +3424,7 @@ const I18N = {
     gtkBillsTitle: '🧾 GST बिल',
     gtkBillsDesc: 'बिल टैब में सभी स्वैप इनवॉइस देखें',
     gtkAccTitle: '👤 खाता',
-    gtkAccDesc: 'प्रोफ़ाइल में KYC, प्लान और फ़ोन अपडेट करें',
+    gtkAccDesc: 'प्रोफ़ाइल में KYC और फ़ोन अपडेट करें',
     partnerStoresHelpSub: 'स्टोर टैब में + स्टोर जोड़ें (पता ऑटोकम्प्लीट के साथ) और + बैटरी जोड़ें का उपयोग करें।',
     vhDeskTitle: '⚡ स्वैप डेस्क कार्यप्रवाह',
     vhStep1Title: 'ड्राइवर चुनें या सत्यापित करें',
@@ -3456,9 +3528,9 @@ function setAppLanguage(lang, persist = true) {
 
   if (persist) {
     if (state.role === 'driver' && state.driver) {
+      document.getElementById('homePlanBadge').textContent = t('payPerSwap');
       loadStations();
       loadDriverHistory();
-      loadSubscriptionPlans();
     } else if (state.role === 'vendor' && state.vendor) {
       refreshVendorViews();
     }
