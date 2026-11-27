@@ -129,4 +129,94 @@ public class StationAndReservationFlowTests
         await context.SaveChangesAsync();
         Assert.Null(await reservationService.GetActiveReservationAsync(driver.Id));
     }
+
+    [Fact]
+    public async Task StoreEditDelete_DeletesOnlyBatteriesCurrentlyInStore_PreservingMovedBatteries()
+    {
+        var context = CreateInMemoryDbContext();
+        var stationService = new StationService(context, new MockNotificationService());
+        var partnerA = new Partner { FullName = "Vendor A", BusinessName = "A Stores", PhoneNumber = "+919000000011" };
+        var partnerB = new Partner { FullName = "Vendor B", BusinessName = "B Stores", PhoneNumber = "+919000000012" };
+        await context.Partners.AddRangeAsync(partnerA, partnerB);
+        await context.SaveChangesAsync();
+
+        var store1 = await stationService.CreateStationAsync(new CreateStationRequest(
+            partnerA.Id, "Store 1", "100 Main St", "Bengaluru", 12.97, 77.59));
+        var store2 = await stationService.CreateStationAsync(new CreateStationRequest(
+            partnerB.Id, "Store 2", "200 Ring Rd", "Bengaluru", 12.98, 77.60));
+
+        // Edit store1 by owner succeeds; non-owner fails
+        var updatedStore = await stationService.UpdateStationAsync(store1.Id,
+            new UpdateStationRequest(partnerA.Id, "Store 1 Updated", "101 Main St", "Bengaluru", 12.971, 77.591));
+        Assert.Equal("Store 1 Updated", updatedStore.Name);
+        Assert.Equal("101 Main St", updatedStore.Address);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            stationService.UpdateStationAsync(store1.Id,
+                new UpdateStationRequest(partnerB.Id, "Hijack", "X", "Bengaluru", 12.9, 77.5)));
+
+        // Register two batteries at store1
+        var batStay = await stationService.RegisterBatteryAtStationAsync(
+            new RegisterBatteryRequest(store1.Id, "BAT-STAY-1", "LFP-48V", 100));
+        var batMoved = await stationService.RegisterBatteryAtStationAsync(
+            new RegisterBatteryRequest(store1.Id, "BAT-MOVED-2", "LFP-48V", 100));
+
+        // Simulate batMoved passing to store2
+        var movedEntity = await context.Batteries.FirstAsync(b => b.Id == batMoved.Id);
+        movedEntity.CurrentStationId = store2.Id;
+        await context.SaveChangesAsync();
+
+        // Non-owner cannot delete store1
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            stationService.DeleteStationAsync(store1.Id, partnerB.Id));
+
+        // Owner deletes store1 -> batStay is deleted, batMoved is preserved!
+        await stationService.DeleteStationAsync(store1.Id, partnerA.Id);
+
+        Assert.Null(await context.Stations.FindAsync(store1.Id));
+        Assert.Null(await context.Batteries.FindAsync(batStay.Id));
+        var preserved = await context.Batteries.FindAsync(batMoved.Id);
+        Assert.NotNull(preserved);
+        Assert.Equal(store2.Id, preserved!.CurrentStationId);
+    }
+
+    [Fact]
+    public async Task BatteryEditDelete_AllowedOnlyForOwner()
+    {
+        var context = CreateInMemoryDbContext();
+        var stationService = new StationService(context, new MockNotificationService());
+        var owner = new Partner { FullName = "Owner", BusinessName = "Owner Hub", PhoneNumber = "+919000000021" };
+        var other = new Partner { FullName = "Other", BusinessName = "Other Hub", PhoneNumber = "+919000000022" };
+        await context.Partners.AddRangeAsync(owner, other);
+        await context.SaveChangesAsync();
+
+        var ownerStore = await stationService.CreateStationAsync(new CreateStationRequest(
+            owner.Id, "Owner Store", "Street 1", "Bengaluru", 12.97, 77.59));
+        var otherStore = await stationService.CreateStationAsync(new CreateStationRequest(
+            other.Id, "Other Store", "Street 2", "Bengaluru", 12.98, 77.60));
+
+        var bat = await stationService.RegisterBatteryAtStationAsync(
+            new RegisterBatteryRequest(ownerStore.Id, "BAT-OWN-1", "LFP-48V", 90));
+
+        // Even if the battery moves to otherStore, 'other' is NOT the owner and cannot edit or delete it
+        var batEntity = await context.Batteries.FirstAsync(b => b.Id == bat.Id);
+        batEntity.CurrentStationId = otherStore.Id;
+        await context.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            stationService.UpdateBatteryAsync(bat.Id,
+                new UpdateBatteryRequest(other.Id, "BAT-OWN-1-X", "LFP-48V", 95, 99)));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            stationService.DeleteBatteryAsync(bat.Id, other.Id));
+
+        // Owner CAN edit and delete their battery
+        var edited = await stationService.UpdateBatteryAsync(bat.Id,
+            new UpdateBatteryRequest(owner.Id, "BAT-OWN-1-V2", "LFP-60V", 95, 98));
+        Assert.Equal("BAT-OWN-1-V2", edited.SerialNumber);
+        Assert.Equal("LFP-60V", edited.ModelType);
+        Assert.Equal(95, edited.StateOfChargePercent);
+
+        await stationService.DeleteBatteryAsync(bat.Id, owner.Id);
+        Assert.Null(await context.Batteries.FindAsync(bat.Id));
+    }
 }

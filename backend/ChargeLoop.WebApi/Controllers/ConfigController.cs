@@ -140,7 +140,8 @@ public class ConfigController : ControllerBase
                         var lat = loc.GetProperty("lat").GetDouble();
                         var lng = loc.GetProperty("lng").GetDouble();
                         var city = ExtractGoogleCity(item);
-                        results.Add(new GeocodeResultDto(formatted, city, lat, lng, "GoogleMaps"));
+                        var street = ExtractGoogleStreetAddress(item, city, formatted);
+                        results.Add(new GeocodeResultDto(formatted, city, lat, lng, "GoogleMaps", street));
                         if (results.Count >= limit) return results;
                     }
                     if (results.Count > 0) return results;
@@ -161,7 +162,8 @@ public class ConfigController : ControllerBase
             var osmLng = double.Parse(hit.GetProperty("lon").GetString()!, System.Globalization.CultureInfo.InvariantCulture);
             var osmDisplay = hit.GetProperty("display_name").GetString() ?? query;
             var osmCity = ExtractOsmCity(hit);
-            results.Add(new GeocodeResultDto(osmDisplay, osmCity, osmLat, osmLng, "OpenStreetMapFallback"));
+            var osmStreet = ExtractOsmStreetAddress(hit, osmCity, osmDisplay);
+            results.Add(new GeocodeResultDto(osmDisplay, osmCity, osmLat, osmLng, "OpenStreetMapFallback", osmStreet));
         }
         return results;
     }
@@ -182,6 +184,47 @@ public class ConfigController : ControllerBase
         return "";
     }
 
+    private static string ExtractGoogleStreetAddress(JsonElement item, string city, string formattedFallback)
+    {
+        var parts = new List<string>();
+        if (item.TryGetProperty("address_components", out var comps))
+        {
+            string? streetNum = null;
+            string? route = null;
+            var localities = new List<string>();
+
+            foreach (var c in comps.EnumerateArray())
+            {
+                if (!c.TryGetProperty("types", out var types)) continue;
+                var longName = c.GetProperty("long_name").GetString()?.Trim();
+                if (string.IsNullOrWhiteSpace(longName)) continue;
+
+                foreach (var t in types.EnumerateArray())
+                {
+                    var typeName = t.GetString();
+                    if (typeName == "street_number") streetNum = longName;
+                    else if (typeName == "route") route = longName;
+                    else if (typeName is "premise" or "subpremise" or "sublocality_level_2" or "sublocality_level_1" or "neighborhood")
+                        localities.Add(longName);
+                }
+            }
+
+            var streetLine = string.Join(" ", new[] { streetNum, route }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            if (!string.IsNullOrWhiteSpace(streetLine)) parts.Add(streetLine);
+            foreach (var loc in localities)
+            {
+                if (!string.Equals(loc, city, StringComparison.OrdinalIgnoreCase) &&
+                    !parts.Any(p => string.Equals(p, loc, StringComparison.OrdinalIgnoreCase)))
+                {
+                    parts.Add(loc);
+                }
+            }
+        }
+
+        if (parts.Count > 0) return string.Join(", ", parts);
+        return TrimBeforeCity(formattedFallback, city);
+    }
+
     private static string ExtractOsmCity(JsonElement hit)
     {
         if (!hit.TryGetProperty("address", out var addrObj)) return "";
@@ -190,5 +233,64 @@ public class ConfigController : ControllerBase
         if (addrObj.TryGetProperty("village", out var c3)) return c3.GetString() ?? "";
         if (addrObj.TryGetProperty("state_district", out var c4)) return c4.GetString() ?? "";
         return "";
+    }
+
+    private static string ExtractOsmStreetAddress(JsonElement hit, string city, string displayFallback)
+    {
+        var parts = new List<string>();
+        if (hit.TryGetProperty("address", out var addrObj))
+        {
+            var houseNumber = GetJsonString(addrObj, "house_number");
+            var road = GetJsonString(addrObj, "road")
+                ?? GetJsonString(addrObj, "pedestrian")
+                ?? GetJsonString(addrObj, "footway")
+                ?? GetJsonString(addrObj, "residential")
+                ?? GetJsonString(addrObj, "amenity")
+                ?? GetJsonString(addrObj, "shop")
+                ?? GetJsonString(addrObj, "building");
+
+            var streetLine = string.Join(" ", new[] { houseNumber, road }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            if (!string.IsNullOrWhiteSpace(streetLine)) parts.Add(streetLine);
+
+            foreach (var key in new[] { "neighbourhood", "quarter", "suburb", "hamlet" })
+            {
+                var val = GetJsonString(addrObj, key);
+                if (!string.IsNullOrWhiteSpace(val) &&
+                    !string.Equals(val, city, StringComparison.OrdinalIgnoreCase) &&
+                    !parts.Any(p => string.Equals(p, val, StringComparison.OrdinalIgnoreCase)))
+                {
+                    parts.Add(val);
+                }
+            }
+        }
+
+        if (parts.Count > 0) return string.Join(", ", parts);
+        return TrimBeforeCity(displayFallback, city);
+    }
+
+    private static string? GetJsonString(JsonElement obj, string prop)
+        => obj.TryGetProperty(prop, out var el) && el.ValueKind == JsonValueKind.String
+            ? el.GetString()?.Trim()
+            : null;
+
+    private static string TrimBeforeCity(string fullAddress, string city)
+    {
+        if (string.IsNullOrWhiteSpace(fullAddress)) return "";
+        var segments = fullAddress.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (segments.Length == 0) return fullAddress;
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            var beforeCity = new List<string>();
+            foreach (var seg in segments)
+            {
+                if (string.Equals(seg, city, StringComparison.OrdinalIgnoreCase)) break;
+                beforeCity.Add(seg);
+            }
+            if (beforeCity.Count > 0 && beforeCity.Count < segments.Length)
+                return string.Join(", ", beforeCity.Take(3));
+        }
+
+        return string.Join(", ", segments.Take(2));
     }
 }

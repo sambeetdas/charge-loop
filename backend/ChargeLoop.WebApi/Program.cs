@@ -143,6 +143,22 @@ using (var scope = app.Services.CreateScope())
                 ('88888888-8888-8888-8888-888888888803', '3W_60V', '3W High-Capacity 60V 45Ah', 60, 45, TRUE)
             ON CONFLICT (code) DO NOTHING;
         ");
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE EXTENSION IF NOT EXISTS postgis;
+                ALTER TABLE stations ADD COLUMN IF NOT EXISTS geom geography(Point, 4326);
+                UPDATE stations
+                SET geom = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+                WHERE geom IS NULL;
+                CREATE INDEX IF NOT EXISTS ix_stations_geom ON stations USING GIST (geom);
+            ");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"PostGIS spatial setup skipped (using Haversine fallback): {ex.Message}");
+        }
     }
 }
 

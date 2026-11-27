@@ -138,6 +138,106 @@ public class StationsController : ControllerBase
         return CreatedAtAction(nameof(GetStationById), new { id = station.Id }, station);
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<StationDto>> UpdateStation(Guid id, [FromBody] UpdateStationRequest request)
+    {
+        if (request.PartnerId == Guid.Empty || string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Address))
+            return BadRequest(new { Error = "PartnerId, Name, and Address are required." });
+
+        try
+        {
+            var updated = await _stationService.UpdateStationAsync(id, request);
+            return Ok(updated);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult> DeleteStation(Guid id, [FromQuery] Guid partnerId)
+    {
+        if (partnerId == Guid.Empty)
+            return BadRequest(new { Error = "partnerId is required." });
+
+        try
+        {
+            await _stationService.DeleteStationAsync(id, partnerId);
+            return Ok(new { Message = "Store deleted." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { Error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpPut("batteries/{batteryId:guid}")]
+    public async Task<ActionResult<BatteryDto>> UpdateBattery(Guid batteryId, [FromBody] UpdateBatteryRequest request)
+    {
+        if (request.PartnerId == Guid.Empty || string.IsNullOrWhiteSpace(request.SerialNumber))
+            return BadRequest(new { Error = "PartnerId and SerialNumber are required." });
+
+        try
+        {
+            var updated = await _stationService.UpdateBatteryAsync(batteryId, request);
+            return Ok(updated);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { Error = ex.Message });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpDelete("batteries/{batteryId:guid}")]
+    public async Task<ActionResult> DeleteBattery(Guid batteryId, [FromQuery] Guid partnerId)
+    {
+        if (partnerId == Guid.Empty)
+            return BadRequest(new { Error = "partnerId is required." });
+
+        try
+        {
+            await _stationService.DeleteBatteryAsync(batteryId, partnerId);
+            return Ok(new { Message = "Battery deleted." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { Error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpGet("partner/{partnerId:guid}")]
     public async Task<ActionResult<IReadOnlyList<StationDto>>> GetStationsByPartner(Guid partnerId)
     {

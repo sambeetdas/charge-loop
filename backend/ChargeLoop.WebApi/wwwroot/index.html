@@ -706,7 +706,20 @@
 
       <div class="section-title">
         <span data-i18n="nearbyStations">Nearby Swap Stations</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadStations()" data-i18n="refresh">Refresh</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary btn-sm" onclick="toggleDriverLocationSearch()" data-i18n="changeLocBtn">📍 Change Location</button>
+          <button class="btn btn-secondary btn-sm" onclick="loadStations()" data-i18n="refresh">Refresh</button>
+        </div>
+      </div>
+      <div id="driverLocationBar" class="card" style="padding:10px 12px;margin-bottom:10px;">
+        <div class="row-between" style="gap:8px;">
+          <div id="driverLocationStatus" style="font-size:12px;color:var(--mint-text);font-weight:700;" data-i18n="locWithin20Gps">📍 Within 20 km of your current GPS location</div>
+          <button id="driverResetGpsBtn" class="btn btn-secondary btn-sm hidden" style="padding:4px 8px;font-size:11px;white-space:nowrap;" onclick="resetDriverLocationToGps()" data-i18n="useMyGpsBtn">Use My GPS</button>
+        </div>
+        <div id="driverLocationSearchBox" class="hidden" style="margin-top:8px;position:relative;">
+          <input id="driverLocationInput" class="input-field" placeholder="Search area or city (e.g. Indiranagar, Bengaluru)..." data-i18n-placeholder="phDriverLoc" autocomplete="off" style="margin-bottom:0;" oninput="onDriverLocationInput(this.value)">
+          <div id="driverLocationSuggestions" class="hidden" style="position:absolute;left:0;right:0;top:100%;z-index:40;background:var(--surface-elevated);border:1px solid var(--border-mint);border-radius:12px;margin-top:4px;max-height:200px;overflow-y:auto;box-shadow:0 12px 28px rgba(0,0,0,0.45);"></div>
+        </div>
       </div>
       <div id="driverStationsList"></div>
     </div>
@@ -990,6 +1003,7 @@
       </div>
 
       <div id="addStoreForm" class="card hidden">
+        <div id="storeFormTitle" style="font-weight:800;margin-bottom:10px;" data-i18n="addStoreTitle">🏪 Add Store / Hub</div>
         <input id="newStoreName" class="input-field" placeholder="Store / Hub Name" data-i18n-placeholder="phStoreName">
         <div style="position:relative;margin-bottom:8px;">
           <input id="newStoreAddress" class="input-field" placeholder="Start typing Street Address..." data-i18n-placeholder="phStoreAddr" autocomplete="off" style="margin-bottom:0;" oninput="onStoreAddressInput(this.value)">
@@ -1000,7 +1014,10 @@
           <input id="newStoreLat" class="input-field" type="number" step="any" placeholder="Latitude (auto)" data-i18n-placeholder="phLat">
           <input id="newStoreLng" class="input-field" type="number" step="any" placeholder="Longitude (auto)" data-i18n-placeholder="phLng">
         </div>
-        <button class="btn btn-primary" onclick="createVendorStore()" data-i18n="saveStore">Save Store / Hub</button>
+        <div style="display:flex;gap:8px;">
+          <button id="saveStoreBtn" class="btn btn-primary" onclick="saveVendorStore()" data-i18n="saveStore">Save Store / Hub</button>
+          <button class="btn btn-secondary" onclick="cancelStoreForm()" data-i18n="cancelBtn">Cancel</button>
+        </div>
       </div>
 
       <div id="vendorStoresList"></div>
@@ -1019,6 +1036,20 @@
           <input id="regBatSoc" class="input-field" type="number" value="100" placeholder="SOC % (0-100)">
         </div>
         <button class="btn btn-primary" onclick="registerBatteryForStore()" data-i18n="addBatterySubmit">Add Battery</button>
+      </div>
+
+      <div id="editBatteryForm" class="card hidden">
+        <div style="font-weight:800;margin-bottom:10px;" data-i18n="editBatteryTitle">✏️ Edit Owned Battery</div>
+        <input id="editBatSerial" class="input-field" placeholder="Battery Serial / QR" data-i18n-placeholder="phBatSerial">
+        <select id="editBatModel" class="input-field"></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input id="editBatSoc" class="input-field" type="number" min="0" max="100" placeholder="SOC % (0-100)">
+          <input id="editBatSoh" class="input-field" type="number" min="0" max="100" placeholder="SOH % (0-100)">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="saveEditedBattery()" data-i18n="updateBatteryBtn">Update Battery</button>
+          <button class="btn btn-secondary" onclick="cancelEditBattery()" data-i18n="cancelBtn">Cancel</button>
+        </div>
       </div>
 
       <select id="invStationSelect" class="input-field" style="margin-bottom:8px;" onchange="loadSelectedStoreBatteries()"></select>
@@ -1538,14 +1569,14 @@ function renderActiveReservation() {
     box.innerHTML = `
       <div class="grid-hero" style="margin-bottom:14px;">
         <div class="row-between" style="margin-bottom:6px;">
-          <span class="mint-pill">🔒 RESERVED (2H HOLD)</span>
+          <span class="mint-pill">${t('reservedHoldBadge')}</span>
           <span class="amber-pill">⏳ ${countdown}</span>
         </div>
         <div style="font-weight:800;font-size:16px;">${res.stationName}</div>
-        ${res.batterySerial ? `<div class="muted" style="margin-bottom:8px;">Held Battery: <b>${res.batterySerial}</b></div>` : '<div style="margin-bottom:8px;"></div>'}
+        ${res.batterySerial ? `<div class="muted" style="margin-bottom:8px;">${t('heldBatteryLabel')} <b>${res.batterySerial}</b></div>` : '<div style="margin-bottom:8px;"></div>'}
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-sm" style="flex:1;" onclick="switchDriverTab('scan')">Go to Scan &amp; Pay</button>
-          <button class="btn btn-secondary btn-sm" style="flex:1;border-color:rgba(239,68,68,0.4);color:#FCA5A5;" onclick="cancelActiveReservation('${res.id}')">Reverse Reserve</button>
+          <button class="btn btn-primary btn-sm" style="flex:1;" onclick="switchDriverTab('scan')">${t('goToScanPayBtn')}</button>
+          <button class="btn btn-secondary btn-sm" style="flex:1;border-color:rgba(239,68,68,0.4);color:#FCA5A5;" onclick="cancelActiveReservation('${res.id}')">${t('reverseReserveBtn')}</button>
         </div>
       </div>
     `;
@@ -1622,24 +1653,132 @@ async function loadBatteryTypes() {
   try {
     const types = await apiFetch('/config/battery-types');
     const sel = document.getElementById('regBatModel');
+    const editSel = document.getElementById('editBatModel');
     const prev = sel.value;
-    sel.innerHTML = (types || []).map(t => `<option value="${t.code}">${t.displayName} (${t.code})</option>`).join('')
+    const prevEdit = editSel ? editSel.value : '';
+    const html = (types || []).map(t => `<option value="${t.code}">${t.displayName} (${t.code})</option>`).join('')
       || '<option value="LFP-48V-30Ah">LFP-48V-30Ah</option>';
+    sel.innerHTML = html;
     if (prev && (types || []).some(t => t.code === prev)) sel.value = prev;
+    if (editSel) {
+      editSel.innerHTML = html;
+      if (prevEdit && (types || []).some(t => t.code === prevEdit)) editSel.value = prevEdit;
+    }
   } catch (e) { console.error(e); }
+}
+
+let _driverLocTimer = null;
+let _driverLocResults = [];
+
+function toggleDriverLocationSearch() {
+  const box = document.getElementById('driverLocationSearchBox');
+  const willOpen = box.classList.contains('hidden');
+  box.classList.toggle('hidden');
+  if (willOpen) {
+    document.getElementById('driverLocationInput').focus();
+  } else {
+    document.getElementById('driverLocationSuggestions').classList.add('hidden');
+  }
+}
+
+function onDriverLocationInput(value) {
+  clearTimeout(_driverLocTimer);
+  const box = document.getElementById('driverLocationSuggestions');
+  const q = (value || '').trim();
+  if (q.length < 3) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+  _driverLocTimer = setTimeout(async () => {
+    try {
+      const items = await apiFetch(`/config/address-suggestions?query=${encodeURIComponent(q)}`);
+      _driverLocResults = Array.isArray(items) ? items : [];
+      if (_driverLocResults.length === 0) {
+        box.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--text-muted);">No matching locations found</div>';
+        box.classList.remove('hidden');
+        return;
+      }
+      box.innerHTML = _driverLocResults.map((item, idx) => `
+        <div onclick="selectDriverLocationSuggestion(${idx})" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;line-height:1.35;">
+          <div style="font-weight:700;color:var(--text-primary);">${item.streetAddress || item.formattedAddress}</div>
+          ${item.city ? `<div style="color:var(--mint-text);font-size:11px;margin-top:2px;">📍 ${item.city}</div>` : ''}
+        </div>
+      `).join('');
+      box.classList.remove('hidden');
+    } catch {
+      box.classList.add('hidden');
+    }
+  }, 350);
+}
+
+async function selectDriverLocationSuggestion(idx) {
+  const item = _driverLocResults[idx];
+  if (!item) return;
+  const label = [item.streetAddress, item.city].filter(Boolean).join(', ') || item.formattedAddress;
+  state.driverSearchLocation = {
+    label,
+    latitude: Number(item.latitude),
+    longitude: Number(item.longitude)
+  };
+  document.getElementById('driverLocationInput').value = label;
+  document.getElementById('driverLocationSuggestions').classList.add('hidden');
+  document.getElementById('driverLocationSearchBox').classList.add('hidden');
+  await loadStations();
+  showToast(`Showing stores within 20 km of ${label}`);
+}
+
+async function resetDriverLocationToGps() {
+  state.driverSearchLocation = null;
+  document.getElementById('driverLocationInput').value = '';
+  document.getElementById('driverLocationSuggestions').classList.add('hidden');
+  document.getElementById('driverLocationSearchBox').classList.add('hidden');
+  await loadStations();
+  showToast('Using your current GPS location');
 }
 
 async function loadStations() {
   try {
-    const coords = await getBrowserCoordinates();
-    state.stations = await apiFetch('/stations/nearby', {
-      method: 'POST',
-      body: JSON.stringify({
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        radiusKm: coords.hasFix ? 50 : 25000
-      })
-    });
+    const statusEl = document.getElementById('driverLocationStatus');
+    const resetBtn = document.getElementById('driverResetGpsBtn');
+    const customLoc = state.driverSearchLocation;
+
+    let searchLat = 0;
+    let searchLng = 0;
+    let hasCoords = false;
+
+    if (customLoc && !Number.isNaN(customLoc.latitude) && !Number.isNaN(customLoc.longitude)) {
+      searchLat = customLoc.latitude;
+      searchLng = customLoc.longitude;
+      hasCoords = true;
+      if (statusEl) statusEl.textContent = `${t('locWithin20Custom')} ${customLoc.label}`;
+      if (resetBtn) resetBtn.classList.remove('hidden');
+    } else {
+      const coords = await getBrowserCoordinates();
+      if (coords.hasFix) {
+        searchLat = coords.latitude;
+        searchLng = coords.longitude;
+        hasCoords = true;
+        if (statusEl) statusEl.textContent = t('locWithin20Gps');
+      } else {
+        if (statusEl) statusEl.textContent = t('locGpsUnavailable');
+      }
+      if (resetBtn) resetBtn.classList.add('hidden');
+    }
+
+    if (hasCoords) {
+      state.stations = await apiFetch('/stations/nearby', {
+        method: 'POST',
+        body: JSON.stringify({
+          latitude: searchLat,
+          longitude: searchLng,
+          radiusKm: 20
+        })
+      });
+    } else {
+      state.stations = [];
+    }
+
     const list = document.getElementById('driverStationsList');
     list.innerHTML = state.stations.map(s => `
       <div class="card">
@@ -1647,7 +1786,7 @@ async function loadStations() {
           <div style="font-weight:800;font-size:15px;">${s.name}</div>
           <span class="mint-pill">${s.availableChargedBatteries} ${t('chargedLabel')}</span>
         </div>
-        <div class="muted" style="margin-bottom:10px;">📍 ${s.address}, ${s.city} • ${s.distanceKm ?? '—'} km</div>
+        <div class="muted" style="margin-bottom:10px;">📍 ${formatStationLocation(s.address, s.city)} • ${s.distanceKm ?? '—'} km</div>
         <div class="row-between">
           <span class="amber-pill">⚡ ${s.chargingBatteries} ${t('chargingLabel')} • ${s.estimatedWaitMinutes}m ${t('waitLabel')}</span>
           <div style="display:flex;gap:6px;">
@@ -1657,7 +1796,7 @@ async function loadStations() {
         </div>
         <div id="stationBats-${s.id}" class="hidden" style="margin-top:8px;"></div>
       </div>
-    `).join('') || `<div class="muted">${t('noStationsNearby')}</div>`;
+    `).join('') || `<div class="muted">${hasCoords ? t('noStores20Km') : t('enableGpsOrLoc')}</div>`;
 
     const sel = document.getElementById('scanStationSelect');
     if (state.activeReservation && new Date(state.activeReservation.expiresAt) > new Date()) {
@@ -2047,12 +2186,18 @@ async function refreshVendorViews() {
   }
 
   document.getElementById('vendorStoresList').innerHTML = state.vendorStations.map(s => `
-    <div class="card row-between">
-      <div>
-        <div style="font-weight:800;">${s.name}</div>
-        <div class="muted">${s.address}, ${s.city}</div>
+    <div class="card">
+      <div class="row-between" style="gap:8px;align-items:flex-start;">
+        <div>
+          <div style="font-weight:800;">${s.name}</div>
+          <div class="muted">${formatStationLocation(s.address, s.city)}</div>
+        </div>
+        <span class="mint-pill">${s.availableChargedBatteries} ${t('chargedLabel')}</span>
       </div>
-      <span class="mint-pill">${s.availableChargedBatteries} ${t('chargedLabel')}</span>
+      <div style="display:flex;gap:6px;margin-top:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary btn-sm" style="padding:5px 10px;font-size:11px;" onclick="editVendorStore('${s.id}')">${t('editBtn')}</button>
+        <button class="btn btn-secondary btn-sm" style="padding:5px 10px;font-size:11px;color:#fca5a5;border-color:rgba(248,113,113,0.35);" onclick="deleteVendorStore('${s.id}')">${t('deleteBtn')}</button>
+      </div>
     </div>
   `).join('') || `<div class="muted">${t('noStoresYet')}</div>`;
 
@@ -2359,6 +2504,7 @@ function renderVendorStoreBatteries() {
 
   document.getElementById('vendorStoreBatteriesList').innerHTML = filtered.map(b => {
     const away = isAway(b);
+    const isOwner = !b.ownerPartnerId || (b.ownerPartnerId || '').toLowerCase() === (state.vendor?.id || '').toLowerCase();
     const st = away && b.locationNote
       ? { label: b.locationNote, cls: 'amber-pill' }
       : (statusMap[b.status] || { label: 'Unknown', cls: 'amber-pill' });
@@ -2368,6 +2514,13 @@ function renderVendorStoreBatteries() {
       : statuses.map(s => `
           <button class="btn btn-sm ${b.status === s.code ? 'btn-primary' : 'btn-secondary'}" style="padding:5px 8px;font-size:11px;" onclick="setBatteryStatus('${b.currentStationId || sid}', '${b.id}', ${s.code})">${s.label}</button>
         `).join('');
+
+    const ownerActions = isOwner && b.status !== 2
+      ? `<div style="display:flex;gap:6px;margin-top:8px;">
+           <button class="btn btn-secondary btn-sm" style="padding:4px 9px;font-size:11px;" onclick="editVendorBattery('${b.id}')">${t('editBtn')}</button>
+           <button class="btn btn-secondary btn-sm" style="padding:4px 9px;font-size:11px;color:#fca5a5;border-color:rgba(248,113,113,0.35);" onclick="deleteVendorBattery('${b.id}')">${t('deleteBtn')}</button>
+         </div>`
+      : '';
 
     const visibilityLine = away
       ? `<div class="muted" style="font-size:11px;margin-bottom:6px;">📍 ${b.locationNote || t('awayFromStore')}</div>`
@@ -2386,9 +2539,76 @@ function renderVendorStoreBatteries() {
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           ${buttons}
         </div>
+        ${ownerActions}
       </div>
     `;
   }).join('');
+}
+
+let _editingBatteryId = null;
+
+function editVendorBattery(batteryId) {
+  const b = (_vendorBatteryCache || []).find(x => x.id === batteryId);
+  if (!b) return;
+  _editingBatteryId = b.id;
+  document.getElementById('registerBatteryForm').classList.add('hidden');
+  document.getElementById('editBatSerial').value = b.serialNumber || '';
+  const modelSel = document.getElementById('editBatModel');
+  if (modelSel && b.modelType) modelSel.value = b.modelType;
+  document.getElementById('editBatSoc').value = b.stateOfChargePercent ?? 100;
+  document.getElementById('editBatSoh').value = b.stateOfHealthPercent ?? 100;
+  document.getElementById('editBatteryForm').classList.remove('hidden');
+  document.getElementById('editBatteryForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelEditBattery() {
+  _editingBatteryId = null;
+  document.getElementById('editBatteryForm').classList.add('hidden');
+}
+
+async function saveEditedBattery() {
+  if (!_editingBatteryId || !state.vendor?.id) return;
+  const serialNumber = document.getElementById('editBatSerial').value.trim();
+  const modelType = document.getElementById('editBatModel').value.trim();
+  const stateOfChargePercent = Number(document.getElementById('editBatSoc').value);
+  const stateOfHealthPercent = Number(document.getElementById('editBatSoh').value);
+  if (!serialNumber) return showToast('Battery serial is required', true);
+  if (Number.isNaN(stateOfChargePercent) || stateOfChargePercent < 0 || stateOfChargePercent > 100) {
+    return showToast('SOC % must be between 0 and 100', true);
+  }
+  if (Number.isNaN(stateOfHealthPercent) || stateOfHealthPercent < 0 || stateOfHealthPercent > 100) {
+    return showToast('SOH % must be between 0 and 100', true);
+  }
+  try {
+    await apiFetch(`/stations/batteries/${_editingBatteryId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        partnerId: state.vendor.id,
+        serialNumber,
+        modelType,
+        stateOfChargePercent,
+        stateOfHealthPercent
+      })
+    });
+    cancelEditBattery();
+    await refreshVendorViews();
+    showToast('Battery updated!');
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function deleteVendorBattery(batteryId) {
+  if (!state.vendor?.id) return;
+  const b = (_vendorBatteryCache || []).find(x => x.id === batteryId);
+  const label = b ? b.serialNumber : 'this battery';
+  if (!confirm(`Delete battery ${label}? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/stations/batteries/${batteryId}?partnerId=${encodeURIComponent(state.vendor.id)}`, {
+      method: 'DELETE'
+    });
+    if (_editingBatteryId === batteryId) cancelEditBattery();
+    await refreshVendorViews();
+    showToast(`Battery ${label} deleted.`);
+  } catch (e) { showToast(e.message, true); }
 }
 
 async function setBatteryStatus(stationId, batteryId, status) {
@@ -2472,11 +2692,75 @@ function toggleRegisterBatteryForm() {
   if (willOpen) document.getElementById('addStoreForm').classList.add('hidden');
 }
 
+function formatStationLocation(address, city) {
+  const addr = (address || '').trim();
+  const c = (city || '').trim();
+  if (!addr) return c;
+  if (!c || c === 'Unknown') return addr;
+  const segments = addr.split(',').map(x => x.trim().toLowerCase());
+  return segments.includes(c.toLowerCase()) ? addr : `${addr}, ${c}`;
+}
+
+let _editingStoreId = null;
+
 function toggleAddStoreForm() {
   const form = document.getElementById('addStoreForm');
-  const willOpen = form.classList.contains('hidden');
-  form.classList.toggle('hidden');
-  if (willOpen) document.getElementById('registerBatteryForm').classList.add('hidden');
+  const willOpen = form.classList.contains('hidden') || _editingStoreId !== null;
+  _editingStoreId = null;
+  document.getElementById('storeFormTitle').textContent = t('addStoreTitle');
+  document.getElementById('saveStoreBtn').textContent = t('saveStore');
+  document.getElementById('newStoreName').value = '';
+  document.getElementById('newStoreAddress').value = '';
+  document.getElementById('newStoreCity').value = '';
+  document.getElementById('newStoreLat').value = '';
+  document.getElementById('newStoreLng').value = '';
+  document.getElementById('storeAddressSuggestions').classList.add('hidden');
+  if (willOpen) {
+    form.classList.remove('hidden');
+    document.getElementById('registerBatteryForm').classList.add('hidden');
+  } else {
+    form.classList.add('hidden');
+  }
+}
+
+function editVendorStore(stationId) {
+  const s = (state.vendorStations || []).find(x => x.id === stationId);
+  if (!s) return;
+  _editingStoreId = s.id;
+  document.getElementById('storeFormTitle').textContent = t('editStoreTitle');
+  document.getElementById('saveStoreBtn').textContent = t('updateStoreBtn');
+  document.getElementById('newStoreName').value = s.name || '';
+  document.getElementById('newStoreAddress').value = s.address || '';
+  document.getElementById('newStoreCity').value = s.city || '';
+  document.getElementById('newStoreLat').value = s.latitude ?? '';
+  document.getElementById('newStoreLng').value = s.longitude ?? '';
+  document.getElementById('storeAddressSuggestions').classList.add('hidden');
+  document.getElementById('registerBatteryForm').classList.add('hidden');
+  document.getElementById('addStoreForm').classList.remove('hidden');
+  document.getElementById('addStoreForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelStoreForm() {
+  _editingStoreId = null;
+  document.getElementById('addStoreForm').classList.add('hidden');
+  document.getElementById('storeAddressSuggestions').classList.add('hidden');
+}
+
+async function deleteVendorStore(stationId) {
+  if (!state.vendor?.id) return;
+  const s = (state.vendorStations || []).find(x => x.id === stationId);
+  const label = s ? s.name : 'this store';
+  if (!confirm(`Delete "${label}"?\n\nBatteries currently in this store will be deleted. Any batteries that have moved to another store or are out with a driver will NOT be deleted.`)) {
+    return;
+  }
+  try {
+    await apiFetch(`/stations/${stationId}?partnerId=${encodeURIComponent(state.vendor.id)}`, {
+      method: 'DELETE'
+    });
+    if (_editingStoreId === stationId) cancelStoreForm();
+    await refreshVendorViews();
+    showToast(`Store "${label}" deleted.`);
+  } catch (e) { showToast(e.message, true); }
 }
 
 let _storeAddrTimer = null;
@@ -2502,7 +2786,7 @@ function onStoreAddressInput(value) {
       }
       box.innerHTML = _storeAddrResults.map((item, idx) => `
         <div onclick="selectStoreAddressSuggestion(${idx})" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;line-height:1.35;">
-          <div style="font-weight:700;color:var(--text-primary);">${item.formattedAddress}</div>
+          <div style="font-weight:700;color:var(--text-primary);">${item.streetAddress || item.formattedAddress}</div>
           ${item.city ? `<div style="color:var(--mint-text);font-size:11px;margin-top:2px;">📍 ${item.city}</div>` : ''}
         </div>
       `).join('');
@@ -2516,7 +2800,7 @@ function onStoreAddressInput(value) {
 function selectStoreAddressSuggestion(idx) {
   const item = _storeAddrResults[idx];
   if (!item) return;
-  document.getElementById('newStoreAddress').value = item.formattedAddress || '';
+  document.getElementById('newStoreAddress').value = item.streetAddress || item.formattedAddress || '';
   if (item.city) document.getElementById('newStoreCity').value = item.city;
   document.getElementById('newStoreLat').value = Number(item.latitude).toFixed(6);
   document.getElementById('newStoreLng').value = Number(item.longitude).toFixed(6);
@@ -2524,7 +2808,7 @@ function selectStoreAddressSuggestion(idx) {
   showToast(`Address selected (${item.provider})`);
 }
 
-async function createVendorStore() {
+async function saveVendorStore() {
   const name = document.getElementById('newStoreName').value.trim();
   let address = document.getElementById('newStoreAddress').value.trim();
   let city = document.getElementById('newStoreCity').value.trim();
@@ -2549,8 +2833,11 @@ async function createVendorStore() {
   if (!city) city = 'Unknown';
 
   try {
-    await apiFetch('/stations', {
-      method: 'POST',
+    const isEdit = Boolean(_editingStoreId);
+    const endpoint = isEdit ? `/stations/${_editingStoreId}` : '/stations';
+    const method = isEdit ? 'PUT' : 'POST';
+    await apiFetch(endpoint, {
+      method,
       body: JSON.stringify({
         partnerId: state.vendor.id,
         name,
@@ -2560,25 +2847,31 @@ async function createVendorStore() {
         longitude
       })
     });
-    document.getElementById('addStoreForm').classList.add('hidden');
+    cancelStoreForm();
     await refreshVendorViews();
-    showToast('Store / Hub created!');
+    showToast(isEdit ? 'Store / Hub updated!' : 'Store / Hub created!');
   } catch (e) { showToast(e.message, true); }
+}
+
+function translateTxReason(reason) {
+  if (!reason) return '';
+  if (reason === 'Instant swap commission share') return t('txSwapCommShare');
+  return reason;
 }
 
 async function loadVendorEarnings() {
   try {
     const res = await apiFetch(`/wallet/balance/${state.vendor.id}?accountType=1`);
     document.getElementById('vendorWalletBig').textContent = `₹${Number(res.balance).toFixed(2)}`;
-    document.getElementById('vendorTxList').innerHTML = (res.recentTransactions || []).map(t => `
+    document.getElementById('vendorTxList').innerHTML = (res.recentTransactions || []).map(tx => `
       <div class="card row-between">
         <div>
-          <div style="font-weight:700;font-size:13px;">${t.reason}</div>
-          <div class="muted">${new Date(t.timestamp).toLocaleString()}</div>
+          <div style="font-weight:700;font-size:13px;">${translateTxReason(tx.reason)}</div>
+          <div class="muted">${new Date(tx.timestamp).toLocaleString()}</div>
         </div>
-        <span style="font-weight:800;color:var(--mint);">+₹${Number(t.amount).toFixed(2)}</span>
+        <span style="font-weight:800;color:var(--mint);">+₹${Number(tx.amount).toFixed(2)}</span>
       </div>
-    `).join('') || '<div class="muted">No commissions yet.</div>';
+    `).join('') || `<div class="muted">${t('noCommissionsYet')}</div>`;
   } catch (e) { console.error(e); }
 }
 
@@ -2838,7 +3131,29 @@ const I18N = {
     sqBirthCity: 'What is your birth city?',
     sqFirstVehicle: 'What was your first vehicle model?',
     sqNickname: 'What is your childhood nickname?',
-    sqFavFood: 'What is your favorite food?'
+    sqFavFood: 'What is your favorite food?',
+    changeLocBtn: '📍 Change Location',
+    useMyGpsBtn: 'Use My GPS',
+    phDriverLoc: 'Search area or city (e.g. Indiranagar, Bengaluru)...',
+    locWithin20Gps: '📍 Within 20 km of your current GPS location',
+    locWithin20Custom: '📍 Within 20 km of:',
+    locGpsUnavailable: '📍 GPS unavailable — tap Change Location to search an area (20 km radius)',
+    noStores20Km: 'No swap stations found within 20 km of this location.',
+    enableGpsOrLoc: 'Enable GPS or tap Change Location above to search for swap stations within 20 km.',
+    editBtn: '✏️ Edit',
+    deleteBtn: '🗑️ Delete',
+    cancelBtn: 'Cancel',
+    addStoreTitle: '🏪 Add Store / Hub',
+    editStoreTitle: '✏️ Edit Store / Hub',
+    updateStoreBtn: 'Update Store / Hub',
+    editBatteryTitle: '✏️ Edit Owned Battery',
+    updateBatteryBtn: 'Update Battery',
+    reservedHoldBadge: '🔒 RESERVED (2H HOLD)',
+    heldBatteryLabel: 'Held Battery:',
+    goToScanPayBtn: 'Go to Scan & Pay',
+    reverseReserveBtn: 'Reverse Reserve',
+    txSwapCommShare: 'Instant swap commission share',
+    noCommissionsYet: 'No commissions yet.'
   },
   hi: {
     brandTagline: 'ऊर्जा समाधान',
@@ -3061,7 +3376,29 @@ const I18N = {
     sqBirthCity: 'आपका जन्म शहर कौन-सा है?',
     sqFirstVehicle: 'आपका पहला वाहन मॉडल कौन-सा था?',
     sqNickname: 'आपके बचपन का उपनाम क्या है?',
-    sqFavFood: 'आपका पसंदीदा भोजन क्या है?'
+    sqFavFood: 'आपका पसंदीदा भोजन क्या है?',
+    changeLocBtn: '📍 स्थान बदलें',
+    useMyGpsBtn: 'मेरा GPS उपयोग करें',
+    phDriverLoc: 'क्षेत्र या शहर खोजें (जैसे इंदिरानगर, बेंगलुरु)...',
+    locWithin20Gps: '📍 आपके वर्तमान GPS स्थान से 20 किमी के भीतर',
+    locWithin20Custom: '📍 20 किमी के भीतर:',
+    locGpsUnavailable: '📍 GPS उपलब्ध नहीं — क्षेत्र खोजने के लिए स्थान बदलें दबाएं (20 किमी दायरा)',
+    noStores20Km: 'इस स्थान के 20 किमी के भीतर कोई स्वैप स्टेशन नहीं मिला।',
+    enableGpsOrLoc: '20 किमी के भीतर स्वैप स्टेशन खोजने के लिए GPS चालू करें या ऊपर स्थान बदलें दबाएं।',
+    editBtn: '✏️ संपादित करें',
+    deleteBtn: '🗑️ हटाएं',
+    cancelBtn: 'रद्द करें',
+    addStoreTitle: '🏪 स्टोर / हब जोड़ें',
+    editStoreTitle: '✏️ स्टोर / हब संपादित करें',
+    updateStoreBtn: 'स्टोर / हब अपडेट करें',
+    editBatteryTitle: '✏️ अपनी बैटरी संपादित करें',
+    updateBatteryBtn: 'बैटरी अपडेट करें',
+    reservedHoldBadge: '🔒 आरक्षित (2 घंटे होल्ड)',
+    heldBatteryLabel: 'होल्ड की गई बैटरी:',
+    goToScanPayBtn: 'स्कैन व पे पर जाएं',
+    reverseReserveBtn: 'आरक्षण रद्द करें',
+    txSwapCommShare: 'तत्काल स्वैप कमीशन हिस्सा',
+    noCommissionsYet: 'अभी कोई कमीशन नहीं।'
   }
 };
 

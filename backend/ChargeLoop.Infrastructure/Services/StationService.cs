@@ -20,8 +20,6 @@ public class StationService : IStationService
 
     public async Task<IReadOnlyList<StationDto>> GetNearbyStationsAsync(NearbyStationsRequest request)
     {
-        // Read directly from PostgreSQL database
-        var stations = await _context.Stations.AsNoTracking().ToListAsync();
         var now = DateTime.UtcNow;
         var reservedByStation = await _context.Reservations
             .AsNoTracking()
@@ -30,6 +28,22 @@ public class StationService : IStationService
             .Select(g => new { StationId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.StationId, x => x.Count);
 
+        if (_context.Database.IsRelational())
+        {
+            try
+            {
+                var postgisResults = await QueryNearbyWithPostGisAsync(request, reservedByStation);
+                if (postgisResults != null)
+                    return postgisResults;
+            }
+            catch
+            {
+                // Fall back to Haversine when PostGIS extension is not installed on the target PostgreSQL instance
+            }
+        }
+
+        // Haversine fallback (used for InMemory unit tests or PostgreSQL without PostGIS)
+        var stations = await _context.Stations.AsNoTracking().ToListAsync();
         var result = new List<StationDto>();
 
         foreach (var station in stations)
@@ -57,6 +71,67 @@ public class StationService : IStationService
         }
 
         return result.OrderBy(s => s.DistanceKm).ToList();
+    }
+
+    private async Task<IReadOnlyList<StationDto>?> QueryNearbyWithPostGisAsync(
+        NearbyStationsRequest request,
+        Dictionary<Guid, int> reservedByStation)
+    {
+        var conn = _context.Database.GetDbConnection();
+        var shouldClose = conn.State != System.Data.ConnectionState.Open;
+        if (shouldClose) await conn.OpenAsync();
+        try
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+                SELECT id, partner_id, name, address, city, latitude, longitude,
+                       available_charged_batteries, charging_batteries, estimated_wait_minutes, status,
+                       ST_Distance(
+                           COALESCE(geom, ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography),
+                           ST_SetSRID(ST_MakePoint(@lng, @lat), 4326)::geography
+                       ) / 1000.0 AS distance_km
+                FROM stations
+                WHERE ST_DWithin(
+                    COALESCE(geom, ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography),
+                    ST_SetSRID(ST_MakePoint(@lng, @lat), 4326)::geography,
+                    @radiusMeters
+                )
+                ORDER BY distance_km ASC;";
+
+            var pLat = cmd.CreateParameter(); pLat.ParameterName = "@lat"; pLat.Value = request.Latitude; cmd.Parameters.Add(pLat);
+            var pLng = cmd.CreateParameter(); pLng.ParameterName = "@lng"; pLng.Value = request.Longitude; cmd.Parameters.Add(pLng);
+            var pRad = cmd.CreateParameter(); pRad.ParameterName = "@radiusMeters"; pRad.Value = request.RadiusKm * 1000.0; cmd.Parameters.Add(pRad);
+
+            var list = new List<StationDto>();
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var id = reader.GetGuid(0);
+                var avail = reader.GetInt32(7);
+                var reservedCount = reservedByStation.GetValueOrDefault(id, 0);
+                var unreservedReady = Math.Max(0, avail - reservedCount);
+
+                list.Add(new StationDto(
+                    id,
+                    reader.GetGuid(1),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetDouble(5),
+                    reader.GetDouble(6),
+                    unreservedReady,
+                    reader.GetInt32(8),
+                    reader.GetInt32(9),
+                    (StationStatus)reader.GetInt32(10),
+                    Math.Round(reader.GetDouble(11), 2)
+                ));
+            }
+            return list;
+        }
+        finally
+        {
+            if (shouldClose) await conn.CloseAsync();
+        }
     }
 
     public async Task<StationDto?> GetStationByIdAsync(Guid stationId)
@@ -484,24 +559,253 @@ public class StationService : IStationService
         _context.Stations.Add(station);
         await _context.SaveChangesAsync();
 
-        var dto = new StationDto(
-            station.Id,
-            station.PartnerId,
-            station.Name,
-            station.Address,
-            station.City,
-            station.Latitude,
-            station.Longitude,
-            station.AvailableChargedBatteriesCount,
-            station.ChargingBatteriesCount,
-            station.EstimatedWaitTimeMinutes,
-            station.Status,
-            null
-        );
+        if (_context.Database.IsRelational())
+        {
+            await UpdateStationGeomAsync(station.Id, station.Latitude, station.Longitude);
+        }
+
+        var dto = ToStationDto(station);
 
         await _notificationService.NotifyStationUpdatedAsync(dto);
         return dto;
     }
+
+    public async Task<StationDto> UpdateStationAsync(Guid stationId, UpdateStationRequest request)
+    {
+        var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId)
+            ?? throw new KeyNotFoundException("Station/store not found.");
+
+        if (station.PartnerId != request.PartnerId)
+            throw new UnauthorizedAccessException("Only the store owner can edit this store.");
+
+        station.Name = request.Name.Trim();
+        station.Address = request.Address.Trim();
+        station.City = string.IsNullOrWhiteSpace(request.City) ? station.City : request.City.Trim();
+        if (request.Latitude != 0) station.Latitude = request.Latitude;
+        if (request.Longitude != 0) station.Longitude = request.Longitude;
+        if (request.Status.HasValue) station.Status = request.Status.Value;
+        station.LastStatusUpdate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        if (_context.Database.IsRelational())
+        {
+            await UpdateStationGeomAsync(station.Id, station.Latitude, station.Longitude);
+        }
+
+        var dto = ToStationDto(station);
+        await _notificationService.NotifyStationUpdatedAsync(dto);
+        return dto;
+    }
+
+    public async Task DeleteStationAsync(Guid stationId, Guid partnerId)
+    {
+        var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId)
+            ?? throw new KeyNotFoundException("Station/store not found.");
+
+        if (station.PartnerId != partnerId)
+            throw new UnauthorizedAccessException("Only the store owner can delete this store.");
+
+        var now = DateTime.UtcNow;
+        var hasActiveReservation = await _context.Reservations
+            .AnyAsync(r => r.StationId == stationId && r.Status == ReservationStatus.Active && r.ExpiresAt > now);
+        if (hasActiveReservation)
+            throw new InvalidOperationException("Cannot delete store while it has an active reservation.");
+
+        var hasActiveSwap = await _context.Swaps
+            .AnyAsync(s => s.StationId == stationId &&
+                (s.Status == SwapStatus.Initiated || s.Status == SwapStatus.Validated || s.Status == SwapStatus.InProgress));
+        if (hasActiveSwap)
+            throw new InvalidOperationException("Cannot delete store while a swap is in progress.");
+
+        var hasSwapHistory = await _context.Swaps.AnyAsync(s => s.StationId == stationId);
+        if (hasSwapHistory)
+            throw new InvalidOperationException("Cannot delete a store that has swap history. You can mark it Closed instead.");
+
+        // Only delete batteries currently physically in this store.
+        // Batteries that moved to a different store or are currently out with a driver are preserved.
+        var batteriesInStore = await _context.Batteries
+            .Where(b => b.CurrentStationId == stationId)
+            .ToListAsync();
+
+        if (batteriesInStore.Count > 0)
+        {
+            var batteryIds = batteriesInStore.Select(b => b.Id).ToList();
+            var referencedInSwaps = await _context.Swaps
+                .AnyAsync(s =>
+                    (s.DepletedBatteryId.HasValue && batteryIds.Contains(s.DepletedBatteryId.Value)) ||
+                    batteryIds.Contains(s.IssuedBatteryId));
+            if (referencedInSwaps)
+                throw new InvalidOperationException("Cannot delete batteries in this store that have swap history.");
+
+            _context.Batteries.RemoveRange(batteriesInStore);
+        }
+
+        var pastReservations = await _context.Reservations
+            .Where(r => r.StationId == stationId)
+            .ToListAsync();
+        if (pastReservations.Count > 0)
+            _context.Reservations.RemoveRange(pastReservations);
+
+        _context.Stations.Remove(station);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<BatteryDto> UpdateBatteryAsync(Guid batteryId, UpdateBatteryRequest request)
+    {
+        var battery = await _context.Batteries.FirstOrDefaultAsync(b => b.Id == batteryId)
+            ?? throw new KeyNotFoundException("Battery not found.");
+
+        await EnsureBatteryOwnerAsync(battery, request.PartnerId);
+
+        if (battery.Status == BatteryStatus.InUseByDriver)
+            throw new InvalidOperationException("Cannot edit a battery while it is out with a driver.");
+
+        var normalizedSerial = request.SerialNumber.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedSerial))
+            throw new ArgumentException("Battery serial number is required.");
+
+        if (!string.Equals(battery.SerialNumber, normalizedSerial, StringComparison.OrdinalIgnoreCase))
+        {
+            var duplicate = await _context.Batteries
+                .AnyAsync(b => b.Id != batteryId && b.SerialNumber == normalizedSerial);
+            if (duplicate)
+                throw new InvalidOperationException($"Battery {normalizedSerial} is already registered.");
+        }
+
+        battery.SerialNumber = normalizedSerial;
+        if (!string.IsNullOrWhiteSpace(request.ModelType))
+            battery.ModelType = request.ModelType.Trim();
+
+        battery.StateOfChargePercent = Math.Clamp(request.StateOfChargePercent, 0, 100);
+        battery.StateOfHealthPercent = Math.Clamp(request.StateOfHealthPercent, 0, 100);
+
+        if (request.Status.HasValue)
+        {
+            if (request.Status.Value == BatteryStatus.InUseByDriver)
+                throw new InvalidOperationException("Cannot manually set battery status to InUseByDriver.");
+            battery.Status = request.Status.Value;
+        }
+        else if (battery.Status != BatteryStatus.MaintenanceFaulty && battery.Status != BatteryStatus.Inactive)
+        {
+            battery.Status = battery.StateOfChargePercent >= 80
+                ? BatteryStatus.AvailableCharged
+                : BatteryStatus.ChargingInStation;
+        }
+
+        battery.IsVisibleToDriver = battery.Status == BatteryStatus.AvailableCharged;
+        battery.LastTelemetryTimestamp = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        if (battery.CurrentStationId.HasValue)
+        {
+            var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == battery.CurrentStationId.Value);
+            if (station != null)
+                await RecalculateAndNotifyStationAsync(station);
+        }
+
+        return new BatteryDto(
+            battery.Id,
+            battery.SerialNumber,
+            battery.ModelType,
+            battery.StateOfChargePercent,
+            battery.StateOfHealthPercent,
+            battery.CellTemperatureCelsius,
+            battery.Status,
+            battery.IsVisibleToDriver,
+            battery.CurrentStationId,
+            battery.OwnerPartnerId
+        );
+    }
+
+    public async Task DeleteBatteryAsync(Guid batteryId, Guid partnerId)
+    {
+        var battery = await _context.Batteries.FirstOrDefaultAsync(b => b.Id == batteryId)
+            ?? throw new KeyNotFoundException("Battery not found.");
+
+        await EnsureBatteryOwnerAsync(battery, partnerId);
+
+        if (battery.Status == BatteryStatus.InUseByDriver)
+            throw new InvalidOperationException("Cannot delete a battery while it is out with a driver.");
+
+        var now = DateTime.UtcNow;
+        var isReserved = await _context.Reservations
+            .AnyAsync(r => r.ReservedBatteryId == batteryId && r.Status == ReservationStatus.Active && r.ExpiresAt > now);
+        if (isReserved)
+            throw new InvalidOperationException("Cannot delete a battery that is currently reserved by a driver.");
+
+        var hasSwapHistory = await _context.Swaps
+            .AnyAsync(s => s.DepletedBatteryId == batteryId || s.IssuedBatteryId == batteryId);
+        if (hasSwapHistory)
+            throw new InvalidOperationException("Cannot delete a battery that has swap history. You can mark it Inactive instead.");
+
+        var stationId = battery.CurrentStationId;
+        _context.Batteries.Remove(battery);
+        await _context.SaveChangesAsync();
+
+        if (stationId.HasValue)
+        {
+            var station = await _context.Stations.FirstOrDefaultAsync(s => s.Id == stationId.Value);
+            if (station != null)
+                await RecalculateAndNotifyStationAsync(station);
+        }
+    }
+
+    private async Task EnsureBatteryOwnerAsync(Battery battery, Guid partnerId)
+    {
+        var ownerPartnerId = battery.OwnerPartnerId;
+        if (!ownerPartnerId.HasValue && battery.CurrentStationId.HasValue)
+        {
+            ownerPartnerId = await _context.Stations
+                .AsNoTracking()
+                .Where(s => s.Id == battery.CurrentStationId.Value)
+                .Select(s => (Guid?)s.PartnerId)
+                .FirstOrDefaultAsync();
+        }
+
+        if (ownerPartnerId != partnerId)
+            throw new UnauthorizedAccessException("Only the battery owner can edit or delete this battery.");
+    }
+
+    private async Task RecalculateAndNotifyStationAsync(Station station)
+    {
+        station.AvailableChargedBatteriesCount = await _context.Batteries
+            .CountAsync(b => b.CurrentStationId == station.Id && b.Status == BatteryStatus.AvailableCharged && b.IsVisibleToDriver);
+        station.ChargingBatteriesCount = await _context.Batteries
+            .CountAsync(b => b.CurrentStationId == station.Id && b.Status == BatteryStatus.ChargingInStation);
+        station.LastStatusUpdate = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        await _notificationService.NotifyStationUpdatedAsync(ToStationDto(station));
+    }
+
+    private async Task UpdateStationGeomAsync(Guid stationId, double latitude, double longitude)
+    {
+        try
+        {
+            await _context.Database.ExecuteSqlRawAsync(
+                "UPDATE stations SET geom = ST_SetSRID(ST_MakePoint({0}, {1}), 4326)::geography WHERE id = {2}",
+                longitude, latitude, stationId);
+        }
+        catch
+        {
+            // Ignore when PostGIS extension is not installed
+        }
+    }
+
+    private static StationDto ToStationDto(Station station) => new(
+        station.Id,
+        station.PartnerId,
+        station.Name,
+        station.Address,
+        station.City,
+        station.Latitude,
+        station.Longitude,
+        station.AvailableChargedBatteriesCount,
+        station.ChargingBatteriesCount,
+        station.EstimatedWaitTimeMinutes,
+        station.Status,
+        null
+    );
 
     public async Task<IReadOnlyList<StationDto>> GetStationsByPartnerIdAsync(Guid partnerId)
     {

@@ -62,7 +62,17 @@ public record CreateStationRequest(
     int InitialChargingBatteries = 0
 );
 
-public record NearbyStationsRequest(double Latitude, double Longitude, double RadiusKm = 10.0);
+public record UpdateStationRequest(
+    Guid PartnerId,
+    string Name,
+    string Address,
+    string City,
+    double Latitude,
+    double Longitude,
+    StationStatus? Status = null
+);
+
+public record NearbyStationsRequest(double Latitude, double Longitude, double RadiusKm = 20.0);
 
 public record BatteryDto(
     Guid Id,
@@ -120,6 +130,15 @@ public record RegisterBatteryRequest(
     int StateOfChargePercent = 100,
     int StateOfHealthPercent = 100,
     double CellTemperatureCelsius = 28.0
+);
+
+public record UpdateBatteryRequest(
+    Guid PartnerId,
+    string SerialNumber,
+    string ModelType,
+    int StateOfChargePercent,
+    int StateOfHealthPercent,
+    BatteryStatus? Status = null
 );
 
 public record InitiateSwapRequest(
@@ -306,4 +325,4 @@ public record UpdatePricingConfigRequest(
 
 public record BatteryTypeDto(Guid Id, string Code, string DisplayName, int Voltage, int CapacityAh, bool IsActive);
 
-public record GeocodeResultDto(string FormattedAddress, string City, double Latitude, double Longitude, string Provider);
+public record GeocodeResultDto(string FormattedAddress, string City, double Latitude, double Longitude, string Provider, string StreetAddress = "");
